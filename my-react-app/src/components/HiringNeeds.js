@@ -1,110 +1,108 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const HireATalent = () => {
-  const [selectedRole, setSelectedRole] = useState('');
+const HiringNeeds = () => {
+  const [selectedDuration, setSelectedDuration] = useState('');
   const navigate = useNavigate();
 
-  const handleRoleChange = (e) => {
-    setSelectedRole(e.target.value);
+  const handleDurationChange = (e) => {
+    setSelectedDuration(e.target.value);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Navigate to the HiringNeeds page
-    navigate('/hire-talent/requirements');
+    // Navigate to the next step
+    navigate('/hire-talent/time-commitment'); // Change this to the actual path for the next step
   };
+
   return (
     <div className="container mx-auto py-12 px-6">
-      <section className="bg-gray-100 p-8 rounded-lg max-w-lg mx-auto">
+      <section className="bg-gray-100 p-8 rounded-lg  max-w-lg mx-auto">
         <h2 className="text-3xl font-semibold text-brand-blue mb-6">
-          Thanks for your interest in hiring through EthioGurus!
+          How long do you need the developer?
         </h2>
-        <p className="text-lg text-brand-gray-dark mb-6">
-          Before we get started, we'd like to ask a few questions to better understand your business needs.
-        </p>
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           <fieldset>
             <legend className="text-xl font-medium text-brand-blue mb-4">
-              What role would you like to hire?
+              Please select the duration
             </legend>
             <div className="flex flex-col gap-4">
               <label className="flex items-center gap-3">
                 <input
                   type="radio"
-                  name="role"
-                  value="Developers"
-                  checked={selectedRole === 'Developers'}
-                  onChange={handleRoleChange}
+                  name="duration"
+                  value="Less than 1 week"
+                  checked={selectedDuration === 'Less than 1 week'}
+                  onChange={handleDurationChange}
                   className="form-radio text-brand-blue"
                 />
                 <span className="text-lg text-brand-gray-dark">
-                  Developers (Software Developers, Data Scientists, DevOps, and QA)
+                  Less than 1 week
                 </span>
               </label>
               <label className="flex items-center gap-3">
                 <input
                   type="radio"
-                  name="role"
-                  value="Designers"
-                  checked={selectedRole === 'Designers'}
-                  onChange={handleRoleChange}
+                  name="duration"
+                  value="1 to 4 weeks"
+                  checked={selectedDuration === '1 to 4 weeks'}
+                  onChange={handleDurationChange}
                   className="form-radio text-brand-blue"
                 />
                 <span className="text-lg text-brand-gray-dark">
-                  Designers (Web, Mobile, UI/UX, Branding, and Visual Designers)
+                  1 to 4 weeks
                 </span>
               </label>
               <label className="flex items-center gap-3">
                 <input
                   type="radio"
-                  name="role"
-                  value="Marketing Experts"
-                  checked={selectedRole === 'Marketing Experts'}
-                  onChange={handleRoleChange}
+                  name="duration"
+                  value="1 to 3 months"
+                  checked={selectedDuration === '1 to 3 months'}
+                  onChange={handleDurationChange}
                   className="form-radio text-brand-blue"
                 />
                 <span className="text-lg text-brand-gray-dark">
-                  Marketing Experts (Growth Marketing Expert, Content Marketing Strategist, Digital Marketers, and SEO Specialist)
+                  1 to 3 months
                 </span>
               </label>
               <label className="flex items-center gap-3">
                 <input
                   type="radio"
-                  name="role"
-                  value="Project Managers"
-                  checked={selectedRole === 'Project Managers'}
-                  onChange={handleRoleChange}
+                  name="duration"
+                  value="3 to 6 months"
+                  checked={selectedDuration === '3 to 6 months'}
+                  onChange={handleDurationChange}
                   className="form-radio text-brand-blue"
                 />
                 <span className="text-lg text-brand-gray-dark">
-                  Project Managers (Digital Project Managers, IT Project Managers, Scrum Masters, and Agile Coaches)
+                  3 to 6 months
                 </span>
               </label>
               <label className="flex items-center gap-3">
                 <input
                   type="radio"
-                  name="role"
-                  value="Product Managers"
-                  checked={selectedRole === 'Product Managers'}
-                  onChange={handleRoleChange}
+                  name="duration"
+                  value="Longer than 6 months"
+                  checked={selectedDuration === 'Longer than 6 months'}
+                  onChange={handleDurationChange}
                   className="form-radio text-brand-blue"
                 />
                 <span className="text-lg text-brand-gray-dark">
-                  Product Managers (Digital Product Managers, Product Owners, and Business Analysts)
+                  Longer than 6 months
                 </span>
               </label>
               <label className="flex items-center gap-3">
                 <input
                   type="radio"
-                  name="role"
-                  value="Finance Experts"
-                  checked={selectedRole === 'Finance Experts'}
-                  onChange={handleRoleChange}
+                  name="duration"
+                  value="I'll decide later"
+                  checked={selectedDuration === "I'll decide later"}
+                  onChange={handleDurationChange}
                   className="form-radio text-brand-blue"
                 />
                 <span className="text-lg text-brand-gray-dark">
-                  Finance Experts (Financial Modelers, Fundraising Advisors, M&A and FP&A Experts)
+                  I'll decide later
                 </span>
               </label>
             </div>
@@ -121,4 +119,4 @@ const HireATalent = () => {
   );
 };
 
-export default HireATalent;
+export default HiringNeeds;

@@ -41,15 +41,16 @@ const Layout = ({ children }) => {
           <nav className="hidden md:flex space-x-4">
             <Link to="/services" className="hover:underline text-brand-light hover:text-brand-green">Services</Link>
             <Link to="/clients" className="hover:underline text-brand-light hover:text-brand-green">Clients</Link>
-            <Link to="/about" className="hover:underline text-brand-light hover:text-brand-green">About Us</Link>
             <Link to="/contact" className="hover:underline text-brand-light hover:text-brand-green">Contact</Link>
+            <Link to="/about" className="hover:underline text-brand-light hover:text-brand-green">About Us</Link>
+
           </nav>
         </div>
 
         {/* Top-right navigation */}
         <nav className="hidden md:flex space-x-4">
           <Link to="/apply-freelancer" className="hover:underline text-brand-light hover:text-brand-green">Apply as a Freelancer</Link>
-          <Link to="/apply-client" className="hover:underline text-brand-light hover:text-brand-green">Hire a Talent</Link>
+          <Link to="/hire-talent" className="hover:underline text-brand-light hover:text-brand-green">Hire a Talent</Link>
           <Link to="/login" className="hover:underline text-brand-light hover:text-brand-green">Login</Link>
         </nav>
 
@@ -67,8 +68,9 @@ const Layout = ({ children }) => {
               <nav className="flex flex-col space-y-4">
                 <Link to="/services" className="hover:underline text-brand-light hover:text-brand-green" onClick={() => setIsMenuOpen(false)}>Services</Link>
                 <Link to="/clients" className="hover:underline text-brand-light hover:text-brand-green" onClick={() => setIsMenuOpen(false)}>Clients</Link>
-                <Link to="/about" className="hover:underline text-brand-light hover:text-brand-green" onClick={() => setIsMenuOpen(false)}>About Us</Link>
                 <Link to="/contact" className="hover:underline text-brand-light hover:text-brand-green" onClick={() => setIsMenuOpen(false)}>Contact</Link>
+                <Link to="/about" className="hover:underline text-brand-light hover:text-brand-green" onClick={() => setIsMenuOpen(false)}>About Us</Link>
+
               </nav>
               <div className="flex flex-col items-center space-y-4 mt-8">
                 <button className="text-brand-light hover:text-brand-green" onClick={() => { window.location.href = '/apply-freelancer'; setIsMenuOpen(false); }}>Apply as a Freelancer</button>
