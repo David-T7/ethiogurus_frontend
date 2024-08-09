@@ -1,44 +1,52 @@
 import React from 'react';
-import { FaEnvelope, FaPhone, FaMapMarkerAlt } from 'react-icons/fa'; // Import icons
+import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaUser, FaComment } from 'react-icons/fa'; // Import icons
 
 const ContactPage = () => {
   return (
     <div className="container mx-auto py-12 px-6">
-      {/* Contact Form */}
+      {/* Contact Form and Details Section */}
       <div className="flex flex-col lg:flex-row gap-12">
-        <section className="flex-1 bg-gray-100 p-8 rounded-lg shadow-lg">
-          <h2 className="text-3xl font-semibold text-center text-brand-blue mb-6">Contact Us</h2>
+        
+        {/* Contact Form */}
+        <section className="flex-1  p-8 rounded-lg">
+          <h2 className="text-3xl font-bold text-center text-brand-blue mb-6">Contact Us</h2>
           <form className="flex flex-col gap-6">
             <div className="flex flex-col gap-2">
-              <label htmlFor="name" className="text-lg font-medium text-brand-blue">Name</label>
+              <label htmlFor="name" className="text-lg font-medium text-brand-blue flex items-center gap-2">
+                <FaUser className="text-brand-blue" /> Name
+              </label>
               <input
                 id="name"
                 type="text"
                 placeholder="Your Name"
-                className="p-3 border rounded-lg"
+                className="p-4 border border-brand-blue rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-blue"
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label htmlFor="email" className="text-lg font-medium text-brand-blue">Email</label>
+              <label htmlFor="email" className="text-lg font-medium text-brand-blue flex items-center gap-2">
+                <FaEnvelope className="text-brand-blue" /> Email
+              </label>
               <input
                 id="email"
                 type="email"
                 placeholder="Your Email"
-                className="p-3 border rounded-lg"
+                className="p-4 border border-brand-blue rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-blue"
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label htmlFor="message" className="text-lg font-medium text-brand-blue">Message</label>
+              <label htmlFor="message" className="text-lg font-medium text-brand-blue flex items-center gap-2">
+                <FaComment className="text-brand-blue" /> Message
+              </label>
               <textarea
                 id="message"
                 rows="5"
                 placeholder="Your Message"
-                className="p-3 border rounded-lg"
+                className="p-4 border border-brand-blue rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-blue"
               ></textarea>
             </div>
             <button
               type="submit"
-              className="bg-brand-blue text-white p-3 rounded-lg hover:bg-brand-dark-blue transition"
+              className="bg-brand-blue text-white p-4 rounded-lg hover:bg-brand-dark-blue transition font-medium"
             >
               Send Message
             </button>
@@ -46,8 +54,8 @@ const ContactPage = () => {
         </section>
 
         {/* Contact Details */}
-        <section className="flex-1 bg-gray-100 p-8 rounded-lg shadow-lg">
-          <h2 className="text-3xl font-semibold text-center text-brand-blue mb-6">Get in Touch</h2>
+        <section className="flex-1 p-8 rounded-lg">
+          <h2 className="text-3xl font-bold text-center text-brand-blue mb-6">Get in Touch</h2>
           <div className="flex flex-col gap-6">
             <div className="flex items-center gap-4">
               <FaEnvelope className="text-3xl text-brand-blue" />
@@ -74,13 +82,12 @@ const ContactPage = () => {
         </section>
       </div>
 
-      {/* Optional: Map Section */}
+      {/* Map Section */}
       <section className="mt-12">
-        <h2 className="text-3xl font-semibold text-center text-brand-blue mb-6">Our Location</h2>
-        <div className="relative w-full h-64">
-          {/* Replace with an actual map embed or component */}
+        <h2 className="text-3xl font-bold text-center text-brand-blue mb-6">Our Location</h2>
+        <div className="relative w-full h-64 rounded-lg overflow-hidden shadow-lg">
           <iframe
-            className="absolute inset-0 w-full h-full"
+            className="absolute inset-0 w-full h-full border-none"
             src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3153.8377168654294!2d-122.41941568468117!3d37.77492927975981!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8085805e1c9e9147%3A0x7a5a4f2a5e5f8b7b!2sSan%20Francisco%2C%20CA%2C%20USA!5e0!3m2!1sen!2sin!4v1624923452807!5m2!1sen!2sin"
             allowFullScreen=""
             loading="lazy"

@@ -17,6 +17,8 @@ const LandingPage = () => {
           managers, and project managers. Leading Ethiopian companies hire
           EthioGuru freelancers for their most crucial projects.
         </p>
+
+          {/* why you choose us Section */}
         <div className="flex flex-col items-center max-w-4xl mx-auto mb-12">
           <h2 className="text-4xl font-extrabold mb-6 text-white text-center">
             Why Choose EthioGuru?
@@ -64,7 +66,7 @@ const LandingPage = () => {
           </div>
           <div className="mt-8">
             <Link
-              to="/apply-client"
+              to="/hire-talent"
               className="flex items-center justify-center bg-brand-green text-white px-6 py-3 rounded-lg transition-transform duration-300 transform hover:scale-105 hover:shadow-lg hover:bg-green-600"
             >
               <FaUserPlus className="mr-2" /> Hire a Talent

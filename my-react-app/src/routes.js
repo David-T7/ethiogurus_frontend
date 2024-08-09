@@ -5,17 +5,20 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
 import LandingPage from './components/landingpage/LandingPage';
 import LoginPage from './components/LoginPage';
-import ApplyFreelancer from './components/ApplyFreelancer';
-import ApplyClient from './components/ApplyClient';
+import ApplyFreelancer from './components/freealncerpage/ApplyFreelancer';
+import ApplyClient from './components/clientpage/ApplyClient';
 import AboutPage from './components/AboutPage';
 import ContactPage from './components/ContactPage';
 import ServicePage from './components/Services';
-import ClientsPage from './components/ClientsPage';
-import HiringNeeds from './components/HiringNeeds';
-import TimeCommitment from './components/TimeCommitment';
-import Skills from './components/Skills';
-import FinalizePage from './components/FinalizePage ';
+import ClientsPage from './components/clientpage/ClientsPage';
+import HiringNeeds from './components/clientpage/HiringNeeds';
+import TimeCommitment from './components/clientpage/TimeCommitment';
+import Skills from './components/clientpage/Skills';
+import FinalizePage from './components/clientpage/FinalizePage ';
 import ForgotPasswordPage from './components/ForgotPasswordPage ';
+import ProjectDescriptionPage from './components/clientpage/ProjectDescription';
+import TalentListPage from './components/clientpage/talentList';
+import FreelancerDetailPage from './components/clientpage/FreelancerDetailPage';
 const RoutesConfig = () => {
   return (
     <Router>
@@ -27,8 +30,11 @@ const RoutesConfig = () => {
         <Route path="/hire-talent" element={<Layout><ApplyClient /></Layout>} />
         <Route path="/hire-talent/requirements" element={<Layout><HiringNeeds /></Layout>} />
         <Route path="/hire-talent/time-commitment" element={<Layout><TimeCommitment /></Layout>} />
-        <Route path="/hire-talent/skiils" element={<Layout><Skills /></Layout>} />
+        <Route path="/hire-talent/skills" element={<Layout><Skills /></Layout>} />
         <Route path="/hire-talent/finalize" element={<Layout><FinalizePage /></Layout>} />
+        <Route path="/hire-talent/talent-list" element={<Layout><TalentListPage /></Layout>} />
+        <Route path="/hire-talent/talent-list/:freelancerId" element={<Layout><FreelancerDetailPage /></Layout>} />
+        <Route path="/hire-talent/project-description" element={<Layout><ProjectDescriptionPage /></Layout>} />
         <Route path="/about" element={<Layout><AboutPage /></Layout>} />
         <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
         <Route path="/services" element={<Layout><ServicePage /></Layout>} />
