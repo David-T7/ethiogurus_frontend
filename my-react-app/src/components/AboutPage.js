@@ -21,7 +21,7 @@ const AboutUs = () => {
         />
         <div className="absolute inset-0 bg-black opacity-60 flex items-center justify-center">
           <div className="text-white text-center p-6">
-            <p className="text-xl lg:text-3xl mt-2">
+            <p className="text-xl lg:text-3xl font-light mt-2">
               We connect top talent in Ethiopia with top organizations.
             </p>
           </div>

@@ -35,7 +35,7 @@ const ProjectDescriptionPage = () => {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Enter project description"
-              className="p-3 border border-gray-300 rounded-lg w-full h-40 resize-none"
+              className="p-3 border  border-brand-blue rounded-lg w-full focus:outline-none focus:ring-1 h-40 focus:ring-brand-blue"
             />
           </div>
           <div className="border-t border-gray-300 pt-6">

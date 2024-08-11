@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FaFileAlt, FaUser, FaEnvelope, FaPhone, FaPencilAlt, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 const positions = [
   'React Developer',
@@ -22,6 +23,8 @@ const ApplyAsFreelancer = () => {
     confirmPassword: '',
     resume: null,
   });
+  const navigate = useNavigate();
+
 
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
@@ -43,7 +46,7 @@ const ApplyAsFreelancer = () => {
       return;
     }
     // Handle form submission logic here
-    alert('Application submitted successfully!');
+    navigate('/tests'); // Change this to the actual path for the next step
   };
 
   return (
@@ -76,7 +79,6 @@ const ApplyAsFreelancer = () => {
               value={formData.name}
               onChange={handleChange}
               className="p-3 border rounded-lg border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
-              required
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -92,7 +94,6 @@ const ApplyAsFreelancer = () => {
               value={formData.email}
               onChange={handleChange}
               className="p-3 border rounded-lg border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
-              required
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -106,7 +107,6 @@ const ApplyAsFreelancer = () => {
               value={formData.position}
               onChange={handleChange}
               className="p-3 border rounded-lg border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
-              required
             >
               <option value="">Select a position</option>
               {positions.map((position) => (
@@ -129,7 +129,6 @@ const ApplyAsFreelancer = () => {
               value={formData.password}
               onChange={handleChange}
               className="p-3 border rounded-lg border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
-              required
             />
             <button
               type="button"
@@ -152,7 +151,6 @@ const ApplyAsFreelancer = () => {
               value={formData.confirmPassword}
               onChange={handleChange}
               className="p-3 border rounded-lg border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
-              required
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -167,7 +165,6 @@ const ApplyAsFreelancer = () => {
               accept=".pdf,.doc,.docx"
               onChange={handleFileChange}
               className="p-3 border rounded-lg border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
-              required
             />
           </div>
           <button

@@ -11,8 +11,11 @@ module.exports = {
         'brand-orange': '#FF6600',
         'brand-gray-light': '#F2F2F2',
         'brand-gray-dark': '#333333',
+        'brand-dark-blue': '#1E40AF',
+        'brand-dark-green': '#065f46',
         'brand-teal': '#009688',
-        'brand-purple': '#673ab7'
+        'brand-purple': '#673ab7',
+        'brand-light-blue': '#add8e6', 
       },
       animation: {
         fadeIn: 'fadeIn 1s ease-out',

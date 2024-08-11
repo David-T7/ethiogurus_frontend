@@ -93,7 +93,7 @@ const TalentListPage = () => {
 
   const handleContactClick = (e, id) => {
     e.stopPropagation(); // Prevents the contact button click event from propagating
-    handleRedirectToSignup();
+    navigate('/contact-freelancer/{id}')
   };
 
   return (
@@ -102,7 +102,7 @@ const TalentListPage = () => {
         <h2 className="text-3xl font-semibold text-brand-blue mb-6">
           Here are some freelancers matched based on your project needs. 
           <br />
-          <span className="text-brand-blue underline hover:text-brand-green cursor-pointer" onClick={handleRedirectToSignup}>
+          <span className="text-brand-blue underline hover:bg-brand-dark-blue cursor-pointer" onClick={handleRedirectToSignup}>
             Sign up
           </span> 
           <span> to see the full list.</span>
