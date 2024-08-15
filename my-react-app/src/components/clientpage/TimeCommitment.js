@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate ,  useLocation } from 'react-router-dom';
 
 const TimeCommitment = () => {
   const [selectedCommitment, setSelectedCommitment] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleCommitmentChange = (e) => {
     setSelectedCommitment(e.target.value);
@@ -11,8 +12,13 @@ const TimeCommitment = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Navigate to the next step
-    navigate('/hire-talent/skills'); // Update this path as needed
+    let nextPath = '/hire-talent/skills'; // Default path for Layout
+    // Check current route to determine the next path
+    if (location.pathname.startsWith('/create-project')) {
+      nextPath = '/create-project/skills'; // Update this path if needed
+    }
+    // Navigate to the determined next path
+    navigate(nextPath);
   };
 
   const handleBack = () => {

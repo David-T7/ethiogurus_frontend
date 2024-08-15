@@ -1,0 +1,55 @@
+// ProjectSelectionPage.js
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FaPlus } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
+
+const ProjectSelectionPage = ({ projects }) => {
+  const [selectedProject, setSelectedProject] = useState(null);
+  const navigate = useNavigate();
+  const handleProjectSelect = (project) => {
+    setSelectedProject(project);
+  };
+
+  const handleConfirm = (id) => {
+    navigate("/projects/{id}/create-contract") 
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto bg-white shadow-xl rounded-lg p-8 mt-8">
+      <h1 className="text-3xl font-thin mb-6 text-brand-dark-blue">Select a Project</h1>
+      <div className="flex justify-end items-center mb-8">
+        <Link to="/create-project" className="inline-flex items-center gap-3  py-2 px-4 bg-blue-600 text-white rounded-lg shadow-lg text-xl font-semibold transition-all duration-300 hover:bg-blue-700 hover:shadow-xl">
+          <FaPlus className="text-2xl" /> Create Project
+        </Link>
+        </div>
+      <ul className="space-y-4">
+        {projects.map((project) => (
+          <li
+            key={project.id}
+            onClick={() => handleProjectSelect(project)}
+            className={`p-6 border rounded-lg cursor-pointer hover:shadow-lg transition-transform transform hover:scale-105 ${
+              selectedProject && selectedProject.id === project.id
+                ? 'bg-blue-50 border-blue-500'
+                : 'border-gray-300'
+            }`}
+          >
+            <h2 className="text-xl font-semibold text-gray-900">{project.name}</h2>
+            <p className="text-gray-600 mt-2">{project.description}</p>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-6 flex justify-end">
+        <button
+          onClick={handleConfirm}
+          disabled={!selectedProject}
+          className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+        >
+          Confirm Selection
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default ProjectSelectionPage;

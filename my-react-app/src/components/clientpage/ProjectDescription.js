@@ -1,15 +1,21 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate , useLocation } from 'react-router-dom';
 import { FaInfoCircle } from 'react-icons/fa';
 
 const ProjectDescriptionPage = () => {
   const [description, setDescription] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Navigate to the next step
-    navigate('/hire-talent/talent-list'); // Change this to the actual path for the next step
+    let nextPath = '/hire-talent/talent-list'; // Default path for Layout
+    // Check current route to determine the next path
+    if (location.pathname.startsWith('/create-project')) {
+      nextPath = '/create-project/talent-list'; // Update this path if needed
+    }
+    // Navigate to the determined next path
+    navigate(nextPath);
   };
 
   const handleBack = () => {

@@ -99,12 +99,11 @@ const TestList = () => {
 
 const TestsPage = () => {
   return (
-    <FreelancerProfileLayout>
+
       <div className="container mx-auto px-4 py-10">
         <TestInfo />
         <TestList />
       </div>
-    </FreelancerProfileLayout>
   );
 };
 

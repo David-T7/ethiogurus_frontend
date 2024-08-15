@@ -46,7 +46,7 @@ const ApplyAsFreelancer = () => {
       return;
     }
     // Handle form submission logic here
-    navigate('/tests'); // Change this to the actual path for the next step
+    navigate('/home'); // Change this to the actual path for the next step
   };
 
   return (

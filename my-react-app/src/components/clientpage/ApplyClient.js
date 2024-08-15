@@ -1,18 +1,23 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate , useLocation } from 'react-router-dom';
 
 const HireATalent = () => {
   const [selectedDuration, setSelectedDuration] = useState('');
   const navigate = useNavigate();
-
+  const location = useLocation();
   const handleDurationChange = (e) => {
     setSelectedDuration(e.target.value);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Navigate to the next step
-    navigate('/hire-talent/time-commitment'); // Change this to the actual path for the next step
+    let nextPath = '/hire-talent/time-commitment'; // Default path for Layout
+    // Check current route to determine the next path
+    if (location.pathname.startsWith('/create-project')) {
+      nextPath = '/create-project/time-commitment'; // Update this path if needed
+    }
+    // Navigate to the determined next path
+    navigate(nextPath);
   };
   return (
     <div className="container mx-auto py-12 px-6">

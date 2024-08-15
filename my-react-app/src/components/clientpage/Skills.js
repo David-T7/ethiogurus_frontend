@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate ,useLocation} from 'react-router-dom';
 
 const recommendedSkills = [
   'JavaScript', 'Python', 'React', 'Node.js', 'Django', 'Java', 'Ruby on Rails', 
@@ -18,6 +18,8 @@ const Skills = () => {
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [filteredSkills, setFilteredSkills] = useState([]);
   const navigate = useNavigate();
+  const location = useLocation();
+
 
   const handleSearchChange = (e) => {
     const term = e.target.value;
@@ -51,10 +53,16 @@ const Skills = () => {
     );
   };
 
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Navigate to the next step
-    navigate('/hire-talent/project-description');
+    let nextPath = '/hire-talent/project-description'; // Default path for Layout
+    // Check current route to determine the next path
+    if (location.pathname.startsWith('/create-project')) {
+      nextPath = '/create-project/project-description'; // Update this path if needed
+    }
+    // Navigate to the determined next path
+    navigate(nextPath);
   };
 
   const handleBack = () => {

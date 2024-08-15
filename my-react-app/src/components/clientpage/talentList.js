@@ -81,10 +81,10 @@ const talentData = [
 const TalentListPage = () => {
   const navigate = useNavigate();
   const blurlimit = 3;
-
   const handleRedirectToSignup = () => {
     navigate('/hire-talent/finalize');
   };
+
 
   const handleCardClick = (e, id) => {
     e.stopPropagation(); // Prevents the card click event from propagating
