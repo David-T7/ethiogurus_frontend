@@ -26,13 +26,13 @@ const ProjectDescriptionPage = () => {
   return (
     <div className="container mx-auto py-12 px-6">
       <section className="bg-gray-100 p-8 rounded-lg max-w-lg mx-auto">
-        <h2 className="text-3xl font-semibold text-brand-blue mb-6">
+        <h2 className="text-3xl font-normal text-brand-blue mb-6">
           Project Description
         </h2>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           <div>
-            <label htmlFor="description" className="block text-lg font-medium text-brand-blue mb-2">
+            <label htmlFor="description" className="block text-lg font-normal text-brand-blue mb-2">
               <FaInfoCircle className="inline mr-2" />
               Say something about the project
             </label>
@@ -41,7 +41,7 @@ const ProjectDescriptionPage = () => {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Enter project description"
-              className="p-3 border  border-brand-blue rounded-lg w-full focus:outline-none focus:ring-1 h-40 focus:ring-brand-blue"
+              className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none h-40 focus:border-blue-500"
             />
           </div>
           <div className="border-t border-gray-300 pt-6">

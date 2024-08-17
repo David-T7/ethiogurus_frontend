@@ -68,7 +68,7 @@ const ContactUser = () => {
             className="w-12 h-12 rounded-full border-2 border-gray-300"
           />
           <div>
-            <h1 className="text-2xl font-bold">{user.name}</h1>
+            <h1 className="text-2xl font-normal">{user.name}</h1>
           </div>
         </div>
       </div>

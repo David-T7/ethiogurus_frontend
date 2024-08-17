@@ -46,16 +46,12 @@ const ProjectsPage = () => {
   }
 
   const handleEditProject = (projectId) => {
-    console.log('Edit project', projectId);
-  };
-
-  const handleDeleteProject = (projectId) => {
-    console.log('Delete project', projectId);
+    navigate('/project/{projectId}/edit');
   };
 
   return (
     <ClientLayout>
-      <div className="max-w-4xl mx-auto p-6 mt-6 bg-white shadow-lg rounded-lg">
+      <div className="max-w-2xl mx-auto p-6 mt-6 bg-white shadow-lg rounded-lg">
         <h1 className="text-3xl font-thin text-brand-blue mb-8 text-center">Your Projects</h1>
 
         <div className="flex justify-end items-center mb-8">
@@ -81,20 +77,6 @@ const ProjectsPage = () => {
                   <div>
                     <h3 className="text-2xl font-semibold">{project.title}</h3>
                     <p className="text-sm mt-2">{project.description}</p>
-                  </div>
-                  <div className="flex space-x-4">
-                    <button
-                      onClick={() => handleEditProject(project.id)}
-                      className="text-gray hover:text-brand-dark-blue transition"
-                    >
-                      <FaEdit className="text-xl" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteProject(project.id)}
-                      className="text-red-400 hover:text-red-600 transition"
-                    >
-                      <FaTrashAlt className="text-xl" />
-                    </button>
                   </div>
                 </div>
                 <div className="flex justify-between items-center mt-4">

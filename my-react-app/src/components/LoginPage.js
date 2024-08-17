@@ -57,7 +57,7 @@ const LoginPage = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
-              className="p-3 border border-brand-blue rounded-lg w-full focus:outline-none focus:ring-1 focus:ring-brand-blue"
+              className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
               required
             />
           </div>
@@ -72,7 +72,7 @@ const LoginPage = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
-              className="p-3 border border-brand-blue rounded-lg w-full focus:outline-none focus:ring-1 focus:ring-brand-blue"
+              className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
               required
             />
             <button
@@ -80,7 +80,7 @@ const LoginPage = () => {
               onClick={() => setPasswordVisible(!passwordVisible)}
               className="absolute right-3 top-10 text-gray-600 hover:text-gray-800"
             >
-              {passwordVisible ? <FaEyeSlash /> : <FaEye />}
+              {!passwordVisible ? <FaEyeSlash /> : <FaEye />}
             </button>
           </div>
           <div className="flex items-center justify-between mb-6">

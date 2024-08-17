@@ -19,7 +19,7 @@ const mockContractsData = [
     id: 2,
     title: 'Mobile App Contract',
     client: 'Client B',
-    status: 'Accepted',
+    status: 'Pending',
     deadline: '2024-10-15',
     projectFee: '$8000',
     milestones: [
@@ -44,7 +44,7 @@ const ContractsList = () => {
 
   return (
     <div className="max-w-2xl mx-auto p-8 mt-8">
-      <h1 className="text-3xl font-normal text-brand-dark-blue mb-6">Contracts</h1>
+      <h1 className="text-3xl font-thin text-brand-dark-blue mb-6">Contracts</h1>
       {contracts.map((contract) => (
         <div key={contract.id} className="border border-gray-200 rounded-lg p-4 mb-4 bg-gray-50 shadow-sm">
           <div className="flex items-center justify-between mb-2">

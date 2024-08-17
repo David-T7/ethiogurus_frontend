@@ -7,6 +7,7 @@ const mockContractData = {
   projectFee: 1000,
   contractTerms: "This is a sample contract term.",
   isMilestoneBased: true,
+  status:"In Dispute",
   milestones: [
     { title: 'Initial Payment', deadline: '2024-08-30', amount: 500 },
     { title: 'Final Payment', deadline: '2024-09-30', amount: 500 },
@@ -26,16 +27,6 @@ const ContractDetailsPage = () => {
     navigate("/contracts/{id}/edit")
   };
 
-  const handleTerminate = () => {
-    console.log('Contract terminated:', contractId);
-    // Simulate contract termination
-  };
-
-  const handleDispute = () => {
-    console.log('Dispute initiated:', contractId);
-    // Simulate initiating a dispute
-  };
-
   if (!contract) return <div>Loading...</div>;
 
   const sortedMilestones = [...contract.milestones].sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
@@ -45,19 +36,19 @@ const ContractDetailsPage = () => {
       <h1 className="text-3xl font-thin mb-6 text-brand-dark-blue">Contract Details</h1>
 
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Project Fee</h2>
+        <h2 className="text-xl font-normal text-gray-800 mb-4">Project Fee</h2>
           <p className="text-gray-600">{contract.projectFee}</p>
       </div>
 
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Contract Terms</h2>
+        <h2 className="text-xl font-normal text-gray-800 mb-4">Contract Terms</h2>
        
           <p className="text-gray-600">{contract.contractTerms}</p>
       </div>
 
       {contract.isMilestoneBased && (
         <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Milestones</h2>
+          <h2 className="text-xl font-normal text-gray-800 mb-4">Milestones</h2>
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-[50%] border-t border-gray-300"></div>
@@ -69,7 +60,7 @@ const ContractDetailsPage = () => {
                     {index + 1}
                   </div>
                   <div className="ml-8 bg-white p-4 border border-gray-200 rounded-lg shadow-md">
-                    <h3 className="text-lg font-semibold text-gray-800">{milestone.title}</h3>
+                    <h3 className="text-xl font-normal text-gray-800">{milestone.title}</h3>
                     <p className="text-gray-600">Deadline: {milestone.deadline}</p>
                     <p className="text-gray-600">Amount: ${milestone.amount}</p>
                   </div>
@@ -80,25 +71,13 @@ const ContractDetailsPage = () => {
         </div>
       )}
 
-      <div className="mt-6 flex justify-left space-x-4">
+      <div className="mt-6 ml-10 flex justify-left space-x-4">
        
             <button
               onClick={handleUpdate}
-              className="bg-yellow-600 text-white py-2 px-4 rounded-lg hover:bg-yellow-700 transition"
+              className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition"
             >
               <FaEdit className="inline mr-2" /> Edit Contract
-            </button>
-            <button
-              onClick={handleTerminate}
-              className="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition"
-            >
-              <FaTrash className="inline mr-2" /> Terminate Contract
-            </button>
-            <button
-              onClick={handleDispute}
-              className="bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition"
-            >
-              <FaExclamationTriangle className="inline mr-2" /> Dispute Contract
             </button>
       </div>
     </div>

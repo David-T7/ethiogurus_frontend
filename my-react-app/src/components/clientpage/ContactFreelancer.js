@@ -97,7 +97,7 @@ const ContactFreelancer = () => {
                 className="w-12 h-12 rounded-full border-2 border-gray-300"
               />
               <div>
-                <h1 className="text-2xl font-bold">{freelancer.name}</h1>
+                <h1 className="text-2xl font-normal">{freelancer.name}</h1>
                 <p className="text-gray-500">Freelancer</p>
               </div>
             </div>

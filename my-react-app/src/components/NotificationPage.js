@@ -46,12 +46,12 @@ const NotificationPage = () => {
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen p-6">
-      <header className="text-center mb-8">
+    <div className="bg-gray-100 min-h-screen p-">
+      <header className="text-center mb-8 mt-2">
         <p className="text-lg text-gray-600">Stay updated with your recent alerts and messages.</p>
       </header>
 
-      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg border border-gray-200 p-6">
+      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg border border-gray-200">
         <ul>
           {notifications.length === 0 ? (
             <p className="text-gray-600 text-center">No new notifications.</p>

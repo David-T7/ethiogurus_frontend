@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 // Mock data for demonstration
 const mockContractsData = {
@@ -12,14 +12,13 @@ const mockContractsData = {
     deadline: '2024-09-01',
     projectFee: '$5000',
     terms: 'The freelancer agrees to deliver the project by the deadline. Payment will be released upon approval of the final deliverable.',
-    milestones: [
-    ],
+    milestones: [],
   },
   2: {
     id: 2,
     title: 'Mobile App Contract',
     client: 'Client B',
-    status: 'Accepted',
+    status: 'Pending',
     description: 'Development of a cross-platform mobile application.',
     deadline: '2024-10-15',
     projectFee: '$8000',
@@ -34,6 +33,7 @@ const mockContractsData = {
 
 const ContractDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [contract, setContract] = useState(null);
 
   useEffect(() => {
@@ -42,11 +42,11 @@ const ContractDetails = () => {
   }, [id]);
 
   const handleAccept = () => {
-   
+    // Replace with API call to accept the contract
   };
 
-  const handleReject = () => {
-    // Replace with API call to reject the contract
+  const handleCounterOffer = () => {
+    navigate(`/counter-offer/${id}`);
   };
 
   if (!contract) {
@@ -55,7 +55,7 @@ const ContractDetails = () => {
 
   return (
     <div className="max-w-2xl mx-auto p-8 mt-8">
-      <h1 className="text-3xl font-normal text-brand-dark-blue mb-6">{contract.title}</h1>
+      <h1 className="text-3xl font-thin text-brand-dark-blue mb-6">{contract.title}</h1>
       <p className="mb-2">Client: {contract.client}</p>
       <p className="mb-2">Deadline: {contract.deadline}</p>
       <p className="mb-2">Project Fee: {contract.projectFee}</p>
@@ -89,10 +89,9 @@ const ContractDetails = () => {
             Accept
           </button>
           <button
-            onClick={handleReject}
-            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-200"
-          >
-            Reject
+            onClick={handleCounterOffer}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-200"          >
+            Counter Offer
           </button>
         </div>
       )}

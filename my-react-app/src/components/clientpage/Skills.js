@@ -73,7 +73,7 @@ const Skills = () => {
   return (
     <div className="container mx-auto py-12 px-6">
       <section className="bg-gray-100 p-8 rounded-lg max-w-lg mx-auto">
-        <h2 className="text-3xl font-semibold text-brand-blue mb-6">
+        <h2 className="text-3xl font-normal text-brand-blue mb-6">
           What skills would you like to see in your new hire?
         </h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -82,8 +82,8 @@ const Skills = () => {
             placeholder="Search for skills..."
             value={searchTerm}
             onChange={handleSearchChange}
-            className="p-3 border border-gray-300 rounded-lg"
-          />
+            className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
+            />
           {filteredSkills.length > 0 && (
             <div className="bg-white border border-gray-300 rounded-lg shadow-md max-h-64 overflow-y-auto mt-0">
               <ul className="list-none p-0 m-0">
@@ -103,7 +103,7 @@ const Skills = () => {
           )}
           {selectedSkills.length > 0 && (
             <div className="mb-6">
-              <h3 className="text-xl font-medium text-brand-blue mb-4">
+              <h3 className="text-xl font-normal text-brand-blue mb-4">
                 Selected Skills
               </h3>
               <div className="flex flex-wrap gap-4">
@@ -125,7 +125,7 @@ const Skills = () => {
             </div>
           )}
           <div className="mb-0">
-            <h3 className="text-xl font-medium text-brand-blue mb-4">
+            <h3 className="text-xl font-normal text-brand-blue mb-4">
               Recommended Skills
             </h3>
             <div className="flex flex-wrap gap-4">

@@ -13,7 +13,7 @@ const LandingPage = () => {
   return (
     <div className="flex flex-col items-center min-h-screen bg-gradient-to-b from-brand-blue to-brand-gray-light p-6">
       <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4 text-white shadow-lg">
+        <h1 className="text-4xl font-normal mb-4 text-white shadow-lg">
           Hire the Top Freelance Talent®
         </h1>
         <p className="text-lg mb-8 text-white shadow-md">
@@ -25,7 +25,7 @@ const LandingPage = () => {
 
         {/* why you choose us Section */}
         <div className="flex flex-col items-center max-w-4xl mx-auto mb-12">
-          <h2 className="text-4xl font-extrabold mb-10 text-white text-center">
+          <h2 className="text-4xl font-normal mb-10 text-white text-center">
             Why Choose EthioGuru?
           </h2>
           <div className="relative w-full">
@@ -97,7 +97,7 @@ const LandingPage = () => {
 
       {/* Hiring Steps */}
       <div className="w-full max-w-4xl mx-auto mb-12">
-        <h2 className="text-3xl font-semibold mb-6 text-center text-brand-blue">
+        <h2 className="text-3xl font-normal mb-6 text-center text-brand-blue">
           How It Works
         </h2>
         <div className="flex flex-col space-y-8">

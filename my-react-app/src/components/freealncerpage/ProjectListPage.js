@@ -42,7 +42,7 @@ const ProjectListPage = () => {
 
   return (
     <div className="max-w-3xl mx-auto p-8 mt-8">
-      <h1 className="text-5xl font-thin mb-8 text-brand-dark-blue text-center">My Projects</h1>
+      <h1 className="text-3xl font-thin mb-8 text-brand-dark-blue text-center">My Projects</h1>
       <div className="p-6">
         {projects.map((project) => (
           <div key={project.id} className="border border-gray-200 rounded-lg p-4 mb-6 bg-gray-50 shadow-sm hover:shadow-md transition-shadow duration-200">

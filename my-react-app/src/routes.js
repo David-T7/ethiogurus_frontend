@@ -36,7 +36,7 @@ import ClientLayout from './components/clientpage/ClientLayoutPage';
 import ClientDashboard from './components/clientpage/ClientDashboard';
 import NotificationPage from './components/NotificationPage';
 import ContractsPage from './components/clientpage/ContractsPage';
-import ContractDetailsPage from './components/clientpage/ContractDetailsPage ';
+import ContractDetailsPage from './components/clientpage/ContractDetailsPage';
 import EditContractPage from './components/clientpage/EditContractPage';
 import FreelancerDashboard from './components/freealncerpage/FreelancerDashboard';
 import FreelancerProfileLayout from './components/freealncerpage/FreelancerLayoutPage';
@@ -47,6 +47,13 @@ import ContractDetails from './components/freealncerpage/ContractDetails';
 import ClientInbox from './components/clientpage/ClientInbox';
 import FreelancerInbox from './components/freealncerpage/FreelancerInbox';
 import ContactUser from './components/contact-user';
+import CounterOfferPage from './components/freealncerpage/submitCounterOffer';
+import FreelancerSettingsPage from './components/freealncerpage/FreelancerSettingsPage';
+import UpdateProfilePage from './components/freealncerpage/UpdateProfilePage';
+import ClientSettingsPages from './components/clientpage/ClientSettingsPage';
+import UpdateProfile from './components/clientpage/UpdateProfilePage';
+import DisputeResponsePage from './components/freealncerpage/DisputeResponsePage';
+import EditProjectPage from './components/clientpage/EditProjectPage';
 const RoutesConfig = () => {
   return (
     <Router>
@@ -70,6 +77,8 @@ const RoutesConfig = () => {
         <Route path="/create-project/skills" element={<ClientLayout><Skills /></ClientLayout>} />
         <Route path="/create-project/talent-list" element={<ClientLayout><TalentListPage /></ClientLayout>} />
         <Route path="/dashboard" element={<ClientLayout><ClientDashboard /></ClientLayout>} />
+        <Route path="/settings" element={<ClientLayout><ClientSettingsPages /> </ClientLayout>} />        
+        <Route path="/profile-update" element={<ClientLayout><UpdateProfile/> </ClientLayout>} />        
         <Route path="/create-project/project-description" element={<ClientLayout><ProjectDescriptionPage /></ClientLayout>} />
         <Route path="/hire-talent/requirements" element={<Layout><HiringNeeds /></Layout>} />
         <Route path="/hire-talent/time-commitment" element={<Layout><TimeCommitment /></Layout>} />
@@ -79,8 +88,9 @@ const RoutesConfig = () => {
         <Route path="/inbox" element={<ClientInbox />} />
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/projects/:id" element={<ProjectDetailPage />} />
+        <Route path="/project/:id/edit" element={<EditProjectPage />} />
         <Route path="/projects/:id/create-contract" element={<CreateContractPage />} />
-        <Route path="/projects/:id/dispute" element={<DisputePage />} />
+        <Route path="/project/:id/createdispute" element={<DisputePage />} />
         <Route path="/hire-talent/talent-list" element={<Layout><TalentListPage /></Layout>} />
         <Route path="/hire-talent/talent-list/:freelancerId" element={<Layout><FreelancerDetailPage /></Layout>} />
         <Route path="/hire-talent/project-description" element={<Layout><ProjectDescriptionPage /></Layout>} />
@@ -99,6 +109,12 @@ const RoutesConfig = () => {
         <Route path="/mycontracts/:id" element={<FreelancerProfileLayout><ContractDetails /></FreelancerProfileLayout>} />
         <Route path="/messages" element={<FreelancerInbox/>} />
         <Route path="/messages/:id" element={<FreelancerProfileLayout><ContactUser/></FreelancerProfileLayout>} />
+        <Route path="/counter-offer/:id" element={<FreelancerProfileLayout><CounterOfferPage /> </FreelancerProfileLayout>} />
+        <Route path="/setting" element={<FreelancerProfileLayout><FreelancerSettingsPage /> </FreelancerProfileLayout>} />        
+        <Route path="/setting" element={<FreelancerProfileLayout><FreelancerSettingsPage /> </FreelancerProfileLayout>} />        
+        <Route path="/update-profile" element={<FreelancerProfileLayout><UpdateProfilePage /> </FreelancerProfileLayout>} />              
+        <Route path="/notifications" element={<FreelancerProfileLayout><NotificationPage /></FreelancerProfileLayout>} />
+        <Route path="/dispute-response/:id" element={<FreelancerProfileLayout><DisputeResponsePage /></FreelancerProfileLayout>} />
       </Routes>
     </Router>
   );

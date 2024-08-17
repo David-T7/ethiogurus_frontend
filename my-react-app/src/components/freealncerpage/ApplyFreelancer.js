@@ -78,7 +78,7 @@ const ApplyAsFreelancer = () => {
               placeholder="Your Name"
               value={formData.name}
               onChange={handleChange}
-              className="p-3 border rounded-lg border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
+              className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -93,7 +93,7 @@ const ApplyAsFreelancer = () => {
               placeholder="Your Email"
               value={formData.email}
               onChange={handleChange}
-              className="p-3 border rounded-lg border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
+              className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -106,7 +106,7 @@ const ApplyAsFreelancer = () => {
               name="position"
               value={formData.position}
               onChange={handleChange}
-              className="p-3 border rounded-lg border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
+              className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
             >
               <option value="">Select a position</option>
               {positions.map((position) => (
@@ -128,7 +128,7 @@ const ApplyAsFreelancer = () => {
               placeholder="Your Password"
               value={formData.password}
               onChange={handleChange}
-              className="p-3 border rounded-lg border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
+              className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
             />
             <button
               type="button"
@@ -150,7 +150,7 @@ const ApplyAsFreelancer = () => {
               placeholder="Confirm Your Password"
               value={formData.confirmPassword}
               onChange={handleChange}
-              className="p-3 border rounded-lg border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
+              className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -164,7 +164,7 @@ const ApplyAsFreelancer = () => {
               type="file"
               accept=".pdf,.doc,.docx"
               onChange={handleFileChange}
-              className="p-3 border rounded-lg border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue"
+              className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
             />
           </div>
           <button

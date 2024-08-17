@@ -4,7 +4,7 @@ import { FaCode, FaPaintBrush, FaChartLine, FaTasks, FaProductHunt, FaBullhorn }
 const LeverageTalentSection = () => {
   return (
     <div className="w-full max-w-6xl mx-auto mb-12">
-      <h2 className="text-3xl font-semibold mb-6 text-white text-center">
+      <h2 className="text-3xl font-normal mb-6 text-white text-center">
         Leverage World-Class Talent
       </h2>
       <p className="text-lg mb-8 text-center text-white">

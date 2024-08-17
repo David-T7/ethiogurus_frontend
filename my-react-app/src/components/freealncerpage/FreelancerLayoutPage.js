@@ -83,7 +83,7 @@ const FreelancerProfileLayout = ({ children }) => {
 
         {/* Top-left branding */}
         <Link
-          to="/"
+          to="/home"
           className="text-xl font-bold md:text-2xl absolute left-6 top-6"
         >
           EthioGurus
@@ -118,8 +118,8 @@ const FreelancerProfileLayout = ({ children }) => {
             )}
           </Link>
           <Link
-            to="/notification"
-            className={getLinkClasses("/notification")}
+            to="/notifications"
+            className={getLinkClasses("/notifications")}
             onClick={() => setIsMenuOpen(false)}
           >
             Notification
@@ -151,7 +151,7 @@ const FreelancerProfileLayout = ({ children }) => {
               <ul className="p-2">
                 <li>
                   <Link
-                    to="/settings"
+                    to="/setting"
                     className="flex items-center gap-2 p-2 text-gray-700 hover:bg-gray-100 rounded"
                   >
                     <FaUserCog /> Settings
@@ -229,8 +229,8 @@ const FreelancerProfileLayout = ({ children }) => {
                     )}
                   </Link>
                   <Link
-                    to="/notification"
-                    className={getLinkClasses("/notification")}
+                    to="/notifications"
+                    className={getLinkClasses("/notifications")}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Notification
@@ -241,15 +241,6 @@ const FreelancerProfileLayout = ({ children }) => {
                     )}
                   </Link>
                 </nav>
-                <button
-                  className="text-brand-light hover:text-brand-green"
-                  onClick={() => {
-                    handleLogout();
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  Logout
-                </button>
               </div>
             </nav>
           </div>

@@ -143,7 +143,7 @@ const ClientLayout = ({ children }) => {
                 </li>
                 <li>
                   <Link
-                    to="/update-profile"
+                    to="/profile-update"
                     className="flex items-center gap-2 p-2 text-gray-700 hover:bg-gray-100 rounded"
                   >
                     <FaUserEdit /> Update Profile

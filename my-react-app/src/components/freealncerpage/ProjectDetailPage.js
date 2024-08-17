@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { FaCheckCircle } from 'react-icons/fa';
+import { useParams , useNavigate} from 'react-router-dom';
+import { FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 
 // Mock data for demonstration
 const mockProjectsData = {
@@ -9,8 +9,7 @@ const mockProjectsData = {
     title: 'Web Development Project',
     description: 'A full-stack web development project.',
     status: 'Active',
-    milestones: [
-    ],
+    milestones: [],
   },
   2: {
     id: 2,
@@ -22,13 +21,23 @@ const mockProjectsData = {
       { id: 2, title: 'Feature Development', status: 'Completed', deadline: '2024-08-15', approvalRequested: true },
     ],
   },
+  3: {
+    id: 3,
+    title: 'E-commerce Platform',
+    description: 'An e-commerce platform for online shopping.',
+    status: 'In Dispute',
+    milestones: [
+      { id: 1, title: 'Design Phase', status: 'Completed', deadline: '2024-06-30', approvalRequested: true },
+      { id: 2, title: 'Development Phase', status: 'In Progress', deadline: '2024-08-30', approvalRequested: false },
+    ],
+  },
   // Add more project data here...
 };
 
 const ProjectDetails = () => {
   const { id } = useParams();
   const [project, setProject] = useState(null);
-
+  const navigate = useNavigate();
   useEffect(() => {
     // Replace with API call to fetch project details by ID
     setProject(mockProjectsData[id]);
@@ -50,6 +59,10 @@ const ProjectDetails = () => {
     alert('Approval requested for the entire project.');
   };
 
+  const handleRespondToDispute = () => {
+    navigate("/dispute-response/{id}")
+  };
+
   if (!project) {
     return <div className="text-center py-8">Loading project details...</div>;
   }
@@ -63,6 +76,21 @@ const ProjectDetails = () => {
         </span>
       </div>
       <p className="text-gray-700 mb-6">{project.description}</p>
+
+      {/* Respond to Dispute Button */}
+      {project.status === 'In Dispute' && (
+        <div className="mb-6">
+          <p className="font-normal text-red-600 flex items-center">
+            <FaExclamationTriangle className="mr-2" /> This project is currently in dispute.
+          </p>
+          <button
+            onClick={handleRespondToDispute}
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-200 mt-4"
+          >
+            Respond to Dispute
+          </button>
+        </div>
+      )}
 
       {/* Approval Section for Projects without Milestones */}
       {project.milestones.length === 0 && (
@@ -136,8 +164,8 @@ const getProjectStatusStyle = (status) => {
       return 'text-green-600';
     case 'Active':
       return 'text-blue-600';
-    case 'Pending':
-        return 'text-yellow-600';
+    case 'In Dispute':
+      return 'text-red-600';
     default:
       return 'text-gray-500';
   }

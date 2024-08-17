@@ -1,127 +1,100 @@
-import React, { useEffect, useState } from "react";
+// src/components/TestimonialSection.js
+import React, { useState, useEffect } from 'react';
+
+const testimonials = [
+  {
+    text: "EthioGuru helped us find top-notch freelancers who delivered exceptional results on time. Highly recommended!",
+    name: "Client Name 1",
+  },
+  {
+    text: "The quality of talent available on EthioGuru is unmatched. We have successfully completed several projects with their freelancers.",
+    name: "Client Name 2",
+  },
+  {
+    text: "Exceptional service and professionalism. EthioGuru's freelancers are highly skilled and reliable.",
+    name: "Client Name 3",
+  },
+  {
+    text: "Exceptional service and professionalism. EthioGuru's freelancers are highly skilled and reliable.",
+    name: "Client Name 4",
+  },
+  {
+    text: "Exceptional service and professionalism. EthioGuru's freelancers are highly skilled and reliable.",
+    name: "Client Name 5",
+  },
+  {
+    text: "Exceptional service and professionalism. EthioGuru's freelancers are highly skilled and reliable.",
+    name: "Client Name 6",
+  },
+  // Add more testimonials as needed
+];
 
 const TestimonialSection = () => {
-  const testimonials = [
-    {
-      text: "EthioGuru helped us find top-notch freelancers who delivered exceptional results on time. Highly recommended!",
-      name: "Client Name 1",
-    },
-    {
-      text: "The quality of talent available on EthioGuru is unmatched. We have successfully completed several projects with their freelancers.",
-      name: "Client Name 2",
-    },
-    {
-      text: "Exceptional service and professionalism. EthioGuru's freelancers are highly skilled and reliable.",
-      name: "Client Name 3",
-    },
-    {
-      text: "EthioGuru helped us find top-notch freelancers who delivered exceptional results on time. Highly recommended!",
-      name: "Client Name 4",
-    },
-    {
-      text: "The quality of talent available on EthioGuru is unmatched. We have successfully completed several projects with their freelancers.",
-      name: "Client Name 5",
-    },
-    {
-      text: "Exceptional service and professionalism. EthioGuru's freelancers are highly skilled and reliable.",
-      name: "Client Name 6",
-    },
-    {
-      text: "EthioGuru helped us find top-notch freelancers who delivered exceptional results on time. Highly recommended!",
-      name: "Client Name 7",
-    },
-    {
-      text: "The quality of talent available on EthioGuru is unmatched. We have successfully completed several projects with their freelancers.",
-      name: "Client Name 8",
-    },
-    {
-      text: "Exceptional service and professionalism. EthioGuru's freelancers are highly skilled and reliable.",
-      name: "Client Name 9",
-    },
-    {
-      text: "Exceptional service and professionalism. EthioGuru's freelancers are highly skilled and reliable.",
-      name: "Client Name 10",
-    },
-  ];
-
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const testimonialsPerPage = 3;
-  const totalPages = Math.ceil(testimonials.length / testimonialsPerPage);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [testimonialsPerPage, setTestimonialsPerPage] = useState(3); // Default value
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      handleNext();
-    }, 15000);
-    return () => clearInterval(interval);
-  }, []);
+    const updateTestimonialsPerPage = () => {
+      const newTestimonialsPerPage = window.innerWidth < 640 ? 1 : 3;
+      if (newTestimonialsPerPage !== testimonialsPerPage) {
+        setTestimonialsPerPage(newTestimonialsPerPage);
+        // Reset the current page to 0 if it exceeds the number of available pages
+        const newPageCount = Math.ceil(testimonials.length / newTestimonialsPerPage);
+        if (currentPage >= newPageCount) {
+          setCurrentPage(newPageCount - 1);
+        }
+      }
+    };
 
-  const handleNext = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % totalPages);
-  };
+    // Initial check
+    updateTestimonialsPerPage();
 
-  const handlePrev = () => {
-    setCurrentIndex((prevIndex) =>
-      prevIndex === 0 ? totalPages - 1 : prevIndex - 1
-    );
-  };
+    // Add event listener to handle screen resizing
+    window.addEventListener('resize', updateTestimonialsPerPage);
 
-  const handleDotClick = (index) => {
-    setCurrentIndex(index);
+    // Clean up event listener on component unmount
+    return () => window.removeEventListener('resize', updateTestimonialsPerPage);
+  }, [testimonialsPerPage, currentPage]);
+
+  const pagesVisited = currentPage * testimonialsPerPage;
+  const pageCount = Math.ceil(testimonials.length / testimonialsPerPage);
+
+  const handlePageClick = (selected) => {
+    setCurrentPage(selected);
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto mb-12 relative overflow-hidden">
-      <h2 className="text-3xl font-semibold mb-6 text-center text-brand-blue">
-        What Our Clients Say
-      </h2>
-      <div className="relative w-full">
-        <div
-          className="flex transition-transform duration-700 ease-in-out"
-          style={{
-            transform: `translateX(-${currentIndex * 100}%)`,
-            width: `${100}%`,
-          }}
-        >
-          {Array.from({ length: totalPages }).map((_, pageIndex) => (
-            <div
-              key={pageIndex}
-              className="flex w-full flex-shrink-0 justify-between"
-            >
-              {testimonials
-                .slice(
-                  pageIndex * testimonialsPerPage,
-                  (pageIndex + 1) * testimonialsPerPage
-                )
-                .map((testimonial, index) => (
-                  <div
-                    key={index}
-                    className="bg-white p-6 rounded-lg shadow-lg transform transition-transform duration-300 hover:scale-105 hover:shadow-xl w-full mx-2 flex-grow flex-shrink-0"
-                    style={{ maxWidth: "calc(100% / 3 - 16px)" }}
-                  >
-                    <p className="text-brand-gray-dark mb-4">
-                      "{testimonial.text}"
-                    </p>
-                    <p className="text-gray-600 font-semibold">
-                      — {testimonial.name}
+    <section className="py-12">
+      <div className="container mx-auto px-4">
+        <h2 className="text-2xl font-normal text-center text-brand-blue mb-8">What Our Clients Say</h2>
+        <div className="flex flex-wrap -m-4">
+          {testimonials
+            .slice(pagesVisited, pagesVisited + testimonialsPerPage)
+            .map((testimonial, index) => (
+              <div key={index} className="p-4 w-full sm:w-1/2 md:w-1/3 flex">
+                <div className="bg-white rounded-lg shadow-lg p-6 flex flex-col h-full transition-transform duration-500 ease-in-out transform hover:scale-105">
+                  <div className="flex-1">
+                    <p className="text-lg italic text-gray-600">{testimonial.text}</p>
+                    <p className="mt-4 text-gray-800 font-semibold">
+                      {testimonial.name}
                     </p>
                   </div>
-                ))}
-            </div>
+                </div>
+              </div>
+            ))}
+        </div>
+        <div className="flex justify-center mt-6">
+          {Array.from({ length: pageCount }).map((_, index) => (
+            <button
+              key={index}
+              className={`w-3 h-3 mx-1 rounded-full transition-colors duration-300 ${index === currentPage ? 'bg-blue-500' : 'bg-gray-300'}`}
+              onClick={() => handlePageClick(index)}
+              aria-label={`Go to page ${index + 1}`}
+            />
           ))}
         </div>
       </div>
-      <div className="flex justify-center mt-6">
-        {Array.from({ length: totalPages }).map((_, index) => (
-          <div
-            key={index}
-            className={`h-3 w-3 rounded-full mx-2 cursor-pointer ${
-              currentIndex === index ? "bg-brand-blue" : "bg-gray-400"
-            }`}
-            onClick={() => handleDotClick(index)}
-          />
-        ))}
-      </div>
-    </div>
+    </section>
   );
 };
 

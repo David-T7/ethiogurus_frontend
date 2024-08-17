@@ -99,10 +99,10 @@ const TalentListPage = () => {
   return (
     <div className="container mx-auto py-12 px-6">
       <section className="bg-gray-100 p-8 rounded-lg max-w-6xl mx-auto">
-        <h2 className="text-3xl font-semibold text-brand-blue mb-6">
+        <h2 className="text-3xl font-noraml text-brand-blue mb-6">
           Here are some freelancers matched based on your project needs. 
           <br />
-          <span className="text-brand-blue underline hover:bg-brand-dark-blue cursor-pointer" onClick={handleRedirectToSignup}>
+          <span className="text-brand-blue underline hover:text-brand-dark-blue cursor-pointer" onClick={handleRedirectToSignup}>
             Sign up
           </span> 
           <span> to see the full list.</span>

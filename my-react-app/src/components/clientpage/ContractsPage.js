@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaCheckCircle, FaClock, FaTimesCircle } from 'react-icons/fa';
+import { FaCheckCircle, FaClock, FaTimesCircle , FaExclamationCircle  } from 'react-icons/fa';
 
 const mockContractsData = [
   { id: 1, title: 'Web Development Project', status: 'Active', projectFee: 1000 },
   { id: 2, title: 'Mobile App Development', status: 'Completed', projectFee: 2000 },
-  { id: 3, title: 'Django Project', status: 'Pending', projectFee: 1000 },
+  { id: 3, title: 'Django Project', status: 'InDispute', projectFee: 1000 },
 
   // Add more mock contracts as needed
 ];
@@ -28,6 +28,8 @@ const ContractsPage = () => {
         return 'bg-blue-500 text-white';
       case 'Pending':
         return 'bg-yellow-500 text-black';
+      case 'InDispute':
+        return 'bg-red-500 text-black';
       default:
         return 'bg-gray-300 text-black';
     }
@@ -41,6 +43,8 @@ const ContractsPage = () => {
         return <FaCheckCircle />;
       case 'Pending':
         return <FaClock />;
+      case 'InDispute':
+          return <FaExclamationCircle />;
       default:
         return <FaTimesCircle />;
     }
@@ -56,7 +60,7 @@ const ContractsPage = () => {
             <div className="p-6">
               <div className="flex items-center mb-4">
                 <h2 className="text-2xl font-semibold text-gray-800">{contract.title}</h2>
-                <span className={`ml-3 px-2 py-1 text-xs font-semibold rounded-full ${getStatusStyle(contract.status)}`}>
+                <span className={`ml-3 px-2 py-2 text-xs font-semibold rounded-full ${getStatusStyle(contract.status)}`}>
                   {contract.status}
                 </span>
               </div>
@@ -68,11 +72,6 @@ const ContractsPage = () => {
                 >
                   {getStatusIcon(contract.status)} View Details
                 </Link>
-                {contract.status === 'Active' && (
-                  <button className="text-red-600 hover:text-red-800 flex items-center">
-                    <FaTimesCircle className="mr-2" /> Terminate
-                  </button>
-                )}
               </div>
             </div>
           </div>

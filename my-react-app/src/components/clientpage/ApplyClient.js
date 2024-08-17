@@ -22,7 +22,7 @@ const HireATalent = () => {
   return (
     <div className="container mx-auto py-12 px-6">
       <section className="bg-gray-100 p-8 rounded-lg max-w-lg mx-auto">
-        <h2 className="text-3xl font-semibold text-brand-blue mb-6">
+        <h2 className="text-3xl font-normal text-brand-blue mb-6">
           Thanks for your interest in hiring through EthioGurus!
         </h2>
         <p className="text-lg text-brand-gray-dark mb-6">
@@ -30,7 +30,7 @@ const HireATalent = () => {
         </p>
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           <fieldset>
-            <legend className="text-xl font-medium text-brand-blue mb-4">
+            <legend className="text-xl font-normal text-brand-blue mb-4">
             How long do you need the developer?
             </legend>
             <div className="flex flex-col gap-4">

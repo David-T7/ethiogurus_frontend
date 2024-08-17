@@ -11,7 +11,7 @@ const ProjectDetailPage = () => {
   const project = {
     title: 'Website Redesign',
     description: 'Redesign the company website with a modern look and feel.',
-    status: 'In Progress',
+    status: 'Active',
     createdAt: '2024-08-01',
     freelancers: [
       {
@@ -50,8 +50,12 @@ const ProjectDetailPage = () => {
     progress: 40, // Completion percentage
   };
 
+  const handleEditProject = () => {
+    navigate(`/project/${projectId}/edit`);
+  };
+
   const handleCreateDispute = () => {
-    navigate(`/projects/${projectId}/dispute`);
+    navigate(`/project/${projectId}/createdispute`);
   };
 
   const handleApproveMilestone = (milestoneId) => {
@@ -65,35 +69,48 @@ const ProjectDetailPage = () => {
   };
 
   const handleContactFreelancer = (freelancerId) => {
-    navigate(`/contact/${freelancerId}`);
+    navigate(`/contact-freelancer/${freelancerId}`);
   };
 
   return (
     <ClientLayout>
       <div className="max-w-4xl mx-auto p-6 mt-6 bg-brand-gray-light shadow-lg rounded-lg border border-gray-300">
-        <h1 className="text-4xl font-thin text-brand-blue mb-6 text-center">
-          {project.title}
-        </h1>
-
-        <div className="mb-8 p-6">
-          <h2 className="text-xl font-semibold mb-2">Project Details</h2>
-          <p className="text-gray-700 mb-4">{project.description}</p>
-          <div
-            className={`inline-block px-4 py-1 rounded-full text-white ${
-              project.status === 'Completed'
-                ? 'bg-brand-green'
-                : project.status === 'In Progress'
-                ? 'bg-brand-orange'
-                : 'bg-brand-gray-dark'
-            }`}
-          >
-            {project.status}
+        <div className="flex justify-between mb-6">
+          <h1 className="text-4xl font-thin text-brand-blue flex items-center">
+            {project.title}
+            <span
+                  className={`text-4xl font-thin ${ProjeectStatusStyle(
+                    project.status
+                  )}`}
+                  style={{ minWidth: '100px', textAlign: 'center' }}
+                >
+                  ({project.status})
+                </span>
+          </h1>
+          <div className="flex space-x-4">
+            <button
+              onClick={handleEditProject}
+              className="bg-brand-blue text-white font-semibold px-4 py-2 rounded-lg hover:bg-brand-dark-blue transition-transform transform hover:scale-105 shadow-md"
+            >
+              Edit Project
+            </button>
+            <button
+              onClick={handleCreateDispute}
+              className="bg-red-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-red-700 transition-transform transform hover:scale-105 shadow-md"
+            >
+              Create Dispute
+            </button>
           </div>
+        </div>
+
+        <div className="mb-8">
+          <h2 className="text-xl font-normal text-brand-blue mb-2">Project Details</h2>
+          <p className="text-gray-700 mb-4">{project.description}</p>
           <span className="block mt-2 text-sm text-gray-700">Created on: {project.createdAt}</span>
         </div>
 
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-brand-gray-dark mb-4">Freelancers</h2>
+          <h2 className="text-xl font-normal text-brand-blue mb-4">Freelancers</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {project.freelancers.map((freelancer) => (
               <div
@@ -110,7 +127,7 @@ const ProjectDetailPage = () => {
                   <FaUserCircle className="w-12 h-12 text-brand-dark-blue" />
                 )}
                 <div className="ml-4 flex-1">
-                  <h3 className="text-lg font-bold">{freelancer.name}</h3>
+                  <h3 className="text-xl font-normal">{freelancer.name}</h3>
                   <p className="text-sm">{freelancer.role}</p>
                 </div>
                 <button
@@ -125,14 +142,14 @@ const ProjectDetailPage = () => {
         </div>
 
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-brand-gray-dark mb-4">Milestones</h2>
+          <h2 className="text-xl font-normal text-brand-blue mb-4">Milestones</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {project.milestones.map((milestone) => (
               <div
                 key={milestone.id}
                 className="p-6 rounded-lg shadow-md bg-brand-gray-light text-brand-gray-dark"
               >
-                <h3 className="text-lg font-bold mb-2">{milestone.title}</h3>
+                <h3 className="text-lg font-normal mb-2">{milestone.title}</h3>
                 <p className="mb-4">
                   {milestone.completed ? 'Completed' : 'In Progress'}
                 </p>
@@ -144,7 +161,6 @@ const ProjectDetailPage = () => {
                     >
                       Approve
                     </button>
-
                   </div>
                 ) : (
                   <p className="text-sm text-red-600">Deadline: {milestone.deadline}</p>
@@ -155,7 +171,7 @@ const ProjectDetailPage = () => {
         </div>
 
         <div className="mb-4">
-          <h2 className="text-xl font-semibold text-brand-gray-dark mb-2">Project Completion</h2>
+          <h2 className="text-xl font-normal text-brand-blue mb-2">Project Completion</h2>
           <div className="relative w-full h-6 bg-brand-gray-light rounded-full overflow-hidden shadow-inner">
             <div
               className={`h-full rounded-full ${project.progress < 50 ? 'bg-brand-orange' : 'bg-brand-green'} transition-all duration-500 ease-in-out`}
@@ -171,4 +187,16 @@ const ProjectDetailPage = () => {
   );
 };
 
+const ProjeectStatusStyle = (status) => {
+  switch (status) {
+    case 'Completed':
+      return 'text-green-500';
+    case 'Active':
+      return 'text-blue-500';
+    case 'InDispute':
+        return 'text-red-500';
+    default:
+      return 'text-black-500';
+  }
+};
 export default ProjectDetailPage;
