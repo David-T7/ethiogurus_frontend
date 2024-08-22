@@ -29,7 +29,7 @@ const ForgotPasswordPage = () => {
   return (
     <div className="container mx-auto py-12 px-6">
       <section className="bg-gray-100 p-8 rounded-lg  max-w-md mx-auto">
-        <h2 className="text-3xl font-semibold text-brand-blue mb-6">
+        <h2 className="text-3xl font-normal text-brand-blue mb-6">
           Forgot Your Password?
         </h2>
         <p className="text-lg text-gray-700 mb-6">
@@ -47,7 +47,7 @@ const ForgotPasswordPage = () => {
         )}
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           <div>
-            <label htmlFor="email" className="block text-lg font-medium text-brand-blue mb-2">
+            <label htmlFor="email" className="block text-lg font-normal text-brand-blue mb-2">
               Email Address
             </label>
             <input
@@ -56,7 +56,7 @@ const ForgotPasswordPage = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email address"
-              className="p-3 border border-gray-300 rounded-lg w-full"
+              className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
               required
             />
           </div>

@@ -54,9 +54,9 @@ import ClientSettingsPages from './components/clientpage/ClientSettingsPage';
 import UpdateProfile from './components/clientpage/UpdateProfilePage';
 import DisputeResponsePage from './components/freealncerpage/DisputeResponsePage';
 import EditProjectPage from './components/clientpage/EditProjectPage';
+import AuthProvider from './components/AuthContext';
 const RoutesConfig = () => {
   return (
-    <Router>
       <Routes>
         <Route path="/" element={<Layout><LandingPage /></Layout>} />
         <Route path="/login" element={<Layout><LoginPage /></Layout>} />
@@ -116,7 +116,6 @@ const RoutesConfig = () => {
         <Route path="/notifications" element={<FreelancerProfileLayout><NotificationPage /></FreelancerProfileLayout>} />
         <Route path="/dispute-response/:id" element={<FreelancerProfileLayout><DisputeResponsePage /></FreelancerProfileLayout>} />
       </Routes>
-    </Router>
   );
 };
 

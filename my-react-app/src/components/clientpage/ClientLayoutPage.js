@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { useState, useEffect, useRef , useContext } from "react";
+import { Link, useLocation , useNavigate} from "react-router-dom";
 import {
   FaBars,
   FaTimes,
@@ -8,6 +8,7 @@ import {
   FaSignOutAlt,
 } from "react-icons/fa";
 import profilePic from "../../images/default-profile-picture.png"; // Default profile picture
+import { AuthContext } from '../AuthContext'; // Update this path according to your project structure
 
 const ClientLayout = ({ children }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -16,7 +17,8 @@ const ClientLayout = ({ children }) => {
   const menuRef = useRef(null); // Ref for the dropdown menu
   const [unreadMessages, setUnreadMessages] = useState(3); // Example unread messages count
   const [unreadNotifications, setUnreadNotifications] = useState(5); // Example unread notifications count
-
+  const { logout } = useContext(AuthContext);
+  const navigate = useNavigate();
   // Disable body scrolling when menu is open
   useEffect(() => {
     document.body.style.overflow = isMenuOpen ? "hidden" : "auto";
@@ -63,9 +65,14 @@ const ClientLayout = ({ children }) => {
       : `${baseClasses} ${hoverClasses}`;
   };
 
-  const handleLogout = () => {
-    // Implement logout logic
-    console.log("Logging out");
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // Optionally redirect to login page after logout
+      navigate("/login")
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (

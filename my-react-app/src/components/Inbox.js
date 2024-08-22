@@ -3,10 +3,12 @@ import React, { useState } from 'react';
 const Inbox = ({ users, handleSelect }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Filter users based on the search term
   const filteredUsers = users.filter(user =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Format timestamp to display
   const formatTimestamp = (timestamp) => {
     const date = new Date(timestamp);
     const now = new Date();
@@ -19,19 +21,21 @@ const Inbox = ({ users, handleSelect }) => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto bg-white shadow-lg rounded-lg p-6 mt-6">
-      <div className="mb-4">
-        <input
-          type="text"
-          placeholder="Search user..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-        />
-      </div>
+    users.length > 0 ?
+  <div className="max-w-2xl mx-auto bg-white shadow-lg rounded-lg p-6 mt-6">
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Search user..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
+          />
+        </div>
+        
       <div className="space-y-4">
         {filteredUsers.length === 0 ? (
-          <p className="text-gray-500">No users found.</p>
+          <p>No users found.</p>
         ) : (
           filteredUsers.map(user => (
             <button
@@ -55,7 +59,8 @@ const Inbox = ({ users, handleSelect }) => {
           ))
         )}
       </div>
-    </div>
+    </div> :
+    <div className="text-center py-8">No Message found.</div>
   );
 };
 

@@ -1,43 +1,55 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom'; // Make sure to have react-router-dom installed
+import React, { useState, useContext } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
-
-// Update this path to where you place your Google logo image
-import googleLogo from '../images/google-logo.png'; 
+import googleLogo from '../images/google-logo.png';
+import { AuthContext } from './AuthContext'; // Update this path according to your project structure
 
 const LoginPage = () => {
+  const { login } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false); // State for remember me checkbox
+  const [rememberMe, setRememberMe] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Basic validation
     if (!email || !password) {
       setError('Please fill out all fields.');
       return;
     }
 
-    // Handle login logic here (e.g., API call)
-    // For now, just logging the values
-    console.log('Email:', email);
-    console.log('Password:', password);
-    console.log('Remember Me:', rememberMe);
-    
-    // Clear error if everything is fine
-    setError('');
-    
-    // Redirect or show success message here
-    alert('Login successful!');
+    try {
+      const userData = await login(email, password); // Assume login returns user data
+      
+      // Redirect based on role
+      if (userData.role === 'admin') {
+        navigate('/admin-dashboard');
+      } else if (userData.role === 'freelancer') {
+        navigate('/home');
+      } else if (userData.role === 'client') {
+        navigate('/dashboard');
+      } else {
+        navigate('/dashboard'); // Default dashboard for other roles
+      }
+
+    } catch (err) {
+      if (err.response && err.response.data) {
+        // Display specific error message from backend
+        setError(err.response.data.detail || 'An error occurred. Please try again.');
+      } else {
+        // Display a generic error message
+        setError('An error occurred. Please try again.');
+      }
+    }
   };
 
   return (
     <div className="container mx-auto py-12 px-6">
       <section className="bg-gray-100 p-8 rounded-lg max-w-md mx-auto">
-        <h2 className="text-3xl font-semibold text-brand-blue mb-6">
+        <h2 className="text-3xl font-normal text-brand-blue mb-6">
           Log In
         </h2>
         {error && (
@@ -47,7 +59,7 @@ const LoginPage = () => {
         )}
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           <div className="relative">
-            <label htmlFor="email" className="block text-lg font-medium text-brand-blue mb-2">
+            <label htmlFor="email" className="block text-lg font-normal text-brand-blue mb-2">
               <FaEnvelope className="inline mr-2" />
               Email
             </label>
@@ -62,7 +74,7 @@ const LoginPage = () => {
             />
           </div>
           <div className="relative">
-            <label htmlFor="password" className="block text-lg font-medium text-brand-blue mb-2">
+            <label htmlFor="password" className="block text-lg font-normal text-brand-blue mb-2">
               <FaLock className="inline mr-2" />
               Password
             </label>

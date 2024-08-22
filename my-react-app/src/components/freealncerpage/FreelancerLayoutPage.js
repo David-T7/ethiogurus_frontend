@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { useState, useEffect, useRef, useContext } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   FaBars,
   FaTimes,
@@ -7,15 +7,51 @@ import {
   FaUserEdit,
   FaSignOutAlt,
 } from "react-icons/fa";
-import profilePic from "../../images/default-profile-picture.png";
-
+import { AuthContext } from '../AuthContext'; // Update this path according to your project structure
+import { UserContext } from "../UserContext";
 const FreelancerProfileLayout = ({ children }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false); // Dropdown menu for profile
   const location = useLocation(); // For determining the current route
   const menuRef = useRef(null); // Ref for the dropdown menu
-  const [unreadMessages, setUnreadMessages] = useState(3); // Example unread messages count
-  const [unreadNotifications, setUnreadNotifications] = useState(5); // Example unread notifications count
+  const { logout } = useContext(AuthContext);
+  const navigate = useNavigate();
+
+  // // Fetch profile data on mount
+  // useEffect(() => {
+  //   const fetchProfileData = async () => {
+  //     try {
+  //       const token = localStorage.getItem('access');
+  //       const response = await axios.get('http://127.0.0.1:8000/api/user/freelancer/manage/', {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       });
+  //       const messageCountResponse = await axios.get('http://127.0.0.1:8000/api/user/messages/unread-count/', {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       });
+  //       const notifitcationCountResponse = await axios.get('http://127.0.0.1:8000/api/user/notifications/unread-count/', {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       });
+  //       console.log("response data is ",response.data)
+  //       const { profile_picture} = response.data;
+       
+  //       setProfilePicture(profile_picture || profilePic);
+  //       setUnreadMessages(messageCountResponse.count || 0);
+  //       setUnreadNotifications(notifitcationCountResponse.count || 0)
+  //     } catch (error) {
+  //       console.error('Failed to fetch profile data:', error);
+  //     }
+  //   };
+
+  //   fetchProfileData();
+  // }, []);
+    const { profilePicture, unreadMessages, unreadNotifications:unreadNotification } = useContext(UserContext);
+
 
   // Disable body scrolling when menu is open
   useEffect(() => {
@@ -63,9 +99,14 @@ const FreelancerProfileLayout = ({ children }) => {
       : `${baseClasses} ${hoverClasses}`;
   };
 
-  const handleLogout = () => {
-    // Implement logout logic
-    console.log("Logging out");
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // Optionally redirect to login page after logout
+      navigate("/login")
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (
@@ -123,9 +164,9 @@ const FreelancerProfileLayout = ({ children }) => {
             onClick={() => setIsMenuOpen(false)}
           >
             Notification
-            {unreadNotifications > 0 && (
+            {unreadNotification > 0 && (
               <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
-                {unreadNotifications}
+                {unreadNotification}
               </span>
             )}
           </Link>
@@ -138,7 +179,7 @@ const FreelancerProfileLayout = ({ children }) => {
             className="flex items-center gap-2 md:mr-0 mr-10 text-white hover:text-gray-200"
           >
             <img
-              src={profilePic} // Replace with dynamic user profile picture
+              src={profilePicture} // Dynamic user profile picture
               alt="Profile"
               className="w-12 h-12 rounded-full border-2 border-white shadow-lg"
             />
@@ -221,9 +262,9 @@ const FreelancerProfileLayout = ({ children }) => {
                     className={getLinkClasses("/messages")}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    inbox
+                    Inbox
                     {unreadMessages > 0 && (
-                      <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
+                      <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
                         {unreadMessages}
                       </span>
                     )}
@@ -234,11 +275,11 @@ const FreelancerProfileLayout = ({ children }) => {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Notification
-                    {unreadNotifications > 0 && (
-                      <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
-                        {unreadNotifications}
-                      </span>
-                    )}
+                    {unreadNotification > 0 && (
+              <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
+                {unreadNotification}
+              </span>
+            )}
                   </Link>
                 </nav>
               </div>
@@ -246,7 +287,7 @@ const FreelancerProfileLayout = ({ children }) => {
           </div>
         )}
       </header>
-      <main className="flex-1 bg-gray-100 p-6">{children}</main>
+      <main className="flex-grow p-6">{children}</main>
     </div>
   );
 };

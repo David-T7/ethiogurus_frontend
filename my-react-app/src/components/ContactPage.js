@@ -9,40 +9,40 @@ const ContactPage = () => {
         
         {/* Contact Form */}
         <section className="flex-1  p-8 rounded-lg">
-          <h2 className="text-3xl font-bold text-center text-brand-blue mb-6">Contact Us</h2>
+          <h2 className="text-3xl font-normal text-center text-brand-blue mb-6">Contact Us</h2>
           <form className="flex flex-col gap-6">
             <div className="flex flex-col gap-2">
-              <label htmlFor="name" className="text-lg font-medium text-brand-blue flex items-center gap-2">
+              <label htmlFor="name" className="text-lg font-normal text-brand-blue flex items-center gap-2">
                 <FaUser className="text-brand-blue" /> Name
               </label>
               <input
                 id="name"
                 type="text"
                 placeholder="Your Name"
-                className="p-4 border border-brand-blue rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-blue"
-              />
+                className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
+                />
             </div>
             <div className="flex flex-col gap-2">
-              <label htmlFor="email" className="text-lg font-medium text-brand-blue flex items-center gap-2">
+              <label htmlFor="email" className="text-lg font-normal text-brand-blue flex items-center gap-2">
                 <FaEnvelope className="text-brand-blue" /> Email
               </label>
               <input
                 id="email"
                 type="email"
                 placeholder="Your Email"
-                className="p-4 border border-brand-blue rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-blue"
-              />
+                className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
+                />
             </div>
             <div className="flex flex-col gap-2">
-              <label htmlFor="message" className="text-lg font-medium text-brand-blue flex items-center gap-2">
+              <label htmlFor="message" className="text-lg font-normal text-brand-blue flex items-center gap-2">
                 <FaComment className="text-brand-blue" /> Message
               </label>
               <textarea
                 id="message"
                 rows="5"
                 placeholder="Your Message"
-                className="p-4 border border-brand-blue rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-blue"
-              ></textarea>
+                className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none h-40 focus:border-blue-500"
+                ></textarea>
             </div>
             <button
               type="submit"
@@ -55,19 +55,19 @@ const ContactPage = () => {
 
         {/* Contact Details */}
         <section className="flex-1 p-8 rounded-lg">
-          <h2 className="text-3xl font-bold text-center text-brand-blue mb-6">Get in Touch</h2>
+          <h2 className="text-3xl font-normal text-center text-brand-blue mb-6">Get in Touch</h2>
           <div className="flex flex-col gap-6">
             <div className="flex items-center gap-4">
               <FaEnvelope className="text-3xl text-brand-blue" />
               <div>
-                <h3 className="text-xl font-semibold text-brand-blue">Email</h3>
+                <h3 className="text-xl font-normal text-brand-blue">Email</h3>
                 <p className="text-lg text-brand-gray-dark">contact@example.com</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
               <FaPhone className="text-3xl text-brand-blue" />
               <div>
-                <h3 className="text-xl font-semibold text-brand-blue">Phone</h3>
+                <h3 className="text-xl font-normal text-brand-blue">Phone</h3>
                 <p className="text-lg text-brand-gray-dark">+1 (123) 456-7890</p>
               </div>
             </div>
@@ -84,7 +84,7 @@ const ContactPage = () => {
 
       {/* Map Section */}
       <section className="mt-12">
-        <h2 className="text-3xl font-bold text-center text-brand-blue mb-6">Our Location</h2>
+        <h2 className="text-3xl font-normal text-center text-brand-blue mb-6">Our Location</h2>
         <div className="relative w-full h-64 rounded-lg overflow-hidden shadow-lg">
           <iframe
             className="absolute inset-0 w-full h-full border-none"

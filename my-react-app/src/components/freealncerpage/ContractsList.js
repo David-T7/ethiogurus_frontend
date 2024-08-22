@@ -1,42 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
-// Mock data for demonstration
-const mockContractsData = [
-  {
-    id: 1,
-    title: 'Web Development Contract',
-    client: 'Client A',
-    status: 'Pending',
-    deadline: '2024-09-01',
-    projectFee: '$5000',
-    milestones: [
-      { id: 1, title: 'Design Phase', dueDate: '2024-08-15', amount: '$2000', status: 'Pending' },
-      { id: 2, title: 'Development Phase', dueDate: '2024-08-30', amount: '$3000', status: 'Pending' },
-    ],
-  },
-  {
-    id: 2,
-    title: 'Mobile App Contract',
-    client: 'Client B',
-    status: 'Pending',
-    deadline: '2024-10-15',
-    projectFee: '$8000',
-    milestones: [
-      { id: 1, title: 'Prototype', dueDate: '2024-09-01', amount: '$3000', status: 'Completed' },
-      { id: 2, title: 'Final Product', dueDate: '2024-10-10', amount: '$5000', status: 'Pending' },
-    ],
-  },
-  // Add more contracts here...
-];
-
+// The ContractsList component
 const ContractsList = () => {
   const [contracts, setContracts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Replace with API call to fetch contracts for the freelancer
-    setContracts(mockContractsData);
+    const fetchContracts = async () => {
+      try {
+        const token = localStorage.getItem('access'); // Get the access token from localStorage
+        const response = await axios.get('http://127.0.0.1:8000/api/freelancer-contracts/', {
+          headers: {
+            Authorization: `Bearer ${token}`, // Include the token in the headers
+          },
+        });
+
+        setContracts(response.data);
+      } catch (error) {
+        console.error('Failed to fetch contracts:', error);
+        setError(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContracts();
   }, []);
+
+  if (loading) {
+    return <div className="text-center py-8">Loading contracts...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-8">Failed to load contracts. Please try again later.</div>;
+  }
 
   if (contracts.length === 0) {
     return <div className="text-center py-8">No contracts found.</div>;

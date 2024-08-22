@@ -1,40 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaCheckCircle, FaHourglassHalf } from 'react-icons/fa';
-
-// Mock data for demonstration
-const mockFreelancerProjects = [
-  {
-    id: 1,
-    title: 'Web Development Project',
-    description: 'A full-stack web development project.',
-    status: 'Active',
-    deadline: '2024-09-01',
-  },
-  {
-    id: 2,
-    title: 'Mobile App Development',
-    description: 'Development of a cross-platform mobile application.',
-    status: 'Completed',
-    deadline: '2024-08-15',
-  },
-  {
-    id: 3,
-    title: 'Django Project',
-    description: 'A Django-based project with multiple milestones.',
-    status: 'Pending',
-    deadline: '2024-09-20',
-  },
-  // Add more project data here...
-];
+import { FaCheckCircle } from 'react-icons/fa';
+import axios from 'axios';
 
 const ProjectListPage = () => {
   const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Replace with an API call to fetch projects associated with the freelancer
-    setProjects(mockFreelancerProjects);
+    const fetchProjects = async () => {
+      try {
+        const token = localStorage.getItem('access'); // Get the access token from localStorage
+        const response = await axios.get('http://127.0.0.1:8000/api/freelancer-projects/', {
+          headers: {
+            Authorization: `Bearer ${token}`, // Include the token in the headers
+          },
+        });
+        setProjects(response.data);
+      } catch (error) {
+        console.error('Failed to fetch projects:', error);
+        setError(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
   }, []);
+
+  if (loading) {
+    return <div className="text-center py-8">Loading projects...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-8">Failed to load projects. Please try again later.</div>;
+  }
 
   if (!projects.length) {
     return <div className="text-center py-8">No projects found.</div>;

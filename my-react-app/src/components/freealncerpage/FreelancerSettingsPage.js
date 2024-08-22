@@ -1,10 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
-// Mock function to simulate updating settings
-const updateSettings = (settings) => {
-  // Replace with actual API call to update settings
-  console.log('Updating settings:', settings);
-};
+import axios from 'axios';
 
 const FreelancerSettingsPage = () => {
   const [settings, setSettings] = useState({
@@ -12,27 +7,52 @@ const FreelancerSettingsPage = () => {
       emailNotifications: true,
       smsNotifications: false,
     },
-    privacySettings: {
-      profileVisibility: 'Public',
-      hideProfileFromSearch: false,
-    },
+    privacySettings: {},
     accountPreferences: {
       preferredLanguage: 'English',
       timeZone: 'UTC',
-      status: 'Available',
-      paymentMethod: 'PayPal', // Example default value
-      bankDetails: '',
     },
+    status: '',
+    paymentMethods: [],
   });
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const token = localStorage.getItem('access');
+        const response = await axios.get('http://127.0.0.1:8000/api/user/freelancer/manage/', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const { availability_status: status, selected_payment_method: paymentMethods } = response.data;
+
+        const localSettings = JSON.parse(localStorage.getItem('settings')) || {};
+
+        setSettings({
+          notificationPreferences: localSettings.notificationPreferences || {
+            emailNotifications: true,
+            smsNotifications: false,
+          },
+          privacySettings: localSettings.privacySettings || {},
+          accountPreferences: localSettings.accountPreferences || {
+            preferredLanguage: 'English',
+            timeZone: 'UTC',
+          },
+          status: status || '',
+          paymentMethods: paymentMethods || [],
+        });
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      }
+    };
+
+    loadSettings();
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setSettings((prevSettings) => ({
       ...prevSettings,
-      accountPreferences: {
-        ...prevSettings.accountPreferences,
-        [name]: value,
-      },
+      [name]: value,
     }));
   };
 
@@ -69,16 +89,61 @@ const FreelancerSettingsPage = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    updateSettings(settings);
-    // Show a confirmation message or redirect
+  const handlePaymentMethodChange = (index, field, value) => {
+    const updatedPaymentMethods = settings.paymentMethods.map((method, i) =>
+      i === index ? { ...method, [field]: value } : method
+    );
+    setSettings((prevSettings) => ({
+      ...prevSettings,
+      paymentMethods: updatedPaymentMethods,
+    }));
   };
 
-  useEffect(() => {
-    // Example to fetch available time zones from an API
-    // Replace this with actual API call if needed
-  }, []);
+  const handleAddPaymentMethod = () => {
+    setSettings((prevSettings) => ({
+      ...prevSettings,
+      paymentMethods: [...prevSettings.paymentMethods, { name: '', details: '' }],
+    }));
+  };
+
+  const handleRemovePaymentMethod = (index) => {
+    const updatedPaymentMethods = settings.paymentMethods.filter((_, i) => i !== index);
+    setSettings((prevSettings) => ({
+      ...prevSettings,
+      paymentMethods: updatedPaymentMethods,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const updateData = {
+        availability_status: settings.status,
+        selected_payment_method: settings.paymentMethods.map((method) => ({
+          name: method.name,
+          details: method.details,
+        })),
+      };
+
+      const token = localStorage.getItem('access');
+      await axios.patch('http://127.0.0.1:8000/api/user/freelancer/manage/', updateData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      localStorage.setItem(
+        'settings',
+        JSON.stringify({
+          notificationPreferences: settings.notificationPreferences,
+          privacySettings: settings.privacySettings,
+          accountPreferences: settings.accountPreferences,
+        })
+      );
+
+      alert('Settings saved successfully!');
+    } catch (error) {
+      console.error('Error saving settings:', error);
+    }
+  };
 
   return (
     <div className="max-w-2xl mx-auto p-8 mt-8">
@@ -91,7 +156,7 @@ const FreelancerSettingsPage = () => {
               type="checkbox"
               id="emailNotifications"
               name="emailNotifications"
-              checked={settings.notificationPreferences.emailNotifications}
+              checked={settings.notificationPreferences?.emailNotifications || false}
               onChange={handleNotificationChange}
               className="mr-2"
             />
@@ -104,30 +169,12 @@ const FreelancerSettingsPage = () => {
               type="checkbox"
               id="smsNotifications"
               name="smsNotifications"
-              checked={settings.notificationPreferences.smsNotifications}
+              checked={settings.notificationPreferences?.smsNotifications || false}
               onChange={handleNotificationChange}
               className="mr-2"
             />
             <label htmlFor="smsNotifications" className="text-lg font-normal text-brand-blue">
               SMS Notifications
-            </label>
-          </div>
-        </div>
-
-        {/* Privacy Settings */}
-        <div className="mb-6">
-          <h3 className="text-xl font-normal text-brand-blue mb-4">Privacy Settings</h3>
-          <div className="flex items-center mb-4">
-            <input
-              type="checkbox"
-              id="hideProfileFromSearch"
-              name="hideProfileFromSearch"
-              checked={settings.privacySettings.hideProfileFromSearch}
-              onChange={handlePrivacyChange}
-              className="mr-2"
-            />
-            <label htmlFor="hideProfileFromSearch" className="text-lg font-normal text-brand-blue">
-              Hide profile from search engines
             </label>
           </div>
         </div>
@@ -142,7 +189,7 @@ const FreelancerSettingsPage = () => {
             <select
               id="preferredLanguage"
               name="preferredLanguage"
-              value={settings.accountPreferences.preferredLanguage}
+              value={settings.accountPreferences?.preferredLanguage || 'English'}
               onChange={handleAccountPreferencesChange}
               className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
             >
@@ -159,7 +206,7 @@ const FreelancerSettingsPage = () => {
             <select
               id="timeZone"
               name="timeZone"
-              value={settings.accountPreferences.timeZone}
+              value={settings.accountPreferences?.timeZone || 'UTC'}
               onChange={handleAccountPreferencesChange}
               className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
             >
@@ -177,54 +224,67 @@ const FreelancerSettingsPage = () => {
             <select
               id="status"
               name="status"
-              value={settings.accountPreferences.status}
-              onChange={handleAccountPreferencesChange}
+              value={settings.status || 'Active'}
+              onChange={handleInputChange}
               className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
             >
-              <option value="Available">Available</option>
-              <option value="Not Available">Not Available</option>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+              {/* Add more status options as needed */}
             </select>
           </div>
-          <div className="mb-4">
-            <label htmlFor="paymentMethod" className="block text-lg font-normal text-brand-blue mb-2">
-              Payment Method
-            </label>
-            <select
-              id="paymentMethod"
-              name="paymentMethod"
-              value={settings.accountPreferences.paymentMethod}
-              onChange={handleAccountPreferencesChange}
-              className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-            >
-              <option value="PayPal">PayPal</option>
-              <option value="Bank Transfer">Bank Transfer</option>
-              <option value="Credit Card">Credit Card</option>
-              {/* Add more payment methods as needed */}
-            </select>
-          </div>
-          {settings.accountPreferences.paymentMethod === 'Bank Transfer' && (
-            <div className="mb-4">
-              <label htmlFor="bankDetails" className="block text-lg font-normal text-brand-blue mb-2">
-                Bank Details
-              </label>
-              <input
-                type="text"
-                id="bankDetails"
-                name="bankDetails"
-                value={settings.accountPreferences.bankDetails}
-                onChange={handleAccountPreferencesChange}
-                className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-                placeholder="Enter your bank details"
-              />
-            </div>
-          )}
         </div>
 
+       {/* Payment Methods Section */}
+       <div className="mb-6">
+       <h3 className="text-xl font-normal text-brand-blue mb-4">Payment Methods</h3>
+          {settings.paymentMethods.map((method, index) => (
+            <div key={index} className="mb-4">
+              <label htmlFor="paymentmethod" className="block text-lg font-normal text-brand-blue mb-2">
+              Payment Method
+            </label>
+              <input
+                type="text"
+                name="paymentmethod"
+                value={method.name}
+                onChange={(e) => handlePaymentMethodChange(index, 'name', e.target.value)}
+                className="w-full border border-gray-300 p-2 mb-4 rounded-lg focus:outline-none focus:border-blue-500"
+                placeholder="Enter payment method name"
+              />
+             <label htmlFor="details" className="block text-lg font-normal text-brand-blue mb-2">
+              Payment Method Detials
+            </label>
+            <textarea
+                type="text"
+                name="details"
+                value={method.details}
+                onChange={(e) => handlePaymentMethodChange(index, 'details', e.target.value)}
+                className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none h-40 focus:border-blue-500"
+                placeholder="Enter payment details separated by commas"
+              />
+              <button
+                type="button"
+                onClick={() => handleRemovePaymentMethod(index)}
+                className="mt-2 text-red-500 hover:text-red-700 text-md"
+              >
+                Remove Payment Method
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={handleAddPaymentMethod}
+            className="mt-2 text-blue-500 hover:text-blue-700 text-md"
+          >
+            Add Payment Method
+          </button>
+        </div>
+        
         <button
           type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-200"
+          className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition duration-200"
         >
-          Save Changes
+          Save Settings
         </button>
       </form>
     </div>
