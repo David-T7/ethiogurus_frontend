@@ -44,7 +44,7 @@ const AuthProvider = ({ children }) => {
       } catch (error) {
         console.error('Error during authentication:', error);
         console.error('Error details:', error.response?.data || error.message);
-        logout(); // Log out the user if the request fails
+        navigate("/")
       }
     } else {
       console.log("token not found");
@@ -59,6 +59,29 @@ const AuthProvider = ({ children }) => {
     };
     loadAuth();
   }, []);
+
+  const isAuthenticated = async () => {
+    const token = localStorage.getItem('access');
+    if (token) {
+      try {
+        console.log("token found");
+        const response = await axios.post('http://127.0.0.1:8000/api/user/token/authenticate/', null, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+  
+        if (response.data.detail === "Access token is valid") {
+          return true
+        }
+        else{
+          return false
+        }
+  }
+  catch (error) {
+    console.error('Error during authentication:', error);
+    console.error('Error details:', error.response?.data || error.message);
+  }
+}
+  }
 
   const login = async (email, password) => {
     try {
@@ -111,7 +134,7 @@ const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ auth, loading, login, logout, refreshToken, authenticate }}>
+    <AuthContext.Provider value={{ auth, loading, isAuthenticated, login, logout, refreshToken, authenticate }}>
       {children}
     </AuthContext.Provider>
   );

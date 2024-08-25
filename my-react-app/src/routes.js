@@ -54,12 +54,16 @@ import ClientSettingsPages from './components/clientpage/ClientSettingsPage';
 import UpdateProfile from './components/clientpage/UpdateProfilePage';
 import DisputeResponsePage from './components/freealncerpage/DisputeResponsePage';
 import EditProjectPage from './components/clientpage/EditProjectPage';
-import AuthProvider from './components/AuthContext';
+import CreateProjectPage from './components/clientpage/CreateProjectPage';
+import ProjectBudgetEstimate from './components/clientpage/ProjectBudgetEstimate';
+import ChangePasswordPage from './components/ChangePassword';
 const RoutesConfig = () => {
   return (
       <Routes>
         <Route path="/" element={<Layout><LandingPage /></Layout>} />
         <Route path="/login" element={<Layout><LoginPage /></Layout>} />
+        <Route path="/change-password" element={<ClientLayout><ChangePasswordPage /></ClientLayout>} />
+        <Route path="/update-password" element={<FreelancerProfileLayout><ChangePasswordPage /></FreelancerProfileLayout>} />
         <Route path="/forgot-password" element={<Layout><ForgotPasswordPage /></Layout>} />
         <Route path="/apply-freelancer" element={<Layout><ApplyFreelancer /></Layout>} />
         <Route path="/apply-freelancer/test-page" element={<FreelancerTestsPage />} />
@@ -71,18 +75,20 @@ const RoutesConfig = () => {
         <Route path="/test-result" element={<TestResultPage />} />
         <Route path="/coding-test-result" element={<CodingTestResultPage />} />
         <Route path="/hire-talent" element={<Layout><ApplyClient /></Layout>} />
-        <Route path="/create-project" element={<ClientLayout><ApplyClient /></ClientLayout>} />
+        <Route path="/find-talent" element={<ClientLayout><ApplyClient /></ClientLayout>} />
         <Route path="/create-project/requirements" element={<ClientLayout><HiringNeeds /></ClientLayout>} />
         <Route path="/create-project/time-commitment" element={<ClientLayout><TimeCommitment /></ClientLayout>} />
         <Route path="/create-project/skills" element={<ClientLayout><Skills /></ClientLayout>} />
         <Route path="/create-project/talent-list" element={<ClientLayout><TalentListPage /></ClientLayout>} />
+        <Route path="/create-project/budget-estimate" element={<ClientLayout><ProjectBudgetEstimate /></ClientLayout>} />
         <Route path="/dashboard" element={<ClientLayout><ClientDashboard /></ClientLayout>} />
         <Route path="/settings" element={<ClientLayout><ClientSettingsPages /> </ClientLayout>} />        
         <Route path="/profile-update" element={<ClientLayout><UpdateProfile/> </ClientLayout>} />        
         <Route path="/create-project/project-description" element={<ClientLayout><ProjectDescriptionPage /></ClientLayout>} />
-        <Route path="/hire-talent/requirements" element={<Layout><HiringNeeds /></Layout>} />
-        <Route path="/hire-talent/time-commitment" element={<Layout><TimeCommitment /></Layout>} />
-        <Route path="/hire-talent/skills" element={<Layout><Skills /></Layout>} />
+        <Route path="/hire-talent/requirements" element={<ClientLayout><HiringNeeds /></ClientLayout>} />
+        <Route path="/hire-talent/time-commitment" element={<ClientLayout><TimeCommitment /></ClientLayout>} />
+        <Route path="/hire-talent/skills" element={<ClientLayout><Skills /></ClientLayout>} />
+        <Route path="/hire-talent/budget-estimate" element={<ClientLayout><ProjectBudgetEstimate /></ClientLayout>} />
         <Route path="/hire-talent/finalize" element={<Layout><FinalizePage /></Layout>} />
         <Route path="/contact-freelancer/:id" element={<ContactFreelancer />} />
         <Route path="/inbox" element={<ClientInbox />} />
@@ -91,9 +97,10 @@ const RoutesConfig = () => {
         <Route path="/project/:id/edit" element={<EditProjectPage />} />
         <Route path="/projects/:id/create-contract" element={<CreateContractPage />} />
         <Route path="/project/:id/createdispute" element={<DisputePage />} />
-        <Route path="/hire-talent/talent-list" element={<Layout><TalentListPage /></Layout>} />
-        <Route path="/hire-talent/talent-list/:freelancerId" element={<Layout><FreelancerDetailPage /></Layout>} />
-        <Route path="/hire-talent/project-description" element={<Layout><ProjectDescriptionPage /></Layout>} />
+        <Route path="/create-project" element={<CreateProjectPage />} />        
+        <Route path="/hire-talent/talent-list" element={<ClientLayout><TalentListPage /></ClientLayout>} />
+        <Route path="/hire-talent/talent-list/:id" element={<ClientLayout><FreelancerDetailPage /></ClientLayout>} />
+        <Route path="/hire-talent/project-description" element={<ClientLayout><ProjectDescriptionPage /></ClientLayout>} />
         <Route path="/about" element={<Layout><AboutPage /></Layout>} />
         <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
         <Route path="/services" element={<Layout><ServicePage /></Layout>} />

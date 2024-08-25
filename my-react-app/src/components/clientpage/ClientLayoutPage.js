@@ -6,19 +6,20 @@ import {
   FaUserCog,
   FaUserEdit,
   FaSignOutAlt,
+  FaLock,
 } from "react-icons/fa";
 import profilePic from "../../images/default-profile-picture.png"; // Default profile picture
 import { AuthContext } from '../AuthContext'; // Update this path according to your project structure
-
+import { clientUserContext } from "../clientUserContext";
 const ClientLayout = ({ children }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false); // Dropdown menu for profile
   const location = useLocation(); // For determining the current route
   const menuRef = useRef(null); // Ref for the dropdown menu
-  const [unreadMessages, setUnreadMessages] = useState(3); // Example unread messages count
-  const [unreadNotifications, setUnreadNotifications] = useState(5); // Example unread notifications count
   const { logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const { profilePicture, unreadMessages, unreadNotifications:unreadNotification } = useContext(clientUserContext);
+
   // Disable body scrolling when menu is open
   useEffect(() => {
     document.body.style.overflow = isMenuOpen ? "hidden" : "auto";
@@ -114,9 +115,9 @@ const ClientLayout = ({ children }) => {
           </Link>
           <Link to="/notification" className={getLinkClasses("/notification")}>
             Notifications
-            {unreadNotifications > 0 && (
+            {unreadNotification > 0 && (
               <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
-                {unreadNotifications}
+                {unreadNotification}
               </span>
             )}
           </Link>
@@ -129,7 +130,7 @@ const ClientLayout = ({ children }) => {
             className="flex items-center gap-2 md:mr-0 mr-10 text-white hover:text-gray-200"
           >
             <img
-              src={profilePic} // Replace with dynamic user profile picture
+              src={profilePicture || profilePic} // Replace with dynamic user profile picture
               alt="Profile"
               className="w-12 h-12 rounded-full border-2 border-white shadow-lg"
             />
@@ -154,6 +155,14 @@ const ClientLayout = ({ children }) => {
                     className="flex items-center gap-2 p-2 text-gray-700 hover:bg-gray-100 rounded"
                   >
                     <FaUserEdit /> Update Profile
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/change-password"
+                    className="flex items-center gap-2 p-2 text-gray-700 hover:bg-gray-100 rounded"
+                  >
+                    <FaLock /> Change Password
                   </Link>
                 </li>
                 <li>
@@ -212,9 +221,9 @@ const ClientLayout = ({ children }) => {
                   className={getLinkClasses("/notification")}
                 >
                   Notifications
-                  {unreadNotifications > 0 && (
+                  {unreadNotification > 0 && (
               <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
-                {unreadNotifications}
+                {unreadNotification}
               </span>
             )}
                 </Link>

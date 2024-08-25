@@ -9,11 +9,13 @@ const ProjectDescriptionPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    localStorage.setItem("projectDescription",description)
     let nextPath = '/hire-talent/talent-list'; // Default path for Layout
     // Check current route to determine the next path
     if (location.pathname.startsWith('/create-project')) {
       nextPath = '/create-project/talent-list'; // Update this path if needed
     }
+    
     // Navigate to the determined next path
     navigate(nextPath);
   };

@@ -2,41 +2,38 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaProjectDiagram, FaPlus } from 'react-icons/fa';
 import getRelativeTime from "../../utils/getRelativeTime"
+import axios from 'axios';
 const ClientDashboard = () => {
   const [recentProjects, setRecentProjects] = useState([]);
-
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   useEffect(() => {
-    // Sample recent projects data
-    const sampleProjects = [
-      {
-        id: 1,
-        title: 'Website Redesign',
-        description: 'Redesign the company website with a modern look and improved user experience.',
-        date: '2024-08-10T14:20:00Z'
-      },
-      {
-        id: 2,
-        title: 'Mobile App Development',
-        description: 'Develop a new mobile app for our e-commerce platform with integrated payment systems.',
-        date: '2024-08-05T10:00:00Z'
-      },
-      {
-        id: 3,
-        title: 'SEO Optimization',
-        description: 'Optimize the website for search engines to improve visibility and drive traffic.',
-        date: '2024-07-30T09:15:00Z'
-      },
-      {
-        id: 4,
-        title: 'Marketing Campaign',
-        description: 'Plan and execute a new marketing campaign to increase brand awareness and customer engagement.',
-        date: '2024-07-25T11:45:00Z'
-      }
-    ];
+    const fetchRecentProjects = async () => {
+      try {
+        const token = localStorage.getItem('access'); // Get the access token from localStorage
+        const response = await axios.get('http://127.0.0.1:8000/api/projects/', {
+          headers: {
+            Authorization: `Bearer ${token}`, // Include the token in the headers
+          },
+        });
 
-    setRecentProjects(sampleProjects);
+        // Sort projects by creation date in descending order (latest first)
+        const sortedProjects = response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        // Select the top 5 most recent projects
+        setRecentProjects(sortedProjects.slice(0, 5));
+      } catch (error) {
+        console.error('Failed to fetch recent projects:', error);
+        setError(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecentProjects();
   }, []);
 
+  
 
   return (
     <div className="bg-gray-50 min-h-screen p-6">
@@ -47,8 +44,8 @@ const ClientDashboard = () => {
       </header>
 
       {/* Recent Projects Highlights */}
-      <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg border  border-gray-200 p-6 mb-8">
-        <h2 className="text-3xl font-semibold mb-6 flex items-center gap-3 text-gray-800">
+      <div className="max-w-3xl mx-auto p-6 mb-8">
+        <h2 className="text-blue-600 text-2xl mb-6 flex items-center gap-3">
           <FaProjectDiagram className="text-blue-600 text-2xl" />
           Recent Projects
         </h2>
@@ -64,7 +61,7 @@ const ClientDashboard = () => {
               >
                 <h3 className="text-xl font-semibold text-gray-700 mb-2">{project.title}</h3>
                 <p className="text-gray-600 mb-2">{project.description}</p>
-                <span className="text-gray-500 text-sm">{getRelativeTime(project.date)}</span>
+                <span className="text-gray-500 text-sm">{getRelativeTime(new Date(project.created_at).toLocaleDateString())}</span>
               </Link>
             ))}
           </ul>
@@ -73,7 +70,7 @@ const ClientDashboard = () => {
 
       {/* Create Project Button */}
       <div className="text-center">
-        <Link to="/create-project" className="inline-flex items-center gap-3 px-6 py-3 bg-blue-600 text-white rounded-lg shadow-lg text-xl font-semibold transition-all duration-300 hover:bg-blue-700 hover:shadow-xl">
+        <Link to="/create-project" className="inline-flex items-center gap-3 px-6 py-2 bg-blue-600 text-white rounded-lg shadow-lg text-xl font-semibold transition-all duration-300 hover:bg-blue-700 hover:shadow-xl">
           <FaPlus className="text-2xl" /> Create Project
         </Link>
       </div>

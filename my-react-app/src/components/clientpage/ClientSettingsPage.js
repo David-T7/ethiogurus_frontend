@@ -1,41 +1,51 @@
-import React, { useState } from 'react';
-
-// Mock function to simulate updating settings
-const updateSettings = (settings) => {
-  // Replace with actual API call to update settings
-  console.log('Updating settings:', settings);
-};
-
-const ClientSettingsPage = () => {
+import React, { useState , useEffect } from 'react';
+import axios from 'axios';
+const ClientSettingsPage = () =>{
   const [settings, setSettings] = useState({
     notificationPreferences: {
       emailNotifications: true,
       smsNotifications: false,
     },
-    privacySettings: {
-      profileVisibility: 'Public',
-      hideProfileFromSearch: false,
-    },
+    privacySettings: {},
     accountPreferences: {
       preferredLanguage: 'English',
       timeZone: 'UTC',
-      accountStatus: 'Available',
     },
-    paymentMethod: 'Credit Card',
-    bankDetails: {
-      bankName: '',
-      accountNumber: '',
-      routingNumber: '',
-    },
-    paypalDetails: {
-      paypalEmail: '',
-    },
-    creditCardDetails: {
-      cardNumber: '',
-      expirationDate: '',
-      cvv: '',
-    },
+    status: '',
+    paymentMethods: [],
   });
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const token = localStorage.getItem('access');
+        const response = await axios.get('http://127.0.0.1:8000/api/user/client/manage/', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const { availability_status: status, selected_payment_method: paymentMethods } = response.data;
+
+        const localSettings = JSON.parse(localStorage.getItem('settings')) || {};
+
+        setSettings({
+          notificationPreferences: localSettings.notificationPreferences || {
+            emailNotifications: true,
+            smsNotifications: false,
+          },
+          privacySettings: localSettings.privacySettings || {},
+          accountPreferences: localSettings.accountPreferences || {
+            preferredLanguage: 'English',
+            timeZone: 'UTC',
+          },
+          status: status || '',
+          paymentMethods: paymentMethods || [],
+        });
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      }
+    };
+
+    loadSettings();
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -56,54 +66,71 @@ const ClientSettingsPage = () => {
     }));
   };
 
-  const handlePrivacyChange = (e) => {
-    const { name, value, checked, type } = e.target;
-    setSettings((prevSettings) => ({
-      ...prevSettings,
-      privacySettings: {
-        ...prevSettings.privacySettings,
-        [name]: type === 'checkbox' ? checked : value,
-      },
-    }));
-  };
 
-  const handleBankDetailsChange = (e) => {
+  const handleAccountPreferencesChange = (e) => {
     const { name, value } = e.target;
     setSettings((prevSettings) => ({
       ...prevSettings,
-      bankDetails: {
-        ...prevSettings.bankDetails,
+      accountPreferences: {
+        ...prevSettings.accountPreferences,
         [name]: value,
       },
     }));
   };
 
-  const handlePayPalDetailsChange = (e) => {
-    const { name, value } = e.target;
+  const handlePaymentMethodChange = (index, field, value) => {
+    const updatedPaymentMethods = settings.paymentMethods.map((method, i) =>
+      i === index ? { ...method, [field]: value } : method
+    );
     setSettings((prevSettings) => ({
       ...prevSettings,
-      paypalDetails: {
-        ...prevSettings.paypalDetails,
-        [name]: value,
-      },
+      paymentMethods: updatedPaymentMethods,
     }));
   };
 
-  const handleCreditCardDetailsChange = (e) => {
-    const { name, value } = e.target;
+  const handleAddPaymentMethod = () => {
     setSettings((prevSettings) => ({
       ...prevSettings,
-      creditCardDetails: {
-        ...prevSettings.creditCardDetails,
-        [name]: value,
-      },
+      paymentMethods: [...prevSettings.paymentMethods, { name: '', details: '' }],
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleRemovePaymentMethod = (index) => {
+    const updatedPaymentMethods = settings.paymentMethods.filter((_, i) => i !== index);
+    setSettings((prevSettings) => ({
+      ...prevSettings,
+      paymentMethods: updatedPaymentMethods,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    updateSettings(settings);
-    // Show a confirmation message or redirect
+    try {
+      const updateData = {
+        selected_payment_method: settings.paymentMethods.map((method) => ({
+          name: method.name,
+          details: method.details,
+        })),
+      };
+
+      const token = localStorage.getItem('access');
+      await axios.patch('http://127.0.0.1:8000/api/user/client/manage/', updateData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      localStorage.setItem(
+        'settings',
+        JSON.stringify({
+          notificationPreferences: settings.notificationPreferences,
+          privacySettings: settings.privacySettings,
+          accountPreferences: settings.accountPreferences,
+        })
+      );
+
+      alert('Settings saved successfully!');
+    } catch (error) {
+      console.error('Error saving settings:', error);
+    }
   };
 
   return (
@@ -117,7 +144,7 @@ const ClientSettingsPage = () => {
               type="checkbox"
               id="emailNotifications"
               name="emailNotifications"
-              checked={settings.notificationPreferences.emailNotifications}
+              checked={settings.notificationPreferences?.emailNotifications || false}
               onChange={handleNotificationChange}
               className="mr-2"
             />
@@ -130,7 +157,7 @@ const ClientSettingsPage = () => {
               type="checkbox"
               id="smsNotifications"
               name="smsNotifications"
-              checked={settings.notificationPreferences.smsNotifications}
+              checked={settings.notificationPreferences?.smsNotifications || false}
               onChange={handleNotificationChange}
               className="mr-2"
             />
@@ -139,7 +166,6 @@ const ClientSettingsPage = () => {
             </label>
           </div>
         </div>
-
 
         {/* Account Preferences */}
         <div className="mb-6">
@@ -151,8 +177,8 @@ const ClientSettingsPage = () => {
             <select
               id="preferredLanguage"
               name="preferredLanguage"
-              value={settings.accountPreferences.preferredLanguage}
-              onChange={handleInputChange}
+              value={settings.accountPreferences?.preferredLanguage || 'English'}
+              onChange={handleAccountPreferencesChange}
               className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
             >
               <option value="English">English</option>
@@ -168,157 +194,70 @@ const ClientSettingsPage = () => {
             <select
               id="timeZone"
               name="timeZone"
-              value={settings.accountPreferences.timeZone}
-              onChange={handleInputChange}
+              value={settings.accountPreferences?.timeZone || 'UTC'}
+              onChange={handleAccountPreferencesChange}
               className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
             >
+              {/* Replace with dynamic options */}
               <option value="UTC">UTC</option>
-              <option value="GMT">GMT</option>
-              <option value="CET">CET</option>
-              {/* Add more time zones as needed */}
+              <option value="America/New_York">America/New_York</option>
+              <option value="Europe/London">Europe/London</option>
+              {/* Add more time zone options as needed */}
             </select>
           </div>
         </div>
 
-        {/* Payment Method */}
-        <div className="mb-6">
-          <h3 className="text-xl font-normal text-brand-blue mb-4">Payment Method</h3>
-          <div className="mb-4">
-            <label htmlFor="paymentMethod" className="block text-lg font-normal text-brand-blue mb-2">
-              Select Payment Method
+       {/* Payment Methods Section */}
+       <div className="mb-6">
+       <h3 className="text-xl font-normal text-brand-blue mb-4">Payment Methods</h3>
+          {settings.paymentMethods.map((method, index) => (
+            <div key={index} className="mb-4">
+              <label htmlFor="paymentmethod" className="block text-lg font-normal text-brand-blue mb-2">
+              Payment Method
             </label>
-            <select
-              id="paymentMethod"
-              name="paymentMethod"
-              value={settings.paymentMethod}
-              onChange={handleInputChange}
-              className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-            >
-              <option value="Credit Card">Credit Card</option>
-              <option value="Bank Transfer">Bank Transfer</option>
-              <option value="PayPal">PayPal</option>
-            </select>
-          </div>
-
-          {/* Bank Details */}
-          {settings.paymentMethod === 'Bank Transfer' && (
-            <div className="mb-6">
-              <div className="mb-4">
-                <label htmlFor="bankName" className="block text-lg font-normal text-brand-blue mb-2">
-                  Bank Name
-                </label>
-                <input
-                  type="text"
-                  id="bankName"
-                  name="bankName"
-                  value={settings.bankDetails.bankName}
-                  onChange={handleBankDetailsChange}
-                  className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-                />
-              </div>
-              <div className="mb-4">
-                <label htmlFor="accountNumber" className="block text-lg font-normal text-brand-blue mb-2">
-                  Account Number
-                </label>
-                <input
-                  type="text"
-                  id="accountNumber"
-                  name="accountNumber"
-                  value={settings.bankDetails.accountNumber}
-                  onChange={handleBankDetailsChange}
-                  className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-                />
-              </div>
-              <div className="mb-4">
-                <label htmlFor="routingNumber" className="block text-lg font-normal text-brand-blue mb-2">
-                  Routing Number
-                </label>
-                <input
-                  type="text"
-                  id="routingNumber"
-                  name="routingNumber"
-                  value={settings.bankDetails.routingNumber}
-                  onChange={handleBankDetailsChange}
-                  className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-                />
-              </div>
+              <input
+                type="text"
+                name="paymentmethod"
+                value={method.name}
+                onChange={(e) => handlePaymentMethodChange(index, 'name', e.target.value)}
+                className="w-full border border-gray-300 p-2 mb-4 rounded-lg focus:outline-none focus:border-blue-500"
+                placeholder="Enter payment method name"
+              />
+             <label htmlFor="details" className="block text-lg font-normal text-brand-blue mb-2">
+              Payment Method Detials
+            </label>
+            <textarea
+                type="text"
+                name="details"
+                value={method.details}
+                onChange={(e) => handlePaymentMethodChange(index, 'details', e.target.value)}
+                className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none h-40 focus:border-blue-500"
+                placeholder="Enter payment details separated by commas"
+              />
+              <button
+                type="button"
+                onClick={() => handleRemovePaymentMethod(index)}
+                className="mt-2 text-red-500 hover:text-red-700 text-md"
+              >
+                Remove Payment Method
+              </button>
             </div>
-          )}
-
-          {/* PayPal Details */}
-          {settings.paymentMethod === 'PayPal' && (
-            <div className="mb-6">
-              <div className="mb-4">
-                <label htmlFor="paypalEmail" className="block text-lg font-normal text-brand-blue mb-2">
-                  PayPal Email
-                </label>
-                <input
-                  type="email"
-                  id="paypalEmail"
-                  name="paypalEmail"
-                  value={settings.paypalDetails.paypalEmail}
-                  onChange={handlePayPalDetailsChange}
-                  className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Credit Card Details */}
-          {settings.paymentMethod === 'Credit Card' && (
-            <div className="mb-6">
-              <div className="mb-4">
-                <label htmlFor="cardNumber" className="block text-lg font-normal text-brand-blue mb-2">
-                  Card Number
-                </label>
-                <input
-                  type="text"
-                  id="cardNumber"
-                  name="cardNumber"
-                  value={settings.creditCardDetails.cardNumber}
-                  onChange={handleCreditCardDetailsChange}
-                  className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-                />
-              </div>
-              <div className="mb-4">
-                <label htmlFor="expirationDate" className="block text-lg font-normal text-brand-blue mb-2">
-                  Expiration Date (MM/YY)
-                </label>
-                <input
-                  type="text"
-                  id="expirationDate"
-                  name="expirationDate"
-                  value={settings.creditCardDetails.expirationDate}
-                  onChange={handleCreditCardDetailsChange}
-                  className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-                />
-              </div>
-              <div className="mb-4">
-                <label htmlFor="cvv" className="block text-lg font-normal text-brand-blue mb-2">
-                  CVV
-                </label>
-                <input
-                  type="text"
-                  id="cvv"
-                  name="cvv"
-                  value={settings.creditCardDetails.cvv}
-                  onChange={handleCreditCardDetailsChange}
-                  className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Submit Button */}
-        <div className="flex justify-end">
+          ))}
           <button
-            type="submit"
-            className="bg-brand-blue text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200"
+            type="button"
+            onClick={handleAddPaymentMethod}
+            className="mt-2 text-blue-500 hover:text-blue-700 text-md"
           >
-            Save Settings
+            Add Payment Method
           </button>
         </div>
+        
+        <button
+          type="submit"
+          className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition duration-200"
+        >
+          Save Settings
+        </button>
       </form>
     </div>
   );

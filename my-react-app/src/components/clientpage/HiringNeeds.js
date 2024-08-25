@@ -12,6 +12,7 @@ const HiringNeeds = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     // Navigate to the next step
+    localStorage.setItem("projectDuration",selectedDuration)
     navigate('/hire-talent/time-commitment'); // Change this to the actual path for the next step
   };
 

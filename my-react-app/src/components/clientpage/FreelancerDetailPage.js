@@ -1,79 +1,42 @@
-import React from "react";
-import { FaCheckCircle } from "react-icons/fa";
+import React, { useState, useEffect } from 'react';
+import { FaCheckCircle } from 'react-icons/fa';
+import { useParams } from 'react-router-dom';
+import axios from 'axios';
+import profilePic from "../../images/default-profile-picture.png"; // Default profile picture
+const FreelancerDetailPage = ( ) => {
+  const { id:freelancerId } = useParams();
+  const [freelancerData, setFreelancerData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-const FreelancerDetailPage = () => {
-  const freelancerData = {
-    profilePicture: "https://via.placeholder.com/150",
-    name: "John Doe",
-    title: "Senior Full Stack Developer",
-    skills: ["JavaScript", "React", "Node.js", "Python", "Django"],
-    preferredWorkingStyle: "Part Time",
-    workExperience: [
-      {
-        company: "Tech Corp",
-        role: "Senior Developer",
-        startDate: "Jan 2020",
-        endDate: "Present",
-        description:
-          "Developed and maintained web applications using React and Node.js.",
-      },
-      {
-        company: "Design Studio",
-        role: "Frontend Developer",
-        startDate: "Mar 2018",
-        endDate: "Dec 2019",
-        description:
-          "Worked on UI/UX design and frontend development using React and CSS.",
-      },
-      {
-        company: "Web Solutions Inc.",
-        role: "Backend Developer",
-        startDate: "Jan 2016",
-        endDate: "Feb 2018",
-        description:
-          "Built and managed backend services using Django and PostgreSQL.",
-      },
-    ],
-    portfolio: [
-      {
-        title: "E-commerce Website",
-        description:
-          "Developed a full-featured e-commerce platform with payment integration.",
-        link: "https://example.com",
-        imageUrl: "https://via.placeholder.com/300",
-      },
-      {
-        title: "Portfolio Website",
-        description: "Designed and developed a personal portfolio website.",
-        link: "https://example.com",
-        imageUrl: "https://via.placeholder.com/300",
-      },
-    ],
-    certifications: [
-      {
-        name: "Certified JavaScript Developer",
-        organization: "JavaScript Institute",
-        date: "Apr 2021",
-        link: "https://javascript-institute.org/certifications/certified-javascript-developer", // Example link
-      },
-      {
-        name: "AWS Certified Solutions Architect",
-        organization: "Amazon Web Services",
-        date: "Sep 2020",
-        link: "https://aws.amazon.com/certification/certified-solutions-architect-associate/", // Example link
-      },
-    ],
-  };
+  useEffect(() => {
+    const fetchFreelancerData = async () => {
+      try {
+        const response = await axios.get(`http://127.0.0.1:8000/api/user/freelancer/${freelancerId}/`);
+        setFreelancerData(response.data);
+      } catch (err) {
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFreelancerData();
+  }, [freelancerId]);
+
+  if (loading) return <div className="text-center py-8">Loading...</div>;
+  if (error) return <div className="text-center py-8">Error fetching freelancer details</div>;
+  if (!freelancerData) return <div className="text-center py-8">No data available</div>;
 
   const {
-    profilePicture,
-    name,
-    title,
+    profile_picture,
+    full_name,
+    bio,
     skills,
-    workExperience,
+    prev_work_experience,
     portfolio,
     certifications,
-    preferredWorkingStyle,
+    preferred_working_hours,
   } = freelancerData;
 
   return (
@@ -81,24 +44,24 @@ const FreelancerDetailPage = () => {
       <div className="p-10 max-w-5xl mx-auto">
         <div className="flex items-start mb-8">
           <img
-            src={profilePicture}
-            alt={`${name}'s profile`}
+            src={profile_picture || profilePic}
+            alt={`${full_name}'s profile`}
             className="w-32 h-32 object-cover rounded-full border-4 border-blue-600 shadow-lg"
           />
           <div className="ml-6">
             <h2 className="text-4xl font-semibold text-blue-800 flex items-center">
-              {name}
+              {full_name || "John Doe"}
             </h2>
             <p className="text-xl text-blue-700 flex items-center mt-2">
               <FaCheckCircle className="w-5 mr-1 h-5 text-green-500" />
-              <span className="flex items-center">{title}</span>
+              <span className="flex items-center">{bio || "Senior Full Stack Developer"}</span>
             </p>
             <div className="flex items-center mt-4">
               <p className="text-lg text-blue-700 mr-4">
                 <span className="text-green-700">Available</span> for hire
               </p>
               <button className="bg-green-500 text-white py-2 px-4 rounded-lg">
-                Hire {name}
+                Hire {full_name || "John Doe"}
               </button>
             </div>
           </div>
@@ -107,7 +70,7 @@ const FreelancerDetailPage = () => {
         <section className="mb-8">
           <h3 className="text-2xl font-semibold text-blue-800 mb-4">Skills</h3>
           <div className="flex flex-wrap gap-2">
-            {skills.map((skill, index) => (
+            {skills.split(',').map((skill, index) => (
               <span
                 key={index}
                 className="bg-blue-300 text-blue-900 text-lg px-3 py-1 rounded-full shadow-sm"
@@ -119,28 +82,15 @@ const FreelancerDetailPage = () => {
         </section>
 
         <section className="mb-8">
-          <h3 className="text-2xl font-semibold text-blue-800 mb-4">
-            Work Experience
-          </h3>
+          <h3 className="text-2xl font-semibold text-blue-800 mb-4">Work Experience</h3>
           <div className="relative pl-8 border-l-2 border-blue-400">
-            {workExperience.map((experience, index) => (
+            {prev_work_experience.split(';').map((experience, index) => (
               <div key={index} className="mb-6 relative">
                 <div className="absolute -left-4 top-0 w-8 h-8 bg-blue-700 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-semibold">
-                    {index + 1}
-                  </span>
+                  <span className="text-white text-sm font-semibold">{index + 1}</span>
                 </div>
                 <div className="ml-4">
-                  <h4 className="text-xl font-semibold text-blue-800">
-                    {experience.role}
-                  </h4>
-                  <p className="text-lg text-blue-700">{experience.company}</p>
-                  <p className="text-sm text-blue-600">
-                    {experience.startDate} - {experience.endDate}
-                  </p>
-                  <p className="text-base text-blue-800 mt-2">
-                    {experience.description}
-                  </p>
+                  <p className="text-base text-blue-800 mt-2">{experience}</p>
                 </div>
               </div>
             ))}
@@ -148,17 +98,15 @@ const FreelancerDetailPage = () => {
         </section>
 
         <section className="mb-8">
-          <h3 className="text-2xl font-semibold text-blue-800 mb-4">
-            Portfolio
-          </h3>
+          <h3 className="text-2xl font-semibold text-blue-800 mb-4">Portfolio</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {portfolio.map((project, index) => (
+            {portfolio.split(';').map((project, index) => (
               <div
                 key={index}
                 className="relative bg-white p-6 rounded-lg shadow-lg hover:shadow-2xl transition duration-300"
               >
                 <img
-                  src={project.imageUrl}
+                  src={project.imageUrl || "https://via.placeholder.com/300"}
                   alt={project.title}
                   className="w-full h-40 object-cover rounded-lg mb-4"
                 />
@@ -182,14 +130,12 @@ const FreelancerDetailPage = () => {
         </section>
 
         <section className="mb-8">
-          <h3 className="text-2xl font-semibold text-blue-800 mb-4">
-            Certifications
-          </h3>
+          <h3 className="text-2xl font-semibold text-blue-800 mb-4">Certifications</h3>
           <ul className="list-disc list-inside">
-            {certifications.map((certification, index) => (
+            {certifications.split(';').map((certification, index) => (
               <li key={index} className="text-lg text-blue-700">
                 <a
-                  href={certification.link}
+                  href={certification.link || "#"}
                   className="text-blue-600 underline hover:text-blue-800"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -206,7 +152,7 @@ const FreelancerDetailPage = () => {
           <h3 className="text-2xl font-semibold text-blue-800 mb-4">
             Preferred Working Style
           </h3>
-          <p className="text-lg text-blue-700">{preferredWorkingStyle}</p>
+          <p className="text-lg text-blue-700">{preferred_working_hours}</p>
         </section>
       </div>
     </div>

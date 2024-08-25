@@ -14,7 +14,6 @@ const ApplyAsFreelancer = () => {
   });
   const [positions, setPositions] = useState([]);
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(true); // To handle loading state
   const navigate = useNavigate();
 
@@ -161,7 +160,7 @@ const ApplyAsFreelancer = () => {
               onClick={() => setPasswordVisible(!passwordVisible)}
               className="absolute right-3 top-10 text-gray-600 hover:text-gray-800"
             >
-              {passwordVisible ? <FaEyeSlash /> : <FaEye />}
+              {!passwordVisible ? <FaEyeSlash /> : <FaEye />}
             </button>
           </div>
           <div className="flex flex-col gap-2 relative">
@@ -172,7 +171,7 @@ const ApplyAsFreelancer = () => {
             <input
               id="confirmPassword"
               name="confirmPassword"
-              type={confirmPasswordVisible ? "text" : "password"}
+              type={"password"}
               placeholder="Confirm Your Password"
               value={formData.confirmPassword}
               onChange={handleChange}

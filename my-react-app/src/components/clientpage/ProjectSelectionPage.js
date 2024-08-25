@@ -16,7 +16,7 @@ const ProjectSelectionPage = ({ projects }) => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto bg-white shadow-xl rounded-lg p-8 mt-8">
+    <div className="max-w-3xl mx-auto p-8 mt-8">
       <h1 className="text-3xl font-thin mb-6 text-brand-dark-blue">Select a Project</h1>
       <div className="flex justify-end items-center mb-8">
         <Link to="/create-project" className="inline-flex items-center gap-3  py-2 px-4 bg-blue-600 text-white rounded-lg shadow-lg text-xl font-semibold transition-all duration-300 hover:bg-blue-700 hover:shadow-xl">

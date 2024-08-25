@@ -8,7 +8,7 @@ const HireATalent = () => {
   const handleDurationChange = (e) => {
     setSelectedDuration(e.target.value);
   };
-
+  
   const handleSubmit = (e) => {
     e.preventDefault();
     let nextPath = '/hire-talent/time-commitment'; // Default path for Layout
@@ -17,6 +17,7 @@ const HireATalent = () => {
       nextPath = '/create-project/time-commitment'; // Update this path if needed
     }
     // Navigate to the determined next path
+    localStorage.setItem("projectDuration",selectedDuration)
     navigate(nextPath);
   };
   return (
@@ -116,7 +117,12 @@ const HireATalent = () => {
           </fieldset>
           <button
             type="submit"
-            className="bg-brand-blue text-white p-3 rounded-lg hover:bg-brand-dark-blue transition"
+            disabled={!selectedDuration} // Disable if nothing is selected
+            className={`py-3 px-6 rounded-lg text-lg transition ${
+              selectedDuration
+                ? 'bg-brand-blue text-white hover:bg-brand-dark-blue'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
           >
             Get Started
           </button>

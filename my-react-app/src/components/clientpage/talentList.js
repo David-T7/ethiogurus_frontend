@@ -1,90 +1,54 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate , useLocation } from 'react-router-dom';
 import { FaEnvelope, FaStar } from 'react-icons/fa';
+import axios from 'axios';
 
-// Example data
-const talentData = [
-  {
-    id: 1,
-    profilePicture: 'https://via.placeholder.com/100',
-    title: 'Senior Developer',
-    skills: ['JavaScript', 'React', 'Node.js'],
-    experienceYears: 5,
-    hourlyRate: '$60',
-    rating: 4.5,
-  },
-  {
-    id: 2,
-    profilePicture: 'https://via.placeholder.com/100',
-    title: 'UI/UX Designer',
-    skills: ['Figma', 'Photoshop', 'Sketch'],
-    experienceYears: 3,
-    hourlyRate: '$45',
-    rating: 4.7,
-  },
-  {
-    id: 3,
-    profilePicture: 'https://via.placeholder.com/100',
-    title: 'Full Stack Developer',
-    skills: ['Python', 'Django', 'JavaScript'],
-    experienceYears: 7,
-    hourlyRate: '$75',
-    rating: 4.8,
-  },
-  {
-    id: 4,
-    profilePicture: 'https://via.placeholder.com/100',
-    title: 'Front End Developer',
-    skills: ['HTML', 'CSS', 'React'],
-    experienceYears: 4,
-    hourlyRate: '$50',
-    rating: 4.2,
-  },
-  {
-    id: 5,
-    profilePicture: 'https://via.placeholder.com/100',
-    title: 'Backend Developer',
-    skills: ['Node.js', 'Express', 'MongoDB'],
-    experienceYears: 6,
-    hourlyRate: '$65',
-    rating: 4.6,
-  },
-  {
-    id: 6,
-    profilePicture: 'https://via.placeholder.com/100',
-    title: 'Graphic Designer',
-    skills: ['Illustrator', 'InDesign', 'Photoshop'],
-    experienceYears: 5,
-    hourlyRate: '$55',
-    rating: 4.4,
-  },
-  {
-    id: 7,
-    profilePicture: 'https://via.placeholder.com/100',
-    title: 'Mobile App Developer',
-    skills: ['Swift', 'Kotlin', 'React Native'],
-    experienceYears: 4,
-    hourlyRate: '$70',
-    rating: 4.9,
-  },
-  {
-    id: 8,
-    profilePicture: 'https://via.placeholder.com/100',
-    title: 'Project Manager',
-    skills: ['Agile', 'Scrum', 'Jira'],
-    experienceYears: 8,
-    hourlyRate: '$85',
-    rating: 4.3,
-  },
-];
-
+// Component
 const TalentListPage = () => {
   const navigate = useNavigate();
-  const blurlimit = 3;
-  const handleRedirectToSignup = () => {
-    navigate('/hire-talent/finalize');
-  };
+  const [talents, setTalents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const location = useLocation();
 
+  let blurlimit = 0;
+
+  useEffect(() => {
+    const fetchTalents = async () => {
+      try {
+        const data = {
+          "tech_stack":localStorage.getItem("selectedSkills"),
+          "working_preference":localStorage.getItem("timeCommitment"),
+          "project_duration":localStorage.getItem("projectDuration"),
+          "project_budget":localStorage.getItem("projectBudget"),
+          "project_description":localStorage.getItem("projectDescription"),
+        }
+        
+        const response = await axios.get('http://127.0.0.1:8000/api/freelancers/search/' , data ); // Replace with your actual endpoint
+        console.log("talent response list",response.data)
+        setTalents(response.data.freelancers);
+        if (location.pathname.startsWith('/create-project')) {
+          blurlimit = 3
+        }
+
+      } catch (err) {
+        setError('Failed to fetch talent data.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTalents();
+  }, []);
+
+  const handleRedirectToSignup = () => {
+    if (location.pathname.startsWith('/create-project')) {
+    navigate('/hire-talent/finalize');
+    }
+    else{
+      navigate("/hire-talent/talent-list/{id}")
+    }
+  };
 
   const handleCardClick = (e, id) => {
     e.stopPropagation(); // Prevents the card click event from propagating
@@ -93,13 +57,16 @@ const TalentListPage = () => {
 
   const handleContactClick = (e, id) => {
     e.stopPropagation(); // Prevents the contact button click event from propagating
-    navigate('/contact-freelancer/{id}')
+    navigate(`/contact-freelancer/${id}`);
   };
+
+  if (loading) return <div className="text-center py-8">Loading...</div>;
+  if (error) return <div className="text-center py-8 text-red-500">{error}</div>;
 
   return (
     <div className="container mx-auto py-12 px-6">
       <section className="bg-gray-100 p-8 rounded-lg max-w-6xl mx-auto">
-        <h2 className="text-3xl font-noraml text-brand-blue mb-6">
+        {talents.length > 0 ? <h2 className="text-3xl font-normal text-brand-blue mb-6">
           Here are some freelancers matched based on your project needs. 
           <br />
           <span className="text-brand-blue underline hover:text-brand-dark-blue cursor-pointer" onClick={handleRedirectToSignup}>
@@ -107,8 +74,11 @@ const TalentListPage = () => {
           </span> 
           <span> to see the full list.</span>
         </h2>
+        :
+        <h2 className='text-center'>No freelancer found based on your requirement</h2>
+        }
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {talentData.map((talent, index) => (
+          {talents.map((talent, index) => (
             <div
               key={talent.id}
               onClick={(e) => handleCardClick(e, talent.id)}

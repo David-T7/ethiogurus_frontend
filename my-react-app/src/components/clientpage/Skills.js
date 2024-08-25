@@ -1,25 +1,32 @@
-import React, { useState } from 'react';
-import { useNavigate ,useLocation} from 'react-router-dom';
-
-const recommendedSkills = [
-  'JavaScript', 'Python', 'React', 'Node.js', 'Django', 'Java', 'Ruby on Rails', 
-  'SQL', 'NoSQL', 'DevOps', 'AWS', 'Docker', 'Kubernetes', 'UI/UX Design', 'Project Management'
-];
-
-const allSkills = [
-  'JavaScript', 'Python', 'React', 'Node.js', 'Django', 'Java', 'Ruby on Rails', 
-  'SQL', 'NoSQL', 'DevOps', 'AWS', 'Docker', 'Kubernetes', 'UI/UX Design', 'Project Management',
-  'PHP', 'C++', 'Swift', 'TypeScript', 'GraphQL', 'Microservices', 'Machine Learning', 
-  'Cloud Computing', 'Agile', 'Scrum', 'Business Analysis'
-];
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const Skills = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [filteredSkills, setFilteredSkills] = useState([]);
+  const [allSkills, setAllSkills] = useState([]);
+  const [recommendedSkills, setRecommendedSkills] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
 
+  useEffect(() => {
+    // Fetch skills and recommended skills using Axios
+    const fetchSkills = async () => {
+      try {
+        const skillsResponse = await axios.get('http://127.0.0.1:8000/api/technologies/');
+        const recommendedSkillsResponse = await axios.get('http://127.0.0.1:8000/api/skill-search/');
+
+        setAllSkills(skillsResponse.data); // Set all skills fetched from the backend
+        setRecommendedSkills(recommendedSkillsResponse.data); // Set recommended skills fetched from the backend
+      } catch (error) {
+        console.error('Error fetching skills:', error);
+      }
+    };
+
+    fetchSkills();
+  }, []);
 
   const handleSearchChange = (e) => {
     const term = e.target.value;
@@ -27,7 +34,7 @@ const Skills = () => {
 
     if (term) {
       const results = allSkills.filter(skill =>
-        skill.toLowerCase().includes(term.toLowerCase())
+        skill.name.toLowerCase().includes(term.toLowerCase())
       );
       setFilteredSkills(results);
     } else {
@@ -53,13 +60,21 @@ const Skills = () => {
     );
   };
 
-
   const handleSubmit = (e) => {
     e.preventDefault();
-    let nextPath = '/hire-talent/project-description'; // Default path for Layout
+    try{
+      axios.post('http://127.0.0.1:8000/api/skill-search/' , {
+        "skill_names": selectedSkills
+      })
+    }
+    catch(error){
+      console.error('Error posting selected skills:', error);
+    }
+    localStorage.setItem("selectedSkills",selectedSkills)
+    let nextPath = '/hire-talent/budget-estimate'; // Default path for Layout
     // Check current route to determine the next path
     if (location.pathname.startsWith('/create-project')) {
-      nextPath = '/create-project/project-description'; // Update this path if needed
+      nextPath = '/create-project/budget-estimate'; // Update this path if needed
     }
     // Navigate to the determined next path
     navigate(nextPath);
@@ -83,18 +98,18 @@ const Skills = () => {
             value={searchTerm}
             onChange={handleSearchChange}
             className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-            />
+          />
           {filteredSkills.length > 0 && (
             <div className="bg-white border border-gray-300 rounded-lg shadow-md max-h-64 overflow-y-auto mt-0">
               <ul className="list-none p-0 m-0">
                 {filteredSkills.map((skill) => (
-                  <li key={skill} className="hover:bg-gray-100">
+                  <li key={skill.id} className="hover:bg-gray-100">
                     <button
                       type="button"
                       onClick={() => handleSkillAdd(skill)}
                       className="w-full text-left p-3 bg-white border-b border-gray-300 hover:bg-brand-blue hover:text-white transition"
                     >
-                      {skill}
+                      {skill.name}
                     </button>
                   </li>
                 ))}
@@ -109,12 +124,12 @@ const Skills = () => {
               <div className="flex flex-wrap gap-4">
                 {selectedSkills.map((skill) => (
                   <div
-                    key={skill}
+                    key={skill.id}
                     className="bg-gray-200 text-brand-gray-dark p-2 rounded-lg flex items-center"
                   >
-                    <span className="mr-2">{skill}</span>
+                    <span className="mr-2">{skill.name}</span>
                     <button
-                      onClick={() => setSelectedSkills(selectedSkills.filter(s => s !== skill))}
+                      onClick={() => setSelectedSkills(selectedSkills.filter(s => s.id !== skill.id))}
                       className="text-red-500 hover:text-red-700"
                     >
                       ×
@@ -124,24 +139,25 @@ const Skills = () => {
               </div>
             </div>
           )}
-          <div className="mb-0">
+          {recommendedSkills.length > 0 && <div className="mb-0">
             <h3 className="text-xl font-normal text-brand-blue mb-4">
               Recommended Skills
             </h3>
             <div className="flex flex-wrap gap-4">
               {recommendedSkills.map((skill) => (
                 <button
-                  key={skill}
+                  key={skill.id}
                   type="button"
                   onClick={() => handleRecommendedSkillAdd(skill)}
                   className="bg-brand-blue text-white p-2 rounded-lg hover:bg-brand-dark-blue transition"
                 >
-                  <span className="mr-2">{skill}</span>
+                  <span className="mr-2">{skill.name}</span>
                   <span className="text-white text-lg">+</span>
                 </button>
               ))}
             </div>
           </div>
+        }
           <div className="border-t border-gray-300 pt-6">
             <div className="flex justify-between">
               <button

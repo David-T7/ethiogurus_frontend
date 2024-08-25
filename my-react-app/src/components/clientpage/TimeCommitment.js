@@ -12,6 +12,7 @@ const TimeCommitment = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    localStorage.setItem("timeCommitment",selectedCommitment)
     let nextPath = '/hire-talent/skills'; // Default path for Layout
     // Check current route to determine the next path
     if (location.pathname.startsWith('/create-project')) {
