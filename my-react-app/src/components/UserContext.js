@@ -7,7 +7,6 @@ export const UserProvider = ({ children }) => {
   const [profilePicture, setProfilePicture] = useState(null);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-
   useEffect(() => {
     const fetchProfileData = async () => {
       try {

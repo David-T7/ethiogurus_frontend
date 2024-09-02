@@ -6,6 +6,7 @@ import {
   FaUserCog,
   FaUserEdit,
   FaSignOutAlt,
+  FaLock,
 } from "react-icons/fa";
 import { AuthContext } from '../AuthContext'; // Update this path according to your project structure
 import { UserContext } from "../UserContext";
@@ -146,6 +147,7 @@ const FreelancerProfileLayout = ({ children }) => {
           >
             Contracts
           </Link>
+
           <Link
             to="/messages"
             className={getLinkClasses("/messages")}
@@ -170,6 +172,13 @@ const FreelancerProfileLayout = ({ children }) => {
               </span>
             )}
           </Link>
+          <Link
+                    to="/skills"
+                    className={getLinkClasses("/skills")}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Skills
+                  </Link>
         </nav>
 
         {/* Profile Picture and Dropdown Menu */}
@@ -204,6 +213,14 @@ const FreelancerProfileLayout = ({ children }) => {
                     className="flex items-center gap-2 p-2 text-gray-700 hover:bg-gray-100 rounded"
                   >
                     <FaUserEdit /> Update Profile
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/update-password"
+                    className="flex items-center gap-2 p-2 text-gray-700 hover:bg-gray-100 rounded"
+                  >
+                    <FaLock /> Change Password
                   </Link>
                 </li>
                 <li>
@@ -257,6 +274,7 @@ const FreelancerProfileLayout = ({ children }) => {
                   >
                     Contracts
                   </Link>
+
                   <Link
                     to="/messages"
                     className={getLinkClasses("/messages")}
@@ -280,6 +298,13 @@ const FreelancerProfileLayout = ({ children }) => {
                 {unreadNotification}
               </span>
             )}
+                  </Link>
+                  <Link
+                    to="/skills"
+                    className={getLinkClasses("/skills")}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Skills
                   </Link>
                 </nav>
               </div>

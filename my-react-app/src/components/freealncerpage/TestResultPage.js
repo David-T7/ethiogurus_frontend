@@ -5,13 +5,19 @@ const TestResultPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Assuming results are passed via state from the TestPage component
+  // Extract data from location state
   const { questions, selectedAnswers, correctAnswers } = location.state || {};
 
+  // Check if required data exists
+  if (!questions || !selectedAnswers || !correctAnswers) {
+    return <div>Error: Missing data.</div>;
+  }
+
+  // Calculate the score based on selected and correct answers
   const calculateScore = () => {
     let score = 0;
-    questions.forEach((question, index) => {
-      if (selectedAnswers[question.id] === correctAnswers[question.id]) {
+    questions.forEach((question) => {
+      if (selectedAnswers[question.id]?.text === correctAnswers[question.id]) {
         score += 1;
       }
     });
@@ -34,16 +40,16 @@ const TestResultPage = () => {
         <div className="p-6">
           <h3 className="text-xl font-semibold mb-4">Detailed Results</h3>
           <ul className="space-y-4">
-            {questions.map((question, index) => (
-              <li key={index}>
-                <div className="mb-2 text-lg font-medium">{question.question}</div>
+            {questions.map((question) => (
+              <li key={question.id}>
+                <div className="mb-2 text-lg font-medium">{question.text}</div>
                 <div className={`p-4 rounded-lg ${
-                  selectedAnswers[question.id] === correctAnswers[question.id]
+                  selectedAnswers[question.id]?.text === correctAnswers[question.id]
                     ? 'bg-green-100 border-l-4 border-green-500'
                     : 'bg-red-100 border-l-4 border-red-500'
                 }`}>
-                  <p className="font-semibold">Your Answer: {selectedAnswers[question.id]}</p>
-                  {selectedAnswers[question.id] !== correctAnswers[question.id] && (
+                  <p className="font-semibold">Your Answer: {selectedAnswers[question.id]?.text}</p>
+                  {selectedAnswers[question.id]?.id !== correctAnswers[question.id] && (
                     <p className="font-semibold">Correct Answer: {correctAnswers[question.id]}</p>
                   )}
                 </div>
