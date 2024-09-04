@@ -59,10 +59,10 @@ const TestResultPage = () => {
 
           <div className="mt-8 flex justify-center">
             <button
-              onClick={() => navigate('/tests')}
+              onClick={() => navigate('/skills')}
               className="px-6 py-2 rounded-lg bg-brand-blue text-white font-semibold hover:bg-brand-dark-blue transition-colors duration-300"
             >
-              Go to Tests Dashboard
+              Return to skills page
             </button>
           </div>
         </div>

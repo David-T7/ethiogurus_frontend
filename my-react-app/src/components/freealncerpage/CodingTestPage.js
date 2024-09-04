@@ -8,25 +8,25 @@ const CodingTestPage = () => {
 
   // State to store test data and answers
   const [testData, setTestData] = useState([]);
-  const [currentTest , setCurrentTest] = useState([])
+  const [currentTest, setCurrentTest] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [timer, setTimer] = useState(0);
   const token = localStorage.getItem("access");
-  const [freelancerId , setFreelancerId]= useState(null)
-  const [submission_id , setSubmissionId] = useState(null)
+  const [freelancerId, setFreelancerId] = useState(null);
+  const [submissionId, setSubmissionId] = useState(null);
+
   // Fetch test data and questions when component mounts
   useEffect(() => {
     const fetchTestData = async () => {
       try {
         // Fetch test data including questions
-        
         const testResponse = await axios.get(`http://127.0.0.1:8002/api/practical-test/${testId}/`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        setCurrentTest(testResponse.data)
+        setCurrentTest(testResponse.data);
         
         const response = await axios.get(`http://127.0.0.1:8002/api/tests/${testId}/questions/`, {
           headers: {
@@ -34,13 +34,13 @@ const CodingTestPage = () => {
           },
         });
 
-        const freelnacerResponse = await axios.get("http://127.0.0.1:8000/api/user/freelancer/manage/", {
+        const freelancerResponse = await axios.get("http://127.0.0.1:8000/api/user/freelancer/manage/", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-         
         });
-        setFreelancerId(freelnacerResponse.data.id)
+
+        setFreelancerId(freelancerResponse.data.id);
         setTestData(response.data);
         console.log("test data is ", response.data);
         setTimer(testResponse.data.duration_in_minutes * 60); // Convert minutes to seconds
@@ -100,47 +100,85 @@ const CodingTestPage = () => {
   const submitCurrentAnswer = async () => {
     const currentQuestion = testData[currentQuestionIndex];
     if (currentQuestion) {
-        try {
-            const response = await axios.post(`http://127.0.0.1:8002/api/skilltestsubmissions/${testId}/submit_answer/`, {
-                question_id: currentQuestion.id,
-                answer: answers[currentQuestion.id] || '',
-                freelancer_id : freelancerId,
-                submission_id: submission_id
-            }, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            if (response.data.submission_id){ 
-              setSubmissionId(response.data.submission_id)
-            } 
-        } catch (error) {
-            console.error('Failed to submit answer', error);
+      try {
+        const response = await axios.post(`http://127.0.0.1:8002/api/skilltestsubmissions/${testId}/submit_answer/`, {
+          question_id: currentQuestion.id,
+          answer: answers[currentQuestion.id] || '',
+          freelancer_id: freelancerId,
+          submission_id: submissionId
+        }, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (response.data.submission_id) {
+          setSubmissionId(response.data.submission_id);
         }
-    } 
-};
-
+      } catch (error) {
+        console.error('Failed to submit answer', error);
+      }
+    }
+  };
 
   const handleFinalizeTest = async () => {
     try {
-      await axios.post(`http://127.0.0.1:8002/api/skilltestsubmissions/finalize-submission/`, {
-        submission_id:submission_id
+      const finalizeResponse = await axios.post(`http://127.0.0.1:8002/api/skilltestsubmissions/finalize-submission/`, {
+        submission_id: submissionId
       }, {
-       
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
+      const { submission } = finalizeResponse.data;
+
+      // If the submission is passed, update the freelancer's skills
+      if (submission.passed) {
+        console.log("passed")
+        await updateFreelancerSkills(currentTest.skill_type);        
+      }
+
       // Navigate to results page
-      navigate(`/coding-test-result/${submission_id}`, { 
+      navigate(`/coding-test-result/${submissionId}`, { 
         state: { 
           currentTest, 
-          submission_id,
+          submission_id: submissionId,
         }
       });
     } catch (error) {
       console.error('Failed to finalize test', error);
+    }
+  };
+
+  const updateFreelancerSkills = async (skillType) => {
+    try {
+      const freelancerResponse = await axios.get(`http://127.0.0.1:8000/api/user/freelancer/manage/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const currentSkills = freelancerResponse.data.skills || {};
+      console.log("current skills are ",currentSkills)
+      // Update the skills JSON field
+      const updatedSkills = {
+        ...currentSkills,
+        ["practical"]: Array.isArray(currentSkills["practical"])
+          ? [...currentSkills["practical"], skillType]
+          : [skillType],
+      };
+
+      await axios.patch(`http://127.0.0.1:8000/api/user/freelancer/manage/`, {
+        skills: updatedSkills,
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log('Freelancer skills updated successfully');
+    } catch (error) {
+      console.error('Failed to update freelancer skills', error);
     }
   };
 
