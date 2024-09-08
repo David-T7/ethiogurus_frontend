@@ -10,6 +10,7 @@ import {
 } from "react-icons/fa";
 import { AuthContext } from '../AuthContext'; // Update this path according to your project structure
 import { UserContext } from "../UserContext";
+import defaultProfilePic from "../../images/default-profile-picture.png"
 const FreelancerProfileLayout = ({ children }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false); // Dropdown menu for profile
@@ -188,7 +189,7 @@ const FreelancerProfileLayout = ({ children }) => {
             className="flex items-center gap-2 md:mr-0 mr-10 text-white hover:text-gray-200"
           >
             <img
-              src={profilePicture} // Dynamic user profile picture
+              src={profilePicture || defaultProfilePic} // Dynamic user profile picture
               alt="Profile"
               className="w-12 h-12 rounded-full border-2 border-white shadow-lg"
             />

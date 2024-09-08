@@ -11,6 +11,8 @@ const TestPage = () => {
   const [timeRemaining, setTimeRemaining] = useState(null);
   const [isTestReady, setIsTestReady] = useState(false);
   const [freelancerId, setFreelancerId] = useState(null);
+  const [questionTimeRemaining, setQuestionTimeRemaining] = useState(null);
+
   const navigate = useNavigate();
   const { id } = useParams(); // Assuming testId is passed in the URL
   const token = localStorage.getItem("access");
@@ -51,24 +53,27 @@ const TestPage = () => {
     fetchFreelancerId();
   }, []);
 
+  // Initialize question timer based on duration_in_seconds
   useEffect(() => {
-    if (skillTests.theoretical && skillTests.theoretical.duration_in_minutes) {
-      const durationInMinutes = skillTests.theoretical.duration_in_minutes;
-      setTimeRemaining(durationInMinutes * 60);
+    if (questions.length > 0) {
+      const currentQuestion = questions[currentQuestionIndex];
+      setQuestionTimeRemaining(currentQuestion.duration_in_seconds);
       setIsTestReady(true);
     }
-  }, [skillTests]);
+  }, [questions, currentQuestionIndex]);
 
+  // Question timer effect
   useEffect(() => {
-    if (timeRemaining === null || !isTestReady) return;
+    if (questionTimeRemaining === null || !isTestReady) return;
 
-    if (timeRemaining <= 0) {
-      handleSubmit();
+    if (questionTimeRemaining <= 0) {
+      // Auto-submit the answer and move to the next question
+      handleSubmitCurrentQuestion();
       return;
     }
 
     const timer = setInterval(() => {
-      setTimeRemaining((prevTime) => {
+      setQuestionTimeRemaining((prevTime) => {
         if (prevTime > 0) {
           return prevTime - 1;
         } else {
@@ -79,7 +84,34 @@ const TestPage = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timeRemaining, isTestReady]);
+  }, [questionTimeRemaining, isTestReady]);
+
+  const handleSubmitCurrentQuestion = async () => {
+    const currentQuestion = questions[currentQuestionIndex];
+    const selectedAnswer = selectedAnswers[currentQuestion.id] || {
+      id: "not given",
+      text: "not given", // Default to empty string if no option is selected
+    };
+  
+    setSelectedAnswers((prevAnswers) => {
+      const updatedAnswers = {
+        ...prevAnswers,
+        [currentQuestion.id]: {
+          id: selectedAnswer.id,
+          text: selectedAnswer.text,
+        },
+      };
+  
+      if (currentQuestionIndex < questions.length - 1) {
+        setCurrentQuestionIndex(currentQuestionIndex + 1);
+      } else {
+        // Ensure the state update has completed before final submission
+        handleSubmit(updatedAnswers);
+      }
+  
+      return updatedAnswers;
+    });
+  };
 
   const handleAnswerSelection = (questionId, optionText, optionId) => {
     setSelectedAnswers({
@@ -103,7 +135,7 @@ const TestPage = () => {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (finalAnswers = selectedAnswers) => {
     try {
       const token = localStorage.getItem("access");
 
@@ -121,7 +153,7 @@ const TestPage = () => {
       );
       const submission = submissionResponse.data;
 
-      const answersData = Object.entries(selectedAnswers).map(
+      const answersData = Object.entries(finalAnswers).map(
         ([questionId, optionData]) => ({
           submission: submission.id,
           question: questionId,
@@ -129,6 +161,7 @@ const TestPage = () => {
           answer_text: optionData.text,
         })
       );
+      console.log("final answers are ",answersData)
 
       // Send the answers to the new endpoint
       const answersResponse = await axios.post(
@@ -213,12 +246,6 @@ const TestPage = () => {
     }
   };
 
-  const formatTime = (seconds) => {
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${minutes}:${secs < 10 ? "0" : ""}${secs}`;
-  };
-
   if (!isTestReady) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -232,6 +259,7 @@ const TestPage = () => {
     );
   }
 
+
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -240,86 +268,70 @@ const TestPage = () => {
     );
   }
 
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes}:${secs < 10 ? "0" : ""}${secs}`;
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100">
       <div className="w-full max-w-2xl bg-white shadow-lg rounded-lg overflow-hidden">
         <div className="p-6 bg-gradient-to-r from-brand-blue to-brand-dark-blue text-white">
-          <h2 className="text-2xl font-bold">{skillTests.theoretical.title} Theoretical Test</h2>
-          <p className="mt-2 text-lg">
+          <h2 className="text-2xl font-bold">
             Question {currentQuestionIndex + 1} of {questions.length}
-          </p>
-          <p className="mt-2 text-lg font-semibold">
-            Time Remaining: {formatTime(timeRemaining)}
+          </h2>
+          <p className="text-sm text-gray-200">
+            Time remaining: {formatTime(questionTimeRemaining)}
           </p>
         </div>
         <div className="p-6">
-          {questions.length > 0 && (
-            <>
-              <p className="text-xl font-medium mb-4">
-                {questions[currentQuestionIndex].text}
-              </p>
-              <ul className="space-y-4">
-                {questions[currentQuestionIndex].options.map(
-                  (option, index) => {
-                    const selectedOptionId =
-                      selectedAnswers[questions[currentQuestionIndex].id]?.id ||
-                      null;
-                    return (
-                      <li key={index}>
-                        <button
-                          onClick={() =>
-                            handleAnswerSelection(
-                              questions[currentQuestionIndex].id,
-                              option.option_text,
-                              option.id
-                            )
-                          }
-                          className={`block w-full text-left p-4 rounded-lg transition-colors duration-300 ${
-                            selectedOptionId === option.id
-                              ? "bg-green-500 text-white"
-                              : "bg-gray-200 hover:bg-gray-300"
-                          }`}
-                        >
-                          {option.option_text}
-                        </button>
-                      </li>
-                    );
-                  }
-                )}
-              </ul>
-            </>
-          )}
-          <div className="mt-8 flex justify-between">
-            <button
-              onClick={handlePreviousQuestion}
-              disabled={currentQuestionIndex === 0}
-              className={`px-6 py-2 rounded-lg text-white font-semibold transition-colors duration-300 ${
-                currentQuestionIndex === 0
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-brand-blue hover:bg-brand-dark-blue"
-              }`}
-            >
-              Back
-            </button>
-            {currentQuestionIndex < questions.length - 1 ? (
-              <button
-                onClick={handleNextQuestion}
-                className="px-6 py-2 rounded-lg bg-brand-blue text-white font-semibold hover:bg-brand-dark-blue transition-colors duration-300"
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                onClick={handleSubmit}
-                className="px-6 py-2 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors duration-300"
-              >
-                Submit
-              </button>
-            )}
-          </div>
+          <p className="text-lg text-gray-700">
+            {questions[currentQuestionIndex].text}
+          </p>
+          <ul className="mt-4">
+            {questions[currentQuestionIndex].options.map((option) => (
+              <li key={option.id} className="mb-2">
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    className="form-radio"
+                    name={`answer-${questions[currentQuestionIndex].id}`}
+                    value={option.id}
+                    required
+                    checked={
+                      selectedAnswers[questions[currentQuestionIndex].id]?.id ===
+                      option.id
+                    }
+                    onChange={() =>
+                      handleAnswerSelection(
+                        questions[currentQuestionIndex].id,
+                        option.option_text,
+                        option.id
+                      )
+                    }
+                  />
+                  <span className="ml-2 text-gray-700">
+                    {option.option_text}
+                  </span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="p-6 bg-gray-100">
+          <button
+            onClick={handleSubmitCurrentQuestion}
+            className="px-4 py-2 text-white bg-brand-blue rounded hover:bg-brand-dark-blue"
+          >
+            {currentQuestionIndex === questions.length - 1
+              ? "Submit Test"
+              : "Next Question"}
+          </button>
         </div>
       </div>
     </div>
   );
 };
+
 export default TestPage;
