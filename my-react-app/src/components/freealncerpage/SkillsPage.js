@@ -51,7 +51,7 @@ const SkillsPage = () => {
   }, []);
 
   const handleStartTest = (skillId, testType) => {
-    navigate(`/test/${skillId}/${testType}`);
+    navigate(`/camera-check/${skillId}/${testType}`);
   };
 
   const openSkillDetails = (skill) => {

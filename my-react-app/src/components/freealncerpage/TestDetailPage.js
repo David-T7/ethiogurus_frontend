@@ -28,7 +28,7 @@ const TestDetailPage = () => {
     <div className="flex flex-col items-center justify-center min-h-screen p-8 bg-gray-100">
       <div className="w-full max-w-3xl bg-white shadow-lg rounded-lg overflow-hidden">
         <div className="p-6 bg-gradient-to-r from-brand-blue to-brand-dark-blue text-white">
-          {type == 'theoretical' ? <h2 className="text-3xl font-bold">{testDetails?.title} Theoretical Test</h2>:<h2 className="text-3xl font-bold">{testDetails?.skill_type} Coding Test</h2>}
+          {type == 'theoretical' ? <h2 className="text-3xl font-normal">{testDetails?.title} Theoretical Test</h2>:<h2 className="text-3xl font-bold">{testDetails?.skill_type} Coding Test</h2>}
           {testDetails?.description && <p className="mt-4">{testDetails?.description}</p>}
 
         </div>

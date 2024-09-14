@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import axios from 'axios';
-import FollowUpModal from './FollowUpModal';
-
+import React, { useState, useEffect , useContext , useRef} from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
+import FollowUpModal from "./FollowUpModal";
+import beepSound from "../../audio/beepbeepbeep-53921.mp3";
+import PauseModal from "./PauseModal";
+import { CameraContext } from './CameraContext';
 const CodingTestPage = () => {
   const { id: testId } = useParams();
   const navigate = useNavigate();
@@ -17,12 +19,19 @@ const CodingTestPage = () => {
   const [followUpTimer, setFollowUpTimer] = useState(0); // Timer for follow-up questions
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submissionId, setSubmissionId] = useState(null);
-  const [followUpSubmissionId, setFollowUpSubmissionId] = useState(null);  
-  const token = localStorage.getItem('access');
+  const [followUpSubmissionId, setFollowUpSubmissionId] = useState(null);
+  const token = localStorage.getItem("access");
   const [freelancerId, setFreelancerId] = useState(null);
-  const [currentAnswer , setCurrentAnswer] = useState(null);
-  const [finalQuestion , setFinalQuestion] = useState(false)
+  const [currentAnswer, setCurrentAnswer] = useState(null);
+  const [finalQuestion, setFinalQuestion] = useState(false);
   const [followUpFinished, setFollowUpFinished] = useState(false);
+  const [textareaShake, setTextareaShake] = useState(false);
+  const warningSoundRef = useRef(new Audio(beepSound));
+  const followupWarningSoundRef = useRef(new Audio(beepSound));
+
+  const { startCamera, stopCamera,errorMessage , setErrorMessage, isTerminated, setFreelancerID_, videoRef , showModal ,isPaused, setIsPaused , setShowModal ,updateVideoSource , cameraStream } = useContext(CameraContext);
+
+
   useEffect(() => {
     const fetchTestData = async () => {
       try {
@@ -46,19 +55,37 @@ const CodingTestPage = () => {
         );
 
         const freelancerResponse = await axios.get(
-          'http://127.0.0.1:8000/api/user/freelancer/manage/',
+          "http://127.0.0.1:8000/api/user/freelancer/manage/",
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
+        const { id, profile_picture } = freelancerResponse.data;
+        setFreelancerId(id);
+        setFreelancerID_(id)
 
-        setFreelancerId(freelancerResponse.data.id);
+
+        if (profile_picture) {
+          const imageResponse = await fetch(profile_picture);
+          const imageBlob = await imageResponse.blob();
+          const imageFile = new File([imageBlob], 'profile_picture.jpg', { type: imageBlob.type });
+          // setProfilePictureFile(imageFile);
+          
+          // Upload profile picture to the server
+          const formData = new FormData();
+          formData.append('freelancer_id', id);
+          formData.append('profile_picture', imageFile);
+          await axios.post("http://127.0.0.1:8003/api/fetch-and-store-profile-picture/", formData, {
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+          });
+        }
+
         setTestData(response.data);
         setTimer(testResponse.data.duration_in_minutes * 60); // Convert minutes to seconds
       } catch (error) {
-        console.error('Failed to fetch test data', error);
+        console.error("Failed to fetch test data", error);
       }
     };
 
@@ -66,7 +93,7 @@ const CodingTestPage = () => {
   }, [testId]);
 
   useEffect(() => {
-    if (timer <= 0) return;
+    if (timer <= 0 || isPaused || isModalOpen) return;
 
     const intervalId = setInterval(() => {
       setTimer((prevTimer) => {
@@ -80,21 +107,20 @@ const CodingTestPage = () => {
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [timer]);
+  }, [timer , isPaused , isModalOpen]);
 
   useEffect(() => {
-    if (followUpTimer === null) return;
-    if (followUpTimer <= 0){
-      console.log("automatic submission trigered",timer)
+    if (followUpTimer === null || isPaused ) return;
+    if (followUpTimer <= 0) {
+      console.log("automatic submission trigered", timer);
       handleSubmitFollowUp(); // Automatically submit follow-up answers when timer expires
     }
     const intervalId = setInterval(() => {
-      console.log("timer",followUpTimer)
+      console.log("timer", followUpTimer);
       setFollowUpTimer((prevTimer) => {
         if (prevTimer > 0) {
           return prevTimer - 1;
-        }
-        else{
+        } else {
           clearInterval(intervalId);
           return 0;
         }
@@ -102,7 +128,20 @@ const CodingTestPage = () => {
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [followUpTimer]);
+  }, [followUpTimer , isPaused ]);
+
+  // Start Camera & Capture
+  useEffect(() => {
+    startCamera(); // Start the camera when the component mounts
+
+    return () => {
+      stopCamera(); // Clean up the camera stream when the component unmounts
+    };
+}, [freelancerId , isTerminated]);
+
+useEffect(() => {
+  updateVideoSource()
+}, [cameraStream]);
 
   const handleCodeChange = (e) => {
     const currentQuestion = testData[currentQuestionIndex];
@@ -114,14 +153,47 @@ const CodingTestPage = () => {
     }
   };
 
+  useEffect(() => {
+    const warningSound = warningSoundRef.current;
+    if(isPaused){
+      warningSound.pause()
+    }
+    if (isTerminated){
+      warningSound.remove()
+    }
+    if (timer === 30 && !isPaused) {
+      warningSound.play();
+    } else if (timer > 30 || timer <= 0) {
+      warningSound.pause();
+      warningSound.currentTime = 0; // Reset the sound to the start
+    }
+  }, [timer , isPaused , isTerminated]);
+
+  useEffect(() => {
+    const warningSound = followupWarningSoundRef.current;
+    if(isPaused){
+      warningSound.pause()
+    }
+    if (isTerminated){
+      warningSound.remove()
+    }
+    if (followUpTimer === 7 && !isPaused) {
+      warningSound.play();
+    } else if (followUpTimer > 7 || followUpTimer <= 0) {
+      warningSound.pause();
+      warningSound.currentTime = 0; // Reset the sound to the start
+    }
+  }, [followUpTimer , isPaused , isTerminated]);
+
   const handleFollowUpChange = (e) => {
-    console.log("name is ")
+    console.log("name is ");
 
     const { name, value } = e.target;
-    console.log("name is ",name)
-    console.log("value is ",value)
+    console.log("name is ", name);
+    console.log("value is ", value);
     setFollowUpAnswers({
-      [name]: value});
+      [name]: value,
+    });
   };
 
   const fetchFollowUpQuestions = async (answerId) => {
@@ -141,26 +213,37 @@ const CodingTestPage = () => {
 
       if (fetchedFollowUpQuestions.length > 0) {
         setCurrentFollowUpIndex(0);
-        console.log("current follow up qeustion",fetchedFollowUpQuestions[0])
+        console.log("current follow up qeustion", fetchedFollowUpQuestions[0]);
         setFollowUpTimer(fetchedFollowUpQuestions[0].duration_in_seconds); // Set initial timer for the first follow-up question
         setIsModalOpen(true);
       } else {
         setIsModalOpen(false);
       }
     } catch (error) {
-      console.error('Failed to fetch follow-up questions', error);
+      console.error("Failed to fetch follow-up questions", error);
     }
   };
 
   const handleNextQuestion = async () => {
-    console.log("handling next question")
+    const currentQuestion = testData[currentQuestionIndex];
+    if (currentQuestion && !answers[currentQuestion.id]) {
+      // Trigger the shaking effect by adding a class
+      setTextareaShake(true);
+      setTimeout(() => setTextareaShake(false), 500); // Remove the shake class after the animation
+      return;
+    }
+
     const responseData = await submitCurrentAnswer();
-    setFollowUpFinished(false)
-    if (currentQuestionIndex === testData.length - 1) {
-      await fetchFollowUpQuestions(responseData.id);
-      setFinalQuestion(true)
+    if (responseData.score == 0) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
     } else {
-      await fetchFollowUpQuestions(responseData.id);
+      setFollowUpFinished(false);
+      if (currentQuestionIndex === testData.length - 1) {
+        await fetchFollowUpQuestions(responseData.id);
+        setFinalQuestion(true);
+      } else {
+        await fetchFollowUpQuestions(responseData.id);
+      }
     }
   };
 
@@ -170,11 +253,12 @@ const CodingTestPage = () => {
     }
   };
 
-
   const handleNextFollowUp = () => {
     if (currentFollowUpIndex < followUpQuestions.length - 1) {
       setCurrentFollowUpIndex(currentFollowUpIndex + 1);
-      setFollowUpTimer(followUpQuestions[currentFollowUpIndex + 1].duration_in_seconds); // Set timer for the next question
+      setFollowUpTimer(
+        followUpQuestions[currentFollowUpIndex + 1].duration_in_seconds
+      ); // Set timer for the next question
     }
   };
 
@@ -186,7 +270,7 @@ const CodingTestPage = () => {
           `http://127.0.0.1:8002/api/skilltestsubmissions/${testId}/submit_answer/`,
           {
             question_id: currentQuestion.id,
-            answer: answers[currentQuestion.id] || '',
+            answer: answers[currentQuestion.id] || "",
             freelancer_id: freelancerId,
             submission_id: submissionId,
           },
@@ -196,87 +280,87 @@ const CodingTestPage = () => {
             },
           }
         );
-        console.log("submit answer response is ",response.data)
+        console.log("submit answer response is ", response.data);
         if (response.data) {
-          if (response.data.id) { 
-          setCurrentAnswer(response.data.id)
+          if (response.data.id) {
+            setCurrentAnswer(response.data.id);
           }
           if (response.data.submission_id) {
             setSubmissionId(response.data.submission_id); // Update state with the submission ID
           }
         }
-        return response.data
+        return response.data;
       } catch (error) {
-        console.error('Failed to submit answer', error);
+        console.error("Failed to submit answer", error);
       }
     }
   };
 
+  const submitFollowUpAnswers = async () => {
+    if (!followUpFinished) {
+      try {
+        console.log("In submit follow-up method");
+        console.log("Follow-up answers are ", followUpAnswers);
 
-const submitFollowUpAnswers = async () => {
-  if (!followUpFinished) {
-    try {
-      console.log("In submit follow-up method");
-      console.log("Follow-up answers are ", followUpAnswers);     
+        // Default values
+        let questionId = followUpQuestions[currentFollowUpIndex].id;
+        let answer = "not answered";
 
-      // Default values
-      let questionId = followUpQuestions[currentFollowUpIndex].id;
-      let answer = "not answered";
-
-      // Update the questionId and answer if followUpAnswers contains data
-      if (Object.keys(followUpAnswers).length > 0) {
-        questionId = Object.keys(followUpAnswers)[0]; // Assuming there's only one follow-up question
-        answer = followUpAnswers[questionId];
-        console.log("Answer is ", answer);
-      }
-
-      // Prepare payload
-      const payload = {
-        follow_up_submission: followUpSubmissionId,
-        question: questionId,
-        selected_option: answer, // Send null if answer is "not answered", adjust as needed
-        test_answer: currentAnswer,
-        freelancer_id: freelancerId,
-        test_submission: submissionId,
-      };
-      
-
-      // Send the follow-up answer to the backend
-      const response = await axios.post(
-        "http://127.0.0.1:8002/api/follow-up-question-answer/",
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+        // Update the questionId and answer if followUpAnswers contains data
+        if (Object.keys(followUpAnswers).length > 0) {
+          questionId = Object.keys(followUpAnswers)[0]; // Assuming there's only one follow-up question
+          answer = followUpAnswers[questionId];
+          console.log("Answer is ", answer);
         }
-      );
 
-      if (response.data.follow_up_submission_id) {
-        setFollowUpSubmissionId(response.data.follow_up_submission_id);
-      }
-      console.log("follow up sent as new ");
+        // Prepare payload
+        const payload = {
+          follow_up_submission: followUpSubmissionId,
+          question: questionId,
+          selected_option: answer, // Send null if answer is "not answered", adjust as needed
+          test_answer: currentAnswer,
+          freelancer_id: freelancerId,
+          test_submission: submissionId,
+        };
 
-      // Clear follow-up answers after submission
-      setFollowUpAnswers({});
+        // Send the follow-up answer to the backend
+        const response = await axios.post(
+          "http://127.0.0.1:8002/api/follow-up-question-answer/",
+          payload,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
-      // Handle navigation after submission
+        if (response.data.follow_up_submission_id) {
+          setFollowUpSubmissionId(response.data.follow_up_submission_id);
+        }
+        console.log("follow up sent as new ");
+
+        // Clear follow-up answers after submission
+        setFollowUpAnswers({});
+
+        // Handle navigation after submission
         if (currentFollowUpIndex === followUpQuestions.length - 1) {
           setIsModalOpen(false);
           setCurrentQuestionIndex(currentQuestionIndex + 1);
         } else {
           handleNextFollowUp();
         }
-    } catch (error) {
-      console.error("Failed to submit follow-up answers", error.response ? error.response.data : error.message);
+      } catch (error) {
+        console.error(
+          "Failed to submit follow-up answers",
+          error.response ? error.response.data : error.message
+        );
+      }
     }
-  }
-};
-  
-  
+  };
+
   const handleSubmitFollowUp = async () => {
-    console.log("submitting follow up..")
+    console.log("submitting follow up..");
     await submitFollowUpAnswers();
   };
 
@@ -295,7 +379,7 @@ const submitFollowUpAnswers = async () => {
       );
 
       const finalizeResponse = await axios.post(
-        'http://127.0.0.1:8002/api/skilltestsubmissions/finalize-submission/',
+        "http://127.0.0.1:8002/api/skilltestsubmissions/finalize-submission/",
         {
           submission_id: submissionId,
         },
@@ -305,8 +389,6 @@ const submitFollowUpAnswers = async () => {
           },
         }
       );
-
-    
 
       const { submission } = finalizeResponse.data;
 
@@ -321,14 +403,14 @@ const submitFollowUpAnswers = async () => {
         },
       });
     } catch (error) {
-      console.error('Failed to finalize test', error);
+      console.error("Failed to finalize test", error);
     }
   };
 
   const updateFreelancerSkills = async (skillType) => {
     try {
       const freelancerResponse = await axios.get(
-        'http://127.0.0.1:8000/api/user/freelancer/manage/',
+        "http://127.0.0.1:8000/api/user/freelancer/manage/",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -339,7 +421,7 @@ const submitFollowUpAnswers = async () => {
       const freelancerId = freelancerResponse.data.id;
 
       await axios.post(
-        'http://127.0.0.1:8000/api/user/freelancer/update/skills/',
+        "http://127.0.0.1:8000/api/user/freelancer/update/skills/",
         {
           freelancer_id: freelancerId,
           skill_type: skillType,
@@ -351,58 +433,82 @@ const submitFollowUpAnswers = async () => {
         }
       );
     } catch (error) {
-      console.error('Failed to update freelancer skills', error);
+      console.error("Failed to update freelancer skills", error);
     }
   };
 
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+    return `${minutes}:${secs < 10 ? "0" : ""}${secs}`;
   };
 
   return (
     <div className="container mx-auto px-4 py-6">
+       <div className="absolute top-8 right-4">
+        <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg">
+            <video
+              ref={videoRef}
+              className="w-full h-full object-cover"
+             autoPlay 
+             playsInline
+            />
+        </div>
+      </div>
       {testData.length > 0 && currentQuestionIndex < testData.length && (
         <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
           <div className="p-6 bg-gradient-to-r from-brand-blue to-brand-dark-blue text-white">
-            <h1 className="text-4xl font-extrabold mb-2">{currentTest?.skill_type} Coding Test</h1>
+            <h1 className="text-4xl font-normal mb-2">
+              {currentTest?.skill_type} Coding Test
+            </h1>
             <p className="mt-2 text-lg">Time Remaining: {formatTime(timer)}</p>
           </div>
           <div className="p-6">
             <div className="mb-2 p-6 rounded-lg">
-              <h2 className="text-2xl font-semibold mb-4 text-brand-dark-blue">Question {currentQuestionIndex + 1}</h2>
-              <p className="text-lg mb-4">{testData[currentQuestionIndex].description}</p>
+              <h2 className="text-2xl font-normal mb-4 text-brand-dark-blue">
+                Question {currentQuestionIndex + 1}
+              </h2>
+              <p className="text-lg mb-4">
+                {testData[currentQuestionIndex].description}
+              </p>
               <textarea
-                className="w-full h-64 border border-gray-300 p-2 rounded-md"
-                value={answers[testData[currentQuestionIndex].id] || ''}
+                className={`w-full h-64 border ${
+                  textareaShake
+                    ? "border-red-500 animate-shake"
+                    : "border-gray-300"
+                } p-4 rounded-lg`}
+                value={answers[testData[currentQuestionIndex]?.id] || ""}
                 onChange={handleCodeChange}
-                placeholder="Write your code here..."
+                placeholder="Write your answer here..."
               />
             </div>
             <div className="flex justify-between">
-              <button
-                className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
-                onClick={handlePreviousQuestion}
-                disabled={currentQuestionIndex === 0}
-              >
-                Previous
-              </button>
-              <button
-                className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
-                onClick={handleNextQuestion}
-              >
-                {currentQuestionIndex === testData.length - 1 ? 'Finish Test' : 'Next Question'}
-              </button>
-            </div>
+                <button
+                  className="bg-blue-500 text-white py-2 px-6 rounded-md hover:bg-blue-600"
+                  onClick={handlePreviousQuestion}
+                  disabled={currentQuestionIndex === 0}
+                >
+                  Previous
+                </button>
+                <button
+                  className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+                  onClick={handleNextQuestion}
+                >
+                  {currentQuestionIndex === testData.length - 1
+                    ? "Finish Test"
+                    : "Next Question"}
+                </button>
+              </div>
           </div>
         </div>
       )}
+      <PauseModal showModal={showModal} handleClose={() => setShowModal(false)} message={errorMessage} />
+
 
       <FollowUpModal
         isOpen={isModalOpen}
         onClose={() => {
-          setIsModalOpen(false)
+          setIsModalOpen(false);
           setCurrentQuestionIndex(currentQuestionIndex + 1);
         }}
         followUpQuestions={followUpQuestions}
@@ -413,7 +519,7 @@ const submitFollowUpAnswers = async () => {
         timer={formatTime(followUpTimer)}
         handleFinalizeTest={handleFinalizeTest}
         finalQuestion={finalQuestion}
-        setFollowUpFinished ={setFollowUpFinished}
+        setFollowUpFinished={setFollowUpFinished}
       />
     </div>
   );

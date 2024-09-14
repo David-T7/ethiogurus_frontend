@@ -95,7 +95,7 @@ const StartNewTestPage = () => {
 
   // Handle starting a test
   const handleStartTest = (testId, testType) => {
-    navigate(`/test/${testId}/${testType}`);
+    navigate(`/camera-check/${testId}/${testType}`);
   };
 
   // Handle skill click to open modal

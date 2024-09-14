@@ -59,6 +59,8 @@ import ProjectBudgetEstimate from './components/clientpage/ProjectBudgetEstimate
 import ChangePasswordPage from './components/ChangePassword';
 import SkillsPage from './components/freealncerpage/SkillsPage';
 import StartNewTestPage from './components/freealncerpage/StartNewTestPage';
+import CameraCheckPage from './components/freealncerpage/CameraCheckPage';
+import TestTerminatedPage from './components/freealncerpage/TestTerminatedPage';
 const RoutesConfig = () => {
   return (
       <Routes>
@@ -72,6 +74,7 @@ const RoutesConfig = () => {
         <Route path="/freelancer/:id" element={<FreelancerPage />} />
         <Route path="/tests" element={<FreelancerProfileLayout><TestsPage /></FreelancerProfileLayout>} />
         <Route path="/test/:id/:type" element={<FreelancerProfileLayout><TestDetailPage /></FreelancerProfileLayout>} />
+        <Route path="/camera-check/:id/:type" element={<FreelancerProfileLayout><CameraCheckPage/></FreelancerProfileLayout>} />
         <Route path="/theory-test/:id" element={<FreelancerProfileLayout><TestPage /></FreelancerProfileLayout>} />
         <Route path="/coding-test/:id" element={<FreelancerProfileLayout><CodingTestPage /></FreelancerProfileLayout>} />
         <Route path="/test-result" element={<FreelancerProfileLayout><TestResultPage /></FreelancerProfileLayout>} />
@@ -126,6 +129,7 @@ const RoutesConfig = () => {
         <Route path="/dispute-response/:id" element={<FreelancerProfileLayout><DisputeResponsePage /></FreelancerProfileLayout>} />
         <Route path="/skills" element={<FreelancerProfileLayout><SkillsPage/> </FreelancerProfileLayout>} />        
         <Route path="/new-test" element={<FreelancerProfileLayout><StartNewTestPage/> </FreelancerProfileLayout>} />                
+        <Route path='/test-terminated' element={<FreelancerProfileLayout><TestTerminatedPage/> </FreelancerProfileLayout>} />                
       </Routes>
   );
 };
