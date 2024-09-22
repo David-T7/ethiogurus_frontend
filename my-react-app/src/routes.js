@@ -61,6 +61,7 @@ import SkillsPage from './components/freealncerpage/SkillsPage';
 import StartNewTestPage from './components/freealncerpage/StartNewTestPage';
 import CameraCheckPage from './components/freealncerpage/CameraCheckPage';
 import TestTerminatedPage from './components/freealncerpage/TestTerminatedPage';
+import SelectAppointmentDate from './components/freealncerpage/SelectAppointmentDate';
 const RoutesConfig = () => {
   return (
       <Routes>
@@ -130,6 +131,8 @@ const RoutesConfig = () => {
         <Route path="/skills" element={<FreelancerProfileLayout><SkillsPage/> </FreelancerProfileLayout>} />        
         <Route path="/new-test" element={<FreelancerProfileLayout><StartNewTestPage/> </FreelancerProfileLayout>} />                
         <Route path='/test-terminated' element={<FreelancerProfileLayout><TestTerminatedPage/> </FreelancerProfileLayout>} />                
+        <Route path='/select-appointment' element={<FreelancerProfileLayout><SelectAppointmentDate/> </FreelancerProfileLayout>} />                
+
       </Routes>
   );
 };

@@ -409,6 +409,24 @@ useEffect(() => {
 
   const updateFreelancerSkills = async (skillType) => {
     try {
+      // Fetch the service data to get categories and technologies
+      const servicesResponse = await axios.get("http://127.0.0.1:8000/api/services/", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      // Filter services to find the matching skill in technologies (case insensitive)
+      const matchingService = servicesResponse.data.find(service =>
+        service.technologies.some(tech => tech.name.toLowerCase() === skillType.toLowerCase())
+      );
+  
+      if (!matchingService) {
+        console.error("No matching service found for the skill type.");
+        return;
+      }
+  
+      // Fetch freelancer's current profile data
       const freelancerResponse = await axios.get(
         "http://127.0.0.1:8000/api/user/freelancer/manage/",
         {
@@ -417,14 +435,57 @@ useEffect(() => {
           },
         }
       );
-
-      const freelancerId = freelancerResponse.data.id;
-
-      await axios.post(
-        "http://127.0.0.1:8000/api/user/freelancer/update/skills/",
+  
+      const freelancer = freelancerResponse.data;
+      
+      // Handle freelancer.skills based on its type
+      let currentSkills = Array.isArray(freelancer.skills) ? freelancer.skills : [];
+  
+      // Define the category
+      const category = matchingService.name;
+  
+      // Fetch theoretical and practical tests
+      const theoreticalTestsResponse = await axios.get("http://127.0.0.1:8001/api/skilltests/", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const practicalTestsResponse = await axios.get("http://127.0.0.1:8002/api/practical-test/", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      const theoreticalTests = theoreticalTestsResponse.data;
+      const practicalTests = practicalTestsResponse.data;
+      // Check if the skill is in both theoretical and practical tests
+      const inTheoretical = theoreticalTests.some(test => test.title.toLowerCase() === skillType.toLowerCase());
+      const inPractical = practicalTests.some(test => test.skill_type.toLowerCase() === skillType.toLowerCase());
+  
+      const bothPracticalTheoretical = inTheoretical && inPractical;
+  
+      // Append the new skill under the appropriate category with both_practical_theoretical field
+      const newSkill = {
+        category: category,
+        skill: skillType,
+        type: "practical", // Default to theoretical
+        both_practical_theoretical: bothPracticalTheoretical,
+      };
+  
+      // Check if the skill already exists
+      const skillExists = currentSkills.some(skill =>
+        skill.category === category && skill.skill.toLowerCase() === skillType.toLowerCase()
+      );
+  
+      if (!skillExists) {
+        currentSkills.push(newSkill);
+      }
+  
+      // Patch the freelancer profile with the updated skills (as a JSON string)
+      await axios.patch(
+        `http://127.0.0.1:8000/api/user/freelancer/manage/`,
         {
-          freelancer_id: freelancerId,
-          skill_type: skillType,
+          skills: JSON.stringify(currentSkills), // Convert array to JSON string for storage
         },
         {
           headers: {
@@ -432,11 +493,14 @@ useEffect(() => {
           },
         }
       );
+  
+      console.log("Freelancer skills updated successfully under the category:", category);
     } catch (error) {
       console.error("Failed to update freelancer skills", error);
     }
   };
-
+  
+  
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;

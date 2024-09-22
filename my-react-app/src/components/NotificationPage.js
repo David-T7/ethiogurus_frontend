@@ -1,22 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { FaBell, FaEnvelope } from 'react-icons/fa';
-import axios from 'axios'; // For making API requests
+import axios from 'axios';
 import getRelativeTime from "../utils/getRelativeTime.js";
-
+import SelectAppointmentDate from './freealncerpage/SelectAppointmentDate.js';
 const NotificationPage = () => {
   const [notifications, setNotifications] = useState([]);
   const [displayedNotifications, setDisplayedNotifications] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const notificationsPerPage = 5; // Show 5 notifications initially
-
+  const [selectedAppointmentDates, setSelectedAppointmentDates] = useState(null); // State to hold selected appointment dates
+  const token = localStorage.getItem("access");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [appointmentOptions, setAppointmentOptions] = useState([]); // State for appointment options
   useEffect(() => {
-    // Fetch notifications from the API
     const fetchNotifications = async () => {
       try {
-        const response = await axios.get('/api/notifications/'); // Replace with your API endpoint
+        const response = await axios.get("http://127.0.0.1:8000/api/user/notifications/" , 
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        ); // Replace with your API endpoint
         const sortedNotifications = response.data.sort((a, b) => {
-          // Sort notifications by read status first, then by timestamp
           if (a.read === b.read) {
             return new Date(b.timestamp) - new Date(a.timestamp);
           }
@@ -44,21 +51,35 @@ const NotificationPage = () => {
 
   const markAsRead = async (id) => {
     try {
-      await axios.patch(`/api/notifications/${id}/`, { read: true });
-      setNotifications((prevNotifications) =>
-        prevNotifications.map((notification) =>
-          notification.id === id ? { ...notification, read: true } : notification
-        )
+      await axios.patch(`http://127.0.0.1:8000/api/user/notifications/${id}/`, { read: true } ,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
   };
 
+  const handleNotificationClick = (notification) => {
+    if (notification.type === 'appointment_date_choice') {
+      const appointmentDates = JSON.parse(notification.data);
+      setAppointmentOptions(appointmentDates); // Set the appointment options for the modal
+      setIsModalOpen(true); // Open the modal
+    }
+    markAsRead(notification.id);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
   return (
     <div className="bg-gray-100 min-h-screen p-4">
       <header className="text-center mb-8 mt-2">
-        <p className="text-lg">Stay updated with your recent alerts and messages.</p>
+        <p className="text-lg font-semibold">Stay updated with your recent alerts and messages.</p>
       </header>
 
       {loading ? (
@@ -75,7 +96,7 @@ const NotificationPage = () => {
                     <li
                       className={`flex items-center justify-between py-4 px-6 cursor-pointer 
                         ${notification.read ? 'bg-gray-50' : 'border-l-4 border-blue-500 shadow-lg'}`}
-                      onClick={() => markAsRead(notification.id)}
+                      onClick={() => handleNotificationClick(notification)}
                       style={notification.read ? {} : { boxShadow: '0 0 10px rgba(0, 123, 255, 0.7)' }}
                     >
                       <div className="flex items-center gap-4">
@@ -115,6 +136,13 @@ const NotificationPage = () => {
             </div>
           )}
         </>
+      )}
+
+      {/* Modal for selecting appointment dates */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <SelectAppointmentDate appointmentOptions={appointmentOptions} onClose={closeModal} />
+        </div>
       )}
     </div>
   );
