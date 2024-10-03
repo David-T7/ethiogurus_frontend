@@ -36,7 +36,7 @@ const ProjectDetailPage = () => {
 
   const handleAddFreelancer = () => {
     // Navigate to add freelancer page
-    navigate(`/project/${id}/add-freelancer`);
+    navigate(`/hire-talent/requirements`);
   };
 
   const handleApproveMilestone = (milestoneId) => {
@@ -112,7 +112,7 @@ const ProjectDetailPage = () => {
                   >
                     {freelancer.profile_picture ? (
                       <img
-                        src={freelancer.profile_picture}
+                        src={`http://127.0.0.1:8000/${freelancer.profile_picture}`}
                         alt={`${freelancer.full_name}'s profile`}
                         className="w-12 h-12 rounded-full border-2 border-brand-blue"
                       />
@@ -140,7 +140,7 @@ const ProjectDetailPage = () => {
             {freelancers.length === 0 ? (
                <div className="mt-8">
                <Link
-                 to="/find-talent"
+                 to="/hire-talent/requirements"
                  className="flex items-center md:w-[25%] justify-center bg-brand-green text-white px-6 py-3 rounded-lg transition-transform duration-300 transform hover:scale-105 hover:shadow-lg hover:bg-green-600"
                >
                  <FaUserPlus className="mr-2" /> Hire a Talent
@@ -168,7 +168,7 @@ const ProjectDetailPage = () => {
                   >
                     <h3 className="text-lg font-normal mb-2">{milestone.title}</h3>
                     <p className="mb-4">
-                      {milestone.is_completed ? 'Completed' : 'In Progress'}
+                      Status: {milestone.status}
                     </p>
                     {milestone.is_completed ? (
                       <div className="flex space-x-4">
@@ -180,7 +180,7 @@ const ProjectDetailPage = () => {
                         </button>
                       </div>
                     ) : (
-                      <p className="text-sm text-red-600">Deadline: {milestone.due_date}</p>
+                      <p className="text-sm text-red-600">Deadline: {new Date(milestone.due_date).toLocaleDateString()}</p>
                     )}
                   </div>
                 ))}

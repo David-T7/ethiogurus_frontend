@@ -1,14 +1,42 @@
-import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState , useEffect} from 'react';
+import { useParams , useLocation , useNavigate } from 'react-router-dom';
 import ClientLayout from './ClientLayoutPage';
 import { FaPlus, FaTrash } from 'react-icons/fa';
-
+import axios from 'axios';
 const CreateContractPage = () => {
-  const { projectId } = useParams(); // Get project ID from URL
+  const location = useLocation();
+  const navigate = useNavigate()
+  const { id:projectId } = useParams(); // Get project ID from URL
+  const { freelancerID } = location.state || null;
+  const [project , setProject ] = useState(null)
   const [isMilestoneBased, setIsMilestoneBased] = useState(false);
   const [projectFee, setProjectFee] = useState('');
   const [milestones, setMilestones] = useState([{ title: '', amount: '', deadline: '' }]);
   const [contractTerms, setContractTerms] = useState('');
+  const token = localStorage.getItem("access");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  useEffect(() => {
+    const fetchProject = async () => {
+      try {
+        const response = await axios.get(
+          `http://127.0.0.1:8000/api/projects/${projectId}/`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setProject(response.data);
+      } catch (err) {
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProject();
+  }, []);
 
   const handleMilestoneChange = (index, e) => {
     const { name, value } = e.target;
@@ -25,17 +53,75 @@ const CreateContractPage = () => {
     setMilestones(milestones.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle contract creation (e.g., API call)
-    console.log('Contract created with details:', { projectId, projectFee, isMilestoneBased, milestones, contractTerms });
+    console.log("freelnacer id is ",freelancerID)
+    console.log("project title is ",project.title)
+    const contractData = {
+      project: projectId,
+      freelancer: freelancerID,
+      title:project?.title,
+      terms: contractTerms,
+      start_date: new Date().toISOString(), // Set start date as current date or any selected value
+      end_date: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(), // Dummy end date (e.g., 1 month later)
+      amount_agreed: projectFee,
+      payment_status: "not_started",
+      milestone_based: isMilestoneBased,
+    };
+  
+    try {
+      const response = await axios.post(
+        `http://127.0.0.1:8000/api/contracts/`,
+        contractData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      const createdContract = response.data;
+      console.log('Contract created:', createdContract);
+  
+      // If milestone-based, create milestones
+      if (isMilestoneBased && milestones.length > 0) {
+        await Promise.all(
+          milestones.map((milestone) =>
+            axios.post(
+              `http://127.0.0.1:8000/api/milestones/`,
+              {
+                contract: createdContract.id,
+                title: milestone.title,
+                amount: milestone.amount,
+                due_date: milestone.deadline,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            )
+          )
+        );
+        console.log('Milestones created successfully');
+      }
+  
+      // Redirect or give feedback after successful creation
+      alert('Contract and milestones created successfully');
+      // Optionally navigate to another page
+      navigate(`/contracts/${createdContract.id}`);
+  
+    } catch (error) {
+      console.error('Error creating contract or milestones:', error);
+      alert('Error creating contract or milestones');
+    }
   };
 
   return (
     <ClientLayout>
       <div className="max-w-2xl mx-auto p-8 mt-8">
         <h1 className="text-3xl font-thin text-brand-dark-blue mb-6 text-center">
-          Create Contract for Project #{projectId}
+          Create Contract for {project?.title}
         </h1>
 
         <form onSubmit={handleSubmit}>
@@ -45,7 +131,7 @@ const CreateContractPage = () => {
               type="number"
               value={projectFee}
               onChange={(e) => setProjectFee(e.target.value)}
-              placeholder="Enter project fee"
+              placeholder="Enter project fee in Birr"
               className="w-full border border-gray-300 p-4 rounded-lg focus:outline-none focus:border-blue-500"
               required
             />
@@ -108,7 +194,7 @@ const CreateContractPage = () => {
                       name="amount"
                       value={milestone.amount}
                       onChange={(e) => handleMilestoneChange(index, e)}
-                      placeholder="Amount"
+                      placeholder="Amount in Birr"
                       className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:border-blue-500"
                       required
                     />
@@ -139,7 +225,7 @@ const CreateContractPage = () => {
           <div className="text-center">
             <button
               type="submit"
-              className="bg-blue-600 text-white font-semibold px-6 py-3 rounded-full hover:bg-blue-700 transition-transform transform hover:scale-105 shadow-md"
+             className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition"
             >
               Create Contract
             </button>

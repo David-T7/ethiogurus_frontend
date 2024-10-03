@@ -4,7 +4,7 @@ import axios from 'axios';
 import profilePic from '../../images/default-profile-picture.png'; // Replace with actual profile picture
 import FreelancerProfileLayout from './FreelancerLayoutPage';
 import Inbox from '../Inbox';
-
+import FreelancerMessages from './freelancerMessages';
 const FreelancerInbox = () => {
   const [clients, setClients] = useState([]);
   const [error, setError] = useState(null);
@@ -48,7 +48,7 @@ const FreelancerInbox = () => {
   return (
     <FreelancerProfileLayout>
       {error && <div className="text-center py-8 text-red-600">{error}</div>}
-      <Inbox users={clients} handleSelect={handleSelect} />
+      <FreelancerMessages users={clients} handleSelect={handleSelect} />
     </FreelancerProfileLayout>
   );
 };

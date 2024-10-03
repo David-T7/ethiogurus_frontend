@@ -48,12 +48,12 @@ const ProjectListPage = () => {
         {projects.map((project) => (
           <div key={project.id} className="border border-gray-200 rounded-lg p-4 mb-6 bg-gray-50 shadow-sm hover:shadow-md transition-shadow duration-200">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-800">{project.title}</h3>
+              <h3 className="text-lg font-normal text-brand-blue">{project.title}</h3>
               <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusStyle(project.status)}`}>
                 {project.status}
               </span>
             </div>
-            <p className="text-gray-600 mb-4">Deadline: {project.deadline}</p>
+            <p className="text-gray-600 mb-4">Deadline: {project.deadline ? project.deadline : "Not Specified"}</p>
             <p className="text-gray-600 mb-4">{project.description}</p>
             <Link
               to={`/myprojects/${project.id}`}

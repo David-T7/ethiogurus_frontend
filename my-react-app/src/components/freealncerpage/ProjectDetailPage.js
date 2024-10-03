@@ -1,46 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { useParams , useNavigate} from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
-
-// Mock data for demonstration
-const mockProjectsData = {
-  1: {
-    id: 1,
-    title: 'Web Development Project',
-    description: 'A full-stack web development project.',
-    status: 'Active',
-    milestones: [],
-  },
-  2: {
-    id: 2,
-    title: 'Mobile App Development',
-    description: 'Development of a cross-platform mobile application.',
-    status: 'Completed',
-    milestones: [
-      { id: 1, title: 'Initial Setup', status: 'Completed', deadline: '2024-07-15', approvalRequested: true },
-      { id: 2, title: 'Feature Development', status: 'Completed', deadline: '2024-08-15', approvalRequested: true },
-    ],
-  },
-  3: {
-    id: 3,
-    title: 'E-commerce Platform',
-    description: 'An e-commerce platform for online shopping.',
-    status: 'In Dispute',
-    milestones: [
-      { id: 1, title: 'Design Phase', status: 'Completed', deadline: '2024-06-30', approvalRequested: true },
-      { id: 2, title: 'Development Phase', status: 'In Progress', deadline: '2024-08-30', approvalRequested: false },
-    ],
-  },
-  // Add more project data here...
-};
+import axios from 'axios';
 
 const ProjectDetails = () => {
   const { id } = useParams();
   const [project, setProject] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const token = localStorage.getItem('access'); // Get the access token from localStorage
+
   useEffect(() => {
-    // Replace with API call to fetch project details by ID
-    setProject(mockProjectsData[id]);
+    const fetchProject = async () => {
+      try {
+        const response = await axios.get(`http://127.0.0.1:8000/api/freelancer-projects/${id}/` ,{
+          headers: {
+            Authorization: `Bearer ${token}`, // Include the token in the headers
+          },
+        }
+        );
+        setProject(response.data);
+      } catch (err) {
+        setError('Failed to load project details. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProject();
   }, [id]);
 
   const requestApproval = (milestoneId) => {
@@ -60,22 +48,32 @@ const ProjectDetails = () => {
   };
 
   const handleRespondToDispute = () => {
-    navigate("/dispute-response/{id}")
+    navigate(`/dispute-response/${id}`);
   };
 
-  if (!project) {
+  if (loading) {
     return <div className="text-center py-8">Loading project details...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-8 text-red-600">{error}</div>;
+  }
+
+  if (!project) {
+    return <div className="text-center py-8">No project found.</div>;
   }
 
   return (
     <div className="max-w-2xl mx-auto p-8 mt-8">
       <div className="flex items-center mb-4">
-        <h1 className="text-3xl font-normal text-brand-dark-blue">{project.title}</h1>
+        <h1 className="text-2xl font-normal text-brand-dark-blue">{project.title}</h1>
         <span className={`ml-3 text-lg font-medium ${getProjectStatusStyle(project.status)}`}>
           ({project.status})
         </span>
       </div>
       <p className="text-gray-700 mb-6">{project.description}</p>
+      <h2 className="text-xl font-normal text-brand-dark-blue mb-4">Deadline</h2>
+      <p className="text-gray-700 mb-6">{project?.deadline || "Not Set"}</p>
 
       {/* Respond to Dispute Button */}
       {project.status === 'In Dispute' && (
@@ -93,7 +91,7 @@ const ProjectDetails = () => {
       )}
 
       {/* Approval Section for Projects without Milestones */}
-      {project.milestones.length === 0 && (
+      {project.milestones && project.milestones.length === 0 && (
         <div className="mb-6">
           <p className="font-normal">This project does not have any milestones. Please request approval for the entire project.</p>
           <button
@@ -106,16 +104,14 @@ const ProjectDetails = () => {
       )}
 
       <div className="mb-6">
-        <h2 className="text-2xl font-normal mb-4">Milestones</h2>
-        {project.milestones.length ? (
+        <h2 className="text-xl font-normal text-brand-dark-blue mb-4">Milestones</h2>
+        {project.milestones && project.milestones.length ? (
           project.milestones.map((milestone) => (
             <div key={milestone.id} className="border border-gray-200 rounded-lg p-4 mb-4 bg-gray-50 shadow-sm">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-lg font-semibold text-gray-800">{milestone.title}</h3>
                 <span
-                  className={`text-xs font-semibold rounded-full px-4 py-1 ${getMilestoneStatusStyle(
-                    milestone.status
-                  )}`}
+                  className={`text-xs font-semibold rounded-full px-4 py-1 ${getMilestoneStatusStyle(milestone.status)}`}
                   style={{ minWidth: '100px', textAlign: 'center' }}
                 >
                   {milestone.status}

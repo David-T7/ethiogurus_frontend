@@ -1,5 +1,4 @@
 // src/routes.js
-
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
@@ -47,7 +46,7 @@ import ContractDetails from './components/freealncerpage/ContractDetails';
 import ClientInbox from './components/clientpage/ClientInbox';
 import FreelancerInbox from './components/freealncerpage/FreelancerInbox';
 import ContactUser from './components/contact-user';
-import CounterOfferPage from './components/freealncerpage/submitCounterOffer';
+import SubmitCounterOffer from './components/freealncerpage/submitCounterOffer';
 import FreelancerSettingsPage from './components/freealncerpage/FreelancerSettingsPage';
 import UpdateProfilePage from './components/freealncerpage/UpdateProfilePage';
 import ClientSettingsPages from './components/clientpage/ClientSettingsPage';
@@ -62,6 +61,16 @@ import StartNewTestPage from './components/freealncerpage/StartNewTestPage';
 import CameraCheckPage from './components/freealncerpage/CameraCheckPage';
 import TestTerminatedPage from './components/freealncerpage/TestTerminatedPage';
 import SelectAppointmentDate from './components/freealncerpage/SelectAppointmentDate';
+import AppointmentDetailsPage from './components/freealncerpage/AppointmentDetailsPage';
+import UpdateDispute from './components/clientpage/UpdateDispute';
+import ContactClient from './components/freealncerpage/contactClient';
+import CounterOffersList from './components/freealncerpage/CounterOffersList';
+import CounterOfferDetails from './components/freealncerpage/CounterOfferDetails';
+import EditCounterOffer from './components/freealncerpage/EditCounterOffer';
+import CounterOffers from './components/clientpage/CounterOffers';
+import CounterOffer from './components/clientpage/CounterOfferPage';
+import EditCounterOfferPage from './components/clientpage/EditCouterOfferPage';
+import CreateCounterOffer from './components/clientpage/CreateCounterOffer';
 const RoutesConfig = () => {
   return (
       <Routes>
@@ -97,12 +106,14 @@ const RoutesConfig = () => {
         <Route path="/hire-talent/budget-estimate" element={<ClientLayout><ProjectBudgetEstimate /></ClientLayout>} />
         <Route path="/hire-talent/finalize" element={<Layout><FinalizePage /></Layout>} />
         <Route path="/contact-freelancer/:id" element={<ContactFreelancer />} />
+        <Route path="/contact-client/:id" element={<FreelancerProfileLayout ><ContactClient/></FreelancerProfileLayout>} />
         <Route path="/inbox" element={<ClientInbox />} />
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/projects/:id" element={<ProjectDetailPage />} />
         <Route path="/project/:id/edit" element={<EditProjectPage />} />
         <Route path="/projects/:id/create-contract" element={<CreateContractPage />} />
-        <Route path="/project/:id/createdispute" element={<DisputePage />} />
+        <Route path="/contract/:id/createdispute" element={<ClientLayout><DisputePage /></ClientLayout>} />
+        <Route path="/update-dispute/:id" element={<ClientLayout><UpdateDispute /></ClientLayout>} />
         <Route path="/create-project" element={<CreateProjectPage />} />        
         <Route path="/hire-talent/talent-list" element={<ClientLayout><TalentListPage /></ClientLayout>} />
         <Route path="/hire-talent/talent-list/:id" element={<ClientLayout><FreelancerDetailPage /></ClientLayout>} />
@@ -115,14 +126,21 @@ const RoutesConfig = () => {
         <Route path="/contracts" element={<ClientLayout><ContractsPage /></ClientLayout>} />
         <Route path="/contracts/:id" element={<ClientLayout><ContractDetailsPage /></ClientLayout>} />      
         <Route path="/contracts/:id/edit" element={<ClientLayout><EditContractPage /></ClientLayout>} />
+        <Route path="/contract-counter-offers/:id" element={<ClientLayout><CounterOffers /></ClientLayout>} />
+        <Route path="/contract-counter-offer/:id" element={<ClientLayout><CounterOffer /></ClientLayout>} />
+        <Route path="/create-counter-offer/:id" element={<ClientLayout><CreateCounterOffer /></ClientLayout>} />        
+        <Route path="/edit-offer/:id" element={<ClientLayout><EditCounterOfferPage /></ClientLayout>} />
         <Route path="/home" element={<FreelancerProfileLayout><FreelancerDashboard /></FreelancerProfileLayout>} />
         <Route path="/myprojects" element={<FreelancerProfileLayout><ProjectListPage /></FreelancerProfileLayout>} />
         <Route path="/myprojects/:id" element={<FreelancerProfileLayout><ProjectDetails /></FreelancerProfileLayout>} />
         <Route path="/mycontracts" element={<FreelancerProfileLayout><ContractsList /></FreelancerProfileLayout>} />
         <Route path="/mycontracts/:id" element={<FreelancerProfileLayout><ContractDetails /></FreelancerProfileLayout>} />
+        <Route path="/counter-offers/:id" element={<FreelancerProfileLayout><CounterOffersList /></FreelancerProfileLayout>} />        
+        <Route path="/counter-offer/:id" element={<FreelancerProfileLayout><CounterOfferDetails /></FreelancerProfileLayout>} />        
+        <Route path="/edit-counter-offer/:id" element={<FreelancerProfileLayout><EditCounterOffer /></FreelancerProfileLayout>} />        
         <Route path="/messages" element={<FreelancerInbox/>} />
         <Route path="/messages/:id" element={<FreelancerProfileLayout><ContactUser/></FreelancerProfileLayout>} />
-        <Route path="/counter-offer/:id" element={<FreelancerProfileLayout><CounterOfferPage /> </FreelancerProfileLayout>} />
+        <Route path="/submit-counter-offer/:id" element={<FreelancerProfileLayout><SubmitCounterOffer /> </FreelancerProfileLayout>} />
         <Route path="/setting" element={<FreelancerProfileLayout><FreelancerSettingsPage /> </FreelancerProfileLayout>} />        
         <Route path="/setting" element={<FreelancerProfileLayout><FreelancerSettingsPage /> </FreelancerProfileLayout>} />        
         <Route path="/update-profile" element={<FreelancerProfileLayout><UpdateProfilePage /> </FreelancerProfileLayout>} />              
@@ -132,7 +150,8 @@ const RoutesConfig = () => {
         <Route path="/new-test" element={<FreelancerProfileLayout><StartNewTestPage/> </FreelancerProfileLayout>} />                
         <Route path='/test-terminated' element={<FreelancerProfileLayout><TestTerminatedPage/> </FreelancerProfileLayout>} />                
         <Route path='/select-appointment' element={<FreelancerProfileLayout><SelectAppointmentDate/> </FreelancerProfileLayout>} />                
-
+        <Route path='/appointment-details' element={<FreelancerProfileLayout><AppointmentDetailsPage/> </FreelancerProfileLayout>} />                
+      
       </Routes>
   );
 };

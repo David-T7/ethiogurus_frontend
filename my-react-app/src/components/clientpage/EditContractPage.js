@@ -1,119 +1,502 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { FaSave, FaTimes, FaTrash } from 'react-icons/fa';
-
-const mockContractData = {
-  id: 1,
-  projectFee: 1000,
-  contractTerms: "This is a sample contract term.",
-  isMilestoneBased: true,
-  milestones: [
-    { title: 'Initial Payment', deadline: '2024-08-30', amount: 500 },
-    { title: 'Final Payment', deadline: '2024-09-30', amount: 500 },
-  ],
-};
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { FaSave, FaTimes, FaTrash , FaPlus } from "react-icons/fa";
+import axios from "axios";
 
 const EditContractPage = () => {
-  const { contractId } = useParams();
+  const { id: contractId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [contract, setContract] = useState(null);
+  const [milestones, setMilestones] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [contractStatus, setContractStatus] = useState(null);
+  const [addMilestone, setAddMiletsone] = useState(false);
+  const [disputes, setDisputes] = useState([]);
+  const [newMilestone, setNewMilestone] = useState({
+    title: "",
+    amount: "",
+    due_date: "",
+    is_completed: false,
+    status: "pending",
+  });
+  const token = localStorage.getItem("access");
+
+  // Fetch contract data when the component mounts
+  useEffect(() => {
+    const fetchContract = async () => {
+      try {
+        const response = await axios.get(
+          `http://127.0.0.1:8000/api/contracts/${contractId}/`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setContract(response.data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching contract:", err);
+        setError("Error fetching contract details. Please try again.");
+        setLoading(false);
+      }
+    };
+
+    fetchContract();
+  }, [contractId, contractStatus]);
 
   useEffect(() => {
-    // Simulate fetching contract details
-    setContract(mockContractData);
+    const fetchDisputes = async () => {
+      try {
+        const response = await axios.get(
+          `http://127.0.0.1:8000/api/contracts/${contractId}/disputes/`,
+
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setDisputes(response.data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching contract disputes:", err);
+        // setError("Error fetching contract disputes . Please try again.");
+        setLoading(false);
+      }
+    };
+
+    fetchDisputes();
   }, [contractId]);
 
-  const handleUpdate = () => {
-    console.log('Updated Contract:', contract);
-    // Simulate updating contract
-    navigate(`/contracts/${contractId}`); // Redirect to contract details page
+  // Fetch milestones associated with the contract
+  useEffect(() => {
+    const fetchMilestones = async () => {
+      try {
+        const response = await axios.get(
+          `http://127.0.0.1:8000/api/contracts/${contractId}/milestones/`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setMilestones(response.data);
+      } catch (err) {
+        console.error("Error fetching milestones:", err);
+      }
+    };
+
+    fetchMilestones();
+  }, [contractId, token]);
+
+  const handleUpdateContract = async () => {
+    try {
+      const response = await axios.patch(
+        `http://127.0.0.1:8000/api/contracts/${contractId}/`,
+        {
+          amount_agreed: contract.amount_agreed,
+          terms: contract.terms,
+          milestone_based: contract.milestone_based,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      console.log("Contract updated:", response.data);
+    } catch (error) {
+      console.error("Error updating contract:", error);
+    }
   };
 
-  const handleDeleteMilestone = (index) => {
-    const updatedMilestones = contract.milestones.filter((_, i) => i !== index);
-    setContract({ ...contract, milestones: updatedMilestones });
+  const handleUpdate = async () => {
+    await handleUpdateContract();
+    navigate(`/contracts/${contractId}`);
   };
 
-  if (!contract) return <div>Loading...</div>;
+  const handleUpdateDispute = async (id) => {
+    navigate(`/update-dispute/${id}`);
+  };
+
+  const handleCancelDispute = async (disputeId) => {
+    setLoading(true);
+    setError(null); // Reset error state
+
+    try {
+      // Update the dispute status to resolved
+      const response = axios.patch(
+        `http://127.0.0.1:8000/api/disputes/${disputeId}/cancel/`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      navigate(-1)
+    } catch (error) {
+      setError(error.message); // Set error message in state
+    } finally {
+      setLoading(false); // Reset loading state
+    }
+  };
+
+  const handleUpdateMilestone = async (milestoneId, updatedMilestone) => {
+    try {
+      const response = await axios.patch(
+        `http://127.0.0.1:8000/api/milestones/${milestoneId}/`,
+        updatedMilestone,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      console.log("Milestone updated:", response.data);
+    } catch (error) {
+      console.error("Error updating milestone:", error);
+    }
+  };
+
+  const handleDeleteMilestone = async (index) => {
+    const milestoneId = milestones[index].id;
+    try {
+      await axios.delete(
+        `http://127.0.0.1:8000/api/milestones/${milestoneId}/`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const updatedMilestones = milestones.filter((_, i) => i !== index);
+      setMilestones(updatedMilestones);
+    } catch (error) {
+      console.error("Error deleting milestone:", error);
+    }
+  };
+
+  const handleMilestoneChange = (index, field, value) => {
+    const updatedMilestones = [...milestones];
+    updatedMilestones[index] = { ...updatedMilestones[index], [field]: value };
+    setMilestones(updatedMilestones);
+
+    // Update milestone on the server
+    handleUpdateMilestone(updatedMilestones[index].id, {
+      contract: contractId,
+      title: updatedMilestones[index].title,
+      description: updatedMilestones[index].description || "",
+      amount: updatedMilestones[index].amount,
+      due_date: updatedMilestones[index].due_date,
+      is_completed: updatedMilestones[index].is_completed,
+      status: updatedMilestones[index].status,
+    });
+  };
+
+  const handleAddMilestone = async () => {
+    try {
+      const response = await axios.post(
+        `http://127.0.0.1:8000/api/milestones/`,
+        {
+          contract: contractId,
+          title: newMilestone.title,
+          amount: newMilestone.amount,
+          due_date: newMilestone.due_date,
+          is_completed: newMilestone.is_completed,
+          status: newMilestone.status,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      console.log("Milestone added:", response.data);
+      setMilestones([...milestones, response.data]);
+      await handleUpdateContract();
+      setContract({ ...contract, milestone_based: true });
+      setNewMilestone({
+        title: "",
+        description: "",
+        amount: "",
+        due_date: "",
+        is_completed: false,
+        status: "pending",
+      });
+    } catch (error) {
+      console.error("Error adding milestone:", error);
+    }
+  };
+
+  const handleCreateDispute = async (milestoneId) => {
+    navigate(`/contract/${contract.id}/createdispute`, {
+      state: {
+        milestoneId: milestoneId,
+      },
+    });
+  };
+
+  const handleContractStatusUPdate = async (statusValue) => {
+    try {
+      await axios.patch(
+        `http://127.0.0.1:8000/api/contracts/${contractId}/`,
+        {
+          status: statusValue,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      console.log("Contract status updated to canceled.");
+      setContractStatus(statusValue);
+    } catch (error) {
+      console.error("Error canceling project:", error);
+    }
+  };
+
+  const handleDeleteContract = async () => {
+    try {
+      await axios.delete(`http://127.0.0.1:8000/api/contracts/${contractId}/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log("Contract delteted");
+      navigate("/contracts");
+    } catch (error) {
+      console.error("Error deleting project:", error);
+    }
+  };
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>{error}</div>;
 
   return (
     <div className="max-w-3xl mx-auto p-8 mt-8">
-      <h1 className="text-3xl font-thin mb-6 text-brand-dark-blue">Edit Contract</h1>
+      <h1 className="text-3xl font-thin mb-6 text-brand-dark-blue">
+        Edit Contract
+      </h1>
+      {/* Create Dispute Button */}
+      <div className="mt-6 flex justify-end space-x-4">
+        {contract?.status === "active" && !contract.milestone_based && (
+          <button
+            onClick={handleCreateDispute}
+            className="bg-red-500 text-white py-2 px-4 rounded"
+          >
+            Create Dispute
+          </button>
+        )}
 
+        {/* Cancel Project Button */}
+        {["draft"].includes(contract?.status) && (
+          <button
+            onClick={() => handleDeleteContract()}
+            className="bg-gray-500 text-white hover:bg-gray-700 py-2 px-4 rounded"
+          >
+            Cancel Contract
+          </button>
+        )}
+        {["inDispute"].includes(contract?.status) &&
+          !contract?.milestone_based && (
+            <button
+              onClick={() => handleContractStatusUPdate("canceled")}
+              className="bg-gray-500 text-white hover:bg-gray-700 py-2 px-4 rounded"
+            >
+              Cancel Dispute
+            </button>
+          )}
+
+        {/* Cancel Project Button */}
+        {["canceled"].includes(contract?.status) && (
+          <button
+            onClick={() => handleContractStatusUPdate("pending")}
+            className="bg-green-500 text-white hover:bg-green-700 py-2 px-4 rounded"
+          >
+            Activate Project
+          </button>
+        )}
+      </div>
       <div className="mb-6">
         <h2 className="text-xl font-normal text-gray-800 mb-4">Project Fee</h2>
         <input
           type="number"
-          value={contract.projectFee}
-          onChange={(e) => setContract({ ...contract, projectFee: e.target.value })}
+          value={contract?.amount_agreed}
+          onChange={(e) =>
+            setContract({ ...contract, amount_agreed: e.target.value })
+          }
           className="w-full border border-gray-300 p-4 rounded-lg focus:outline-none focus:border-blue-500"
         />
       </div>
 
       <div className="mb-6">
-        <h2 className="text-xl font-normal text-gray-800 mb-4">Contract Terms</h2>
+        <h2 className="text-xl font-normal text-gray-800 mb-4">
+          Contract Terms
+        </h2>
         <textarea
-          value={contract.contractTerms}
-          onChange={(e) => setContract({ ...contract, contractTerms: e.target.value })}
+          value={contract?.terms}
+          onChange={(e) => setContract({ ...contract, terms: e.target.value })}
           className="w-full border border-gray-300 p-4 rounded-lg focus:outline-none focus:border-blue-500"
           rows="4"
         />
       </div>
 
-      {contract.isMilestoneBased && (
-        <div className="mb-6">
-          <h2 className="text-xl font-normal text-gray-800 mb-4">Milestones</h2>
-          {contract.milestones.map((milestone, index) => (
-            <div key={index} className="flex flex-col mb-4 border border-gray-200 p-4 rounded-lg relative">
-              <div className="flex flex-col mb-2">
-                <label className="text-gray-800">Title</label>
-                <input
-                  type="text"
-                  value={milestone.title}
-                  onChange={(e) => {
-                    const updatedMilestones = [...contract.milestones];
-                    updatedMilestones[index] = { ...updatedMilestones[index], title: e.target.value };
-                    setContract({ ...contract, milestones: updatedMilestones });
-                  }}
-                  className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:border-blue-500"
-                />
-              </div>
-              <div className="flex flex-col mb-2">
-                <label className="text-gray-800">Deadline</label>
-                <input
-                  type="date"
-                  value={milestone.deadline}
-                  onChange={(e) => {
-                    const updatedMilestones = [...contract.milestones];
-                    updatedMilestones[index] = { ...updatedMilestones[index], deadline: e.target.value };
-                    setContract({ ...contract, milestones: updatedMilestones });
-                  }}
-                  className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:border-blue-500"
-                />
-              </div>
-              <div className="flex flex-col mb-2">
-                <label className="text-gray-800">Amount</label>
-                <input
-                  type="number"
-                  value={milestone.amount}
-                  onChange={(e) => {
-                    const updatedMilestones = [...contract.milestones];
-                    updatedMilestones[index] = { ...updatedMilestones[index], amount: e.target.value };
-                    setContract({ ...contract, milestones: updatedMilestones });
-                  }}
-                  className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:border-blue-500"
-                />
-              </div>
+      <div className="mb-6">
+        <h2 className="text-xl font-normal text-gray-800 mb-4">Milestones</h2>
+        {milestones.map((milestone, index) => (
+          <div
+            key={milestone.id}
+            className="flex flex-col mb-4 border border-gray-200 p-4 rounded-lg relative"
+          >
+            <div className="flex flex-col mb-2">
+              <label className="text-gray-800">Title</label>
+              <input
+                type="text"
+                placeholder="Enter milestone title"
+                value={milestone.title}
+                onChange={(e) =>
+                  handleMilestoneChange(index, "title", e.target.value)
+                }
+                className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:border-blue-500"
+              />
+            </div>
+            <div className="flex flex-col mb-2">
+              <label className="text-gray-800">Deadline</label>
+              <input
+                type="date"
+                placeholder="Enter milestone deadline"
+                value={milestone.due_date.split("T")[0]}
+                onChange={(e) =>
+                  handleMilestoneChange(index, "due_date", e.target.value)
+                }
+                className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:border-blue-500"
+              />
+            </div>
+            <div className="flex flex-col mb-2">
+              <label className="text-gray-800">Amount ( Birr )</label>
+              <input
+                type="number"
+                placeholder="Enter amount in Birr"
+                value={milestone.amount}
+                onChange={(e) =>
+                  handleMilestoneChange(index, "amount", e.target.value)
+                }
+                className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:border-blue-500"
+              />
+            </div>
+            <div className="absolute top-2 right-2">
               <button
                 onClick={() => handleDeleteMilestone(index)}
-                className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full hover:bg-red-700 transition"
+                className="text-red-500"
               >
                 <FaTrash />
               </button>
             </div>
-          ))}
-        </div>
-      )}
+            <div className="mt-6 flex justify-end space-x-4">
+              {( (disputes.length > 0 && milestone.status === "active" &&
+                !disputes.some(
+                  (dispute) => dispute.milestone === milestone.id && dispute.status ==="open"
+                )) && (
+                  <button
+                    onClick={() => handleCreateDispute(milestone.id)}
+                    className="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded"
+                  >
+                    Create Dispute
+                  </button>
+                ))}
+
+              {(disputes.length === 0 && milestone.status === "active" &&(
+                  <button
+                    onClick={() => handleCreateDispute(milestone.id)}
+                    className="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded"
+                  >
+                    Create Dispute
+                  </button>
+                ))}
+              {disputes.length > 0 && milestone.status === "active" &&
+                disputes.some(
+                  (dispute) =>
+                    dispute.milestone === milestone.id &&
+                    dispute.status == "open"
+                ) && (
+                  <>
+                    {disputes
+                      .filter((dispute) => dispute.milestone === milestone.id && dispute.status === "open")
+                      .map((dispute) => (
+                        <button
+                          key={dispute.id} // Ensure each button has a unique key
+                          onClick={() => handleUpdateDispute(dispute.id)} // Pass the dispute ID
+                          className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
+                        >
+                          Update Dispute
+                        </button>
+                      ))}
+                  </>
+                )}
+
+              {disputes.length > 0 && milestone.status === "active" &&
+                disputes.some(
+                  (dispute) =>
+                    dispute.milestone === milestone.id &&
+                    dispute.status === "open"
+                ) && (
+                  <>
+                    {disputes
+                      .filter((dispute) => dispute.milestone === milestone.id && dispute.status === "open")
+                      .map((dispute) => (
+                        <button
+                          key={dispute.id} // Ensure each button has a unique key
+                          onClick={() => handleCancelDispute(dispute.id)} // Pass the dispute ID
+                          className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded"
+                        >
+                          Cancel Dispute
+                        </button>
+                      ))}
+                  </>
+                )}
+            </div>
+          </div>
+        ))}
+        <button
+                  type="button"
+                  onClick={() => setAddMiletsone(true)}
+                  className="flex items-center text-blue-600 hover:text-blue-800"
+                >
+                  <FaPlus className="mr-2" /> Add Milestone
+                </button>
+      </div>
+
+      {addMilestone && <div className="mb-6">
+        <h2 className="text-xl font-normal text-gray-800 mb-4">
+          New Milestone
+        </h2>
+        <label className="text-gray-800">Title</label>
+        <input
+          type="text"
+          placeholder="Enter milestone title"
+          value={newMilestone.title}
+          onChange={(e) =>
+            setNewMilestone({ ...newMilestone, title: e.target.value })
+          }
+          className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:border-blue-500 mb-2"
+        />
+                <label className="text-gray-800">Amount ( Birr )</label>
+
+        <input
+          type="number"
+          placeholder="Enter amount in Birr"
+          value={newMilestone.amount}
+          onChange={(e) =>
+            setNewMilestone({ ...newMilestone, amount: e.target.value })
+          }
+          className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:border-blue-500 mb-2"
+        />
+        <input
+          type="date"
+          value={newMilestone.due_date}
+          onChange={(e) =>
+            setNewMilestone({ ...newMilestone, due_date: e.target.value })
+          }
+          className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:border-blue-500 mb-4"
+        />
+        <button
+          onClick={handleAddMilestone}
+          className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded mr-2"
+        >
+          Add Milestone
+        </button>
+        <button
+          onClick={() => setAddMiletsone(false)}
+          className="bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded"
+        >
+          Cancel
+        </button>
+      </div>
+    }
 
       <div className="mt-6 flex justify-end space-x-4">
         <button

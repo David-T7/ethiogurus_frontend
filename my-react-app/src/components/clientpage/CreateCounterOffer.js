@@ -5,10 +5,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import axios from "axios";
 
-const SubmitCounterOffer = () => {
-  const { id: contractId } = useParams(); // Contract ID from URL
+const CreateCounterOffer = () => {
+  const { id: counterOfferID } = useParams(); // Contract ID from URL
   const navigate = useNavigate();
-  const [contract, setContract] = useState(null);
+  const [counterOffer, setCounterOffer] = useState(null);
   const [offer, setOffer] = useState({
     title: "",
     proposed_amount: "",
@@ -20,46 +20,46 @@ const SubmitCounterOffer = () => {
   const [rejectMilestoneOption, setRejectMilestoneOption] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [freelancer, setFreelancer] = useState(null);
+  const [client, setClient] = useState(null);
   const token = localStorage.getItem("access");
 
   useEffect(() => {
-    const fetchFreelancer = async () => {
+    const fetchClient = async () => {
       try {
         const response = await axios.get(
-          "http://127.0.0.1:8000/api/user/freelancer/manage/",
+          "http://127.0.0.1:8000/api/user/client/manage/",
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
-        setFreelancer(response.data);
+        setClient(response.data);
       } catch (err) {
-        console.error("Error fetching freelancer data:", err);
-        setError("Failed to load freelancer details.");
+        console.error("Error fetching client data:", err);
+        setError("Failed to load client details.");
       }
     };
-    fetchFreelancer();
+    fetchClient();
   }, [token]);
 
   useEffect(() => {
-    const fetchContract = async () => {
+    const fetchCounterOffer = async () => {
       try {
         const response = await axios.get(
-          `http://127.0.0.1:8000/api/freelancer-contracts/${contractId}/`,
+          `http://127.0.0.1:8000/api/counter-offer/${counterOfferID}/`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
-        setContract(response.data);
+        setCounterOffer(response.data);
 
         setOffer((prevOffer) => ({
           ...prevOffer,
           title: response.data.title || "",
-          proposed_amount: response.data.amount_agreed || "",
+          proposed_amount: response.data.proposed_amount || "",
           start_date: response.data.start_date
             ? response.data.start_date.split("T")[0]
             : "",
@@ -69,22 +69,22 @@ const SubmitCounterOffer = () => {
           milestone_based: response.data.milestone_based || false,
         }));
       } catch (err) {
-        console.error("Error fetching contract:", err);
-        setError("Failed to load contract details.");
+        console.error("Error fetching counter offer:", err);
+        setError("Failed to load counter offer details.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchContract();
-  }, [contractId]);
+    fetchCounterOffer();
+  }, [counterOfferID]);
 
 
   useEffect(() => {
     const fetchMileStone = async () => {
       try {
         const response = await axios.get(
-          `http://127.0.0.1:8000/api/contracts/${contractId}/milestones/`,
+          `http://127.0.0.1:8000/api/counter-offer/${counterOfferID}/milestones/`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -107,7 +107,7 @@ const SubmitCounterOffer = () => {
       }
     };
     fetchMileStone();
-  }, [contractId]);
+  }, [counterOfferID]);
 
 
 
@@ -185,8 +185,8 @@ const SubmitCounterOffer = () => {
     // Prepare the payload for the counter offer
     const counterOfferPayload = {
       title: offer.title,
-      contract: contractId,
-      sender: freelancer.id,
+      contract: counterOffer.contract,
+      sender: client.id,
       proposed_amount: offer.proposed_amount,
       start_date: offer.start_date,
       end_date: offer.end_date,
@@ -208,22 +208,6 @@ const SubmitCounterOffer = () => {
       );
 
       console.log("Counter offer submitted:", response.data);
-
-
-      await axios.patch(
-        `http://127.0.0.1:8000/api/freelancer-contracts-update/${response.data.contract}/`,
-        {
-          freelancer_accepted_terms:"true"
-        }
-        ,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-
 
       // If milestone-based and not rejecting, submit milestones
       if (offer.milestone_based && !rejectMilestoneOption) {
@@ -248,7 +232,6 @@ const SubmitCounterOffer = () => {
         );
       }
 
-      // Navigate to the contract details page or another appropriate route
       navigate(-1);
     } catch (err) {
       console.error("Error submitting counter offer:", err);
@@ -257,15 +240,15 @@ const SubmitCounterOffer = () => {
   };
 
   if (loading) {
-    return <div className="text-center py-8">Loading contract details...</div>;
+    return <div className="text-center py-8">Loading counter offer details...</div>;
   }
 
   if (error) {
     return <div className="text-center py-8 text-red-500">{error}</div>;
   }
 
-  if (!contract) {
-    return <div className="text-center py-8">No contract data available.</div>;
+  if (!counterOffer) {
+    return <div className="text-center py-8">No counter offer data available.</div>;
   }
 
   return (
@@ -501,4 +484,4 @@ const getOfferStatusStyle = (status) => {
   }
 };
 
-export default SubmitCounterOffer;
+export default CreateCounterOffer;

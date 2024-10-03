@@ -1,25 +1,37 @@
 // ProjectSelectionPage.js
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaPlus } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
-const ProjectSelectionPage = ({ projects }) => {
+const ProjectSelectionPage = ({ projects, freelancerID }) => {
   const [selectedProject, setSelectedProject] = useState(null);
   const navigate = useNavigate();
+  const [freelancer_id , setFreelancerID ] = useState(null)
   const handleProjectSelect = (project) => {
     setSelectedProject(project);
   };
 
-  const handleConfirm = (id) => {
-    navigate("/projects/{id}/create-contract") 
+  useEffect(() => {
+    // Set freelancer ID and update loading state
+    if (freelancerID) {
+      setFreelancerID(freelancerID)
+    }
+  }, [freelancerID]);
+
+  const handleConfirm = () => {
+    if (selectedProject) { // Only confirm if not loading
+      navigate(`/projects/${selectedProject.id}/create-contract`, {
+        state: { freelancerID: freelancer_id }, // Pass freelancerID in state
+      });
+    }
   };
 
   return (
     <div className="max-w-3xl mx-auto p-8 mt-8">
       <h1 className="text-3xl font-thin mb-6 text-brand-dark-blue">Select a Project</h1>
       <div className="flex justify-end items-center mb-8">
-        <Link to="/create-project" className="inline-flex items-center gap-3  py-2 px-4 bg-blue-600 text-white rounded-lg shadow-lg text-xl font-semibold transition-all duration-300 hover:bg-blue-700 hover:shadow-xl">
+        <Link to="/create-project" className="inline-flex items-center gap-3  py-2 px-4 bg-blue-600 text-white rounded-lg shadow-lg text-xl font-semibold transition-transform duration-300 transform hover:scale-105 hover:bg-blue-700 hover:shadow-xl">
           <FaPlus className="text-2xl" /> Create Project
         </Link>
         </div>

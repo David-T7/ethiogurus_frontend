@@ -17,8 +17,13 @@ const ContractsList = () => {
             Authorization: `Bearer ${token}`, // Include the token in the headers
           },
         });
-
-        setContracts(response.data);
+  
+        // Filter out contracts with status 'draft' before setting them in state
+        const filteredContracts = response.data.filter(
+          (contract) => contract.status && contract.status.trim().toLowerCase() !== 'draft'
+        );
+  
+        setContracts(filteredContracts); // Only set non-draft contracts
       } catch (error) {
         console.error('Failed to fetch contracts:', error);
         setError(error);
@@ -26,7 +31,7 @@ const ContractsList = () => {
         setLoading(false);
       }
     };
-
+  
     fetchContracts();
   }, []);
 
@@ -48,14 +53,13 @@ const ContractsList = () => {
       {contracts.map((contract) => (
         <div key={contract.id} className="border border-gray-200 rounded-lg p-4 mb-4 bg-gray-50 shadow-sm">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-semibold text-gray-800">{contract.title}</h3>
+            <h3 className="text-xl font-normal text-brand-dark-blue">{contract.title}</h3>
             <span className={`text-xs font-semibold rounded-full px-4 py-1 ${getContractStatusStyle(contract.status)}`}>
               {contract.status}
             </span>
           </div>
-          <p className="text-gray-600">Client: {contract.client}</p>
-          <p className="text-gray-600">Deadline: {contract.deadline}</p>
-          <p className="text-gray-600">Project Fee: {contract.projectFee}</p>
+          <p className="text-gray-600">Deadline: {new Date(contract.end_date).toLocaleDateString()}</p>
+          <p className="text-gray-600">Project Fee: {contract.amount_agreed} Birr</p>
           <Link to={`/mycontracts/${contract.id}`} className="text-blue-500 hover:underline mt-4 inline-block">
             View Details
           </Link>

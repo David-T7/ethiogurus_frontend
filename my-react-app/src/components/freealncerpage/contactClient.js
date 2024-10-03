@@ -1,17 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import { redirect, useParams } from "react-router-dom";
-import { FaPaperclip , FaUserPlus , FaDownload } from "react-icons/fa";
-import ClientLayout from "./ClientLayoutPage";
-import ProjectSelectionPage from "./ProjectSelectionPage";
+import { FaPaperclip,FaDownload } from "react-icons/fa";
+
 import profilePic from "../../images/default-profile-picture.png";
 import axios from "axios";
 
-const ContactFreelancer = () => {
-  const { id: freelancerId } = useParams(); // Get freelancer ID from URL
+const ContactClient = () => {
+  const { id: client_id } = useParams(); // Get freelancer ID from URL
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [file, setFile] = useState(null);
-  const [isHired, setIsHired] = useState(false); // State to track hiring status
   const [isSelectingProject, setIsSelectingProject] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   const messageEndRef = useRef(null);
@@ -23,32 +21,10 @@ const ContactFreelancer = () => {
   const [error, setError] = useState(null);
   const [projects, setProjects] = useState(null);
   useEffect(() => {
-    const fetchFreelancerData = async () => {
-      try {
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/user/freelancer/${freelancerId}/`
-        );
-        setFreelancerData(response.data);
-      } catch (err) {
-        setError(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFreelancerData();
-  }, []);
-
-  useEffect(() => {
     const fetchClientData = async () => {
       try {
         const response = await axios.get(
-          "http://127.0.0.1:8000/api/user/client/manage/",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          `http://127.0.0.1:8000/api/user/client/${client_id}/`
         );
         setClientData(response.data);
       } catch (err) {
@@ -62,12 +38,35 @@ const ContactFreelancer = () => {
   }, []);
 
   useEffect(() => {
+    const fetchFreelancerData = async () => {
+      try {
+        const response = await axios.get(
+          "http://127.0.0.1:8000/api/user/freelancer/manage/",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setFreelancerData(response.data);
+      } catch (err) {
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFreelancerData();
+  }, []);
+
+  useEffect(() => {
     const fetchChat = async () => {
       try {
         const response = await axios.get(
           "http://127.0.0.1:8000/api/user/clientFreelancerChat/", // Correct endpoint URL
           {
-            params: {  // Query parameters go in 'params'
+            params: {
+              // Query parameters go in 'params'
               client_id: clientData.id,
               freelancer_id: freelancerData.id,
             },
@@ -76,8 +75,8 @@ const ContactFreelancer = () => {
             },
           }
         );
-        
-        setChatID(response.data.chat.id);  // Fixed 'response.data', not 'response.date'
+
+        setChatID(response.data.chat.id); // Fixed 'response.data', not 'response.date'
         setMessages(response.data.messages);
       } catch (err) {
         setError(err);
@@ -86,32 +85,11 @@ const ContactFreelancer = () => {
       }
     };
 
-    if (clientData && freelancerData) { // Ensure both clientData and freelancerData are available
+    if (clientData && freelancerData) {
+      // Ensure both clientData and freelancerData are available
       fetchChat();
     }
-  }, [freelancerData, clientData]);  // Only re-run if freelancerData or clientData changes
-
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const response = await axios.get(
-          "http://127.0.0.1:8000/api/projects/",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setProjects(response.data);
-      } catch (err) {
-        setError(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProjects();
-  }, []);
+  }, [freelancerData, clientData]); // Only re-run if freelancerData or clientData changes
 
   // Scroll to the bottom of chat when new messages are added
   useEffect(() => {
@@ -154,40 +132,10 @@ const ContactFreelancer = () => {
     }
   };
 
-  const fetchOrCreateChat = async () => {
-    try {
-      const chatResponse = await axios.get(
-        "http://127.0.0.1:8000/api/user/chats/",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (chatResponse.data.length > 0) {
-        return chatResponse.data[0]; // Assuming you're interested in the first chat
-      } else {
-        // Create a new chat if none exists
-        const newChatResponse = await axios.post(
-          "http://127.0.0.1:8000/api/user/chats/",
-          {
-            client: clientData.id,
-            freelancer: freelancerData.id,
-          },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        return newChatResponse.data;
-      }
-    } catch (error) {
-      throw new Error("Error fetching or creating chat: " + error.message);
-    }
-  };
-
   // Function to mark messages as read
   const markMessagesAsRead = async (messages) => {
     const unreadMessages = messages.filter(
-      message => !message.read && message.sender===freelancerData.id 
+      message => !message.read && message.sender===clientData.id 
     );
     if (unreadMessages.length > 0) {
       try {
@@ -226,6 +174,35 @@ const ContactFreelancer = () => {
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]); // Dependency on 'messages' ensures the effect runs whenever messages change
 
+  const fetchOrCreateChat = async () => {
+    try {
+      const chatResponse = await axios.get(
+        "http://127.0.0.1:8000/api/user/chats/",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (chatResponse.data.length > 0) {
+        return chatResponse.data[0]; // Assuming you're interested in the first chat
+      } else {
+        // Create a new chat if none exists
+        const newChatResponse = await axios.post(
+          "http://127.0.0.1:8000/api/user/chats/",
+          {
+            client: clientData.id,
+            freelancer: freelancerData.id,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        return newChatResponse.data;
+      }
+    } catch (error) {
+      throw new Error("Error fetching or creating chat: " + error.message);
+    }
+  };
 
   const sendMessage = async (chatID, formData) => {
     try {
@@ -246,16 +223,6 @@ const ContactFreelancer = () => {
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
-  };
-
-  const handleHireFreelancer = () => {
-    setIsSelectingProject(true);
-  };
-
-  const handleProjectSelect = (project) => {
-    setSelectedProject(project);
-    setIsHired(true);
-    setIsSelectingProject(false);
   };
 
   const formatDate = (timestamp) => {
@@ -284,52 +251,36 @@ const ContactFreelancer = () => {
   if (loading) return <div className="text-center py-8">Loading...</div>;
   if (error)
     return (
-      <div className="text-center py-8">Error fetching freelancer details</div>
+      <div className="text-center py-8">Error fetching client details</div>
     );
-  if (!freelancerData)
+  if (!clientData)
     return <div className="text-center py-8">No data available</div>;
 
   return (
-    <ClientLayout>
-      {isSelectingProject ? (
-        <ProjectSelectionPage
-          projects={projects}
-          onProjectSelect={handleProjectSelect}
-          freelancerID={freelancerId}
-        />
-      ) : (
-        <div className="max-w-2xl mx-auto bg-white shadow-lg rounded-lg p-6 mt-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-4">
-              <img
-                src={freelancerData.profile_picture}
-                alt={`${freelancerData.full_name}'s profile`}
-                className="w-12 h-12 rounded-full border-2 border-gray-300"
-              />
-              <div>
-                <h1 className="text-2xl font-normal text-brand-dark-blue">
-                  {freelancerData.full_name}
-                </h1>
-                <p className="text-brand-dark-blue">Freelancer</p>
-              </div>
-            </div>
-            <div>
-              {isHired ? (
-                <span className="px-4 py-2 bg-green-500 text-white rounded-full text-sm font-semibold">
-                  Hiring for {selectedProject.name}....
-                </span>
-              ) : (
-                <button
-                  onClick={handleHireFreelancer}
-                 className="flex items-center  justify-center bg-brand-green text-white px-6 py-3 rounded-lg transition-transform duration-300 transform hover:scale-105 hover:shadow-lg hover:bg-green-600"
-                >
-                  <FaUserPlus className="mr-2" /> Hire
-                </button>
-              )}
-            </div>
+    <div className="max-w-2xl mx-auto bg-white shadow-lg rounded-lg p-6 mt-6">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-4">
+          <img
+            src={clientData.profile_picture}
+            alt={`${
+              clientData.contact_person
+                ? clientData.contact_person
+                : clientData.company_name
+            }'s profile`}
+            className="w-12 h-12 rounded-full border-2 border-gray-300"
+          />
+          <div>
+            <h1 className="text-2xl font-normal text-brand-dark-blue">
+              {clientData.contact_person
+                ? clientData.contact_person
+                : clientData.company_name}
+            </h1>
+            <p className="text-brand-dark-blue">Client</p>
           </div>
+        </div>
+      </div>
 
-          <div className="flex flex-col h-[60vh] overflow-y-auto mb-4">
+      <div className="flex flex-col h-[60vh] overflow-y-auto mb-4">
         {Object.keys(groupedMessages).length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-500">
             <p>No messages yet. Start the conversation!</p>
@@ -344,14 +295,14 @@ const ContactFreelancer = () => {
                 <div
                   key={index}
                   className={`flex flex-col ${
-                    message.sender === freelancerData.id
+                    message.sender === clientData.id
                       ? "items-start"
                       : "items-end"
                   } space-y-1`}
                 >
                   <div
                     className={`flex-1 p-4 rounded-lg shadow-sm ${
-                      message.sender === clientData.id
+                      message.sender === freelancerData.id
                         ? "bg-gray-100"
                         : "bg-blue-500 text-white"
                     }`}
@@ -362,7 +313,7 @@ const ContactFreelancer = () => {
                       <a
                         href={`http://127.0.0.1:8000/${message.file}`} // Update URL according to your backend
                         download
-                        className="text-blue-500"
+                        className="text-white"
                       >
                         <FaDownload className="h-5 w-5 mr-1" />
                         {message.file.split("/").pop()}{" "}
@@ -409,10 +360,8 @@ const ContactFreelancer = () => {
           </button>
         </form>
       </div>
-        </div>
-      )}
-    </ClientLayout>
+    </div>
   );
 };
 
-export default ContactFreelancer;
+export default ContactClient;

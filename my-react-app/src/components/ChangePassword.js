@@ -75,7 +75,7 @@ const ChangePasswordPage = () => {
 
   return (
     <div className="max-w-lg mx-auto p-6 mt-8">
-      <h2 className="text-3xl font-normal text-brand-blue mb-6 text-center">Change Password</h2>
+      <h2 className="text-3xl font-thin text-brand-dark-blue mb-6 text-center">Change Password</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
 
         {/*Old Password*/}

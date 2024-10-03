@@ -59,8 +59,8 @@ const ClientDashboard = () => {
                 key={project.id}
                 className="block bg-gray-100 p-4 rounded-lg shadow-md border  border-gray-300 transition-transform transform hover:scale-105 hover:shadow-lg"
               >
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">{project.title}</h3>
-                <p className="text-gray-600 mb-2">{project.description}</p>
+                <h3 className="text-xl font-normal text-brand-blue mb-2">{project.title}</h3>
+                <p className="text-brand-blue mb-2">{project.description}</p>
                 <span className="text-gray-500 text-sm">{getRelativeTime(new Date(project.created_at).toLocaleDateString())}</span>
               </Link>
             ))}

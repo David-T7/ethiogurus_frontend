@@ -33,13 +33,15 @@ const ContractsPage = () => {
 
   const getStatusStyle = (status) => {
     switch (status) {
-      case 'Active':
+      case 'active':
         return 'bg-green-500 text-white';
-      case 'Completed':
+      case 'completed':
         return 'bg-blue-500 text-white';
-      case 'Pending':
+      case 'accepted':
+          return 'bg-green-500 text-white';
+      case 'pending':
         return 'bg-yellow-500 text-black';
-      case 'InDispute':
+      case 'inDispute':
         return 'bg-red-500 text-black';
       case 'draft':
         return 'bg-gray-300 text-black';
@@ -50,12 +52,14 @@ const ContractsPage = () => {
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'Active':
+      case 'active':
         return <FaCheckCircle />;
-      case 'Completed':
+      case 'accepted':
+          return <FaCheckCircle />;
+      case 'completed':
         return <FaCheckCircle />;
-      case 'Pending':
-        return <FaClock />;
+      case 'pending':
+        return <FaClock />
       case 'InDispute':
         return <FaExclamationCircle />;
       case 'draft':
@@ -74,7 +78,7 @@ const ContractsPage = () => {
           <div key={contract.id} className="bg-gray-50 border border-gray-200 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
             <div className="p-6">
               <div className="flex items-center mb-4">
-                <h2 className="text-2xl font-semibold text-gray-800">{contract.project_title || 'No Title'}</h2>
+                <h2 className="text-2xl font-normal text-brand-blue">{contract.title || 'No Title'}</h2>
                 <span className={`ml-3 px-2 py-2 text-xs font-semibold rounded-full ${getStatusStyle(contract.status)}`}>
                   {contract.status}
                 </span>

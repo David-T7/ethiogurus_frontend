@@ -41,7 +41,7 @@ module.exports = {
           '50%': { opacity: '1', transform: 'scale(1.1)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
-      },
+      }
     },
   },
   plugins: [],

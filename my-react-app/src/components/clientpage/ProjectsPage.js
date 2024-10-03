@@ -25,7 +25,7 @@ const ProjectsPage = () => {
           id: project.id, // Assuming each project has a unique identifier
           title: project.title,
           description: project.description,
-          status: project.status === 'open' ? 'In Progress' : project.status, // Convert status if necessary
+          status: project.status , // Convert status if necessary
           createdAt: new Date(project.created_at).toLocaleDateString(), // Format date for display
         }));
         setProjects(fetchedProjects);
@@ -77,11 +77,11 @@ const ProjectsPage = () => {
               <div
                 key={project.id}
                 onClick={() => handleProjectClick(project.id)}
-                className="bg-brand-gray p-6 rounded-lg shadow-lg text-gray-700 border border-gray-300 hover:bg-brand-blue hover:text-white transition-all transform hover:scale-105"
+                className="bg-brand-gray p-6 rounded-lg shadow-lg text-brand-blue border border-gray-300 hover:bg-brand-blue hover:text-white transition-all transform hover:scale-105"
               >
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="text-2xl font-semibold">{project.title}</h3>
+                    <h3 className="text-2xl">{project.title}</h3>
                     <p className="text-sm mt-2">{project.description}</p>
                   </div>
                 </div>
@@ -89,15 +89,15 @@ const ProjectsPage = () => {
                   <span
                     className={`${
                       project.status === 'Completed'
-                        ? 'text-green-600 bg-green-100'
+                        ? 'text-green-600 bg-gray-200'
                         : project.status === 'In Progress'
-                        ? 'text-yellow-600 bg-yellow-100'
-                        : 'text-gray-400 bg-gray-100'
+                        ? 'text-yellow-600 bg-gray-200'
+                        : 'text-brand-blue bg-gray-200'
                     } font-semibold px-3 py-1 rounded-full`}
                   >
                     {project.status}
                   </span>
-                  <span className="text-sm">{project.createdAt}</span>
+                  <span className="text-sm">Created On :{project.createdAt}</span>
                 </div>
               </div>
             ))}
