@@ -102,40 +102,39 @@ const CounterOfferDetails = () => {
     fetchFreelancerData();
   }, []);
 
-  const handleAccept = async () => {
-    // Handle counter offer acceptance (POST request using axios)
-    try {
-      await axios.patch(
-        `http://127.0.0.1:8000/api/counter-offer/${id}/`,
-        {
-          status: "accpted",
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+  // const handleAccept = async () => {
+  //   // Handle counter offer acceptance (POST request using axios)
+  //   try {
+  //     await axios.patch(
+  //       `http://127.0.0.1:8000/api/counter-offer/${id}/`,
+  //       {
+  //         status: "accpted",
+  //       },
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
 
-      navigate(""); // Navigate back to the contracts list after acceptance
-    } catch (err) {
-      setError(
-        err.response
-          ? err.response.data.detail
-          : "Failed to accept the counter offer"
-      );
-    }
-  };
+  //     navigate(""); // Navigate back to the contracts list after acceptance
+  //   } catch (err) {
+  //     setError(
+  //       err.response
+  //         ? err.response.data.detail
+  //         : "Failed to accept the counter offer"
+  //     );
+  //   }
+  // };
 
-  const handleUpdateOfferStatus = async (status) => {
+  const handleUpdateOfferStatus = async (offerStatus) => {
     try {
       const response = await axios.patch(
         `http://127.0.0.1:8000/api/counter-offer/${id}/`,
-        { status: status },
+        { status: offerStatus },
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
           },
         }
       );
@@ -170,16 +169,14 @@ const CounterOfferDetails = () => {
   return (
     <div className="max-w-2xl mx-auto p-8 mt-8">
       <div className="flex items-center mb-4">
-        <h1 className="text-4xl font-thin text-brand-dark-blue">
+      <h1 className="text-4xl font-thin text-brand-dark-blue">
+          Counter Offer
+        </h1>
+      </div>
+      <div className="flex items-center mb-4">
+        <h1 className="text-3xl font-thin text-brand-dark-blue">
           {counterOffer.title}
         </h1>
-        <span
-          className={`ml-3 text-lg font-medium ${getContractStatusStyle(
-            counterOffer.status
-          )}`}
-        >
-          ({counterOffer.status})
-        </span>
       </div>
       <p className="mb-2">
         Start Date: {new Date(counterOffer.start_date).toLocaleDateString()}
@@ -222,19 +219,11 @@ const CounterOfferDetails = () => {
           {counterOffer.sender !== freelancer?.id && (
             <>
               <button
-                onClick={handleAccept}
+                onClick={handleUpdateOfferStatus("accepted")}
                 className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-200"
               >
                 Accept
               </button>
-
-              <button
-                onClick={handleAccept}
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-200"
-              >
-                Reject
-              </button>
-
               <button
                 onClick={handleCounterOffer}
                 className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-200"
@@ -279,17 +268,17 @@ const CounterOfferDetails = () => {
   );
 };
 
-// Helper function to get contract status styling
-const getContractStatusStyle = (status) => {
+// Helper function to get offer status styling
+const getOfferStatusStyle = (status) => {
   switch (status) {
-    case "Completed":
-      return "text-green-600";
-    case "Active":
-      return "text-blue-600";
-    case "In Dispute":
-      return "text-red-600";
+    case 'accepted':
+      return 'text-green';
+    case 'pending':
+      return 'text-gray';
+    case 'canceled':
+      return 'text-red';
     default:
-      return "text-gray-500";
+      return 'text-gray';
   }
 };
 export default CounterOfferDetails;

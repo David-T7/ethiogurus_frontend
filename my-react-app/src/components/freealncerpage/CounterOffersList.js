@@ -90,11 +90,11 @@ const CounterOffersList = () => {
 // Helper function to get offer status styling
 const getOfferStatusStyle = (status) => {
   switch (status) {
-    case 'Accepted':
+    case 'accepted':
       return 'bg-green-500 text-white';
-    case 'Pending':
+    case 'pending':
       return 'bg-yellow-500 text-black';
-    case 'Rejected':
+    case 'canceled':
       return 'bg-red-500 text-white';
     default:
       return 'bg-gray-300 text-black';

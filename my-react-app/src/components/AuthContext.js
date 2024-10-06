@@ -34,8 +34,10 @@ const AuthProvider = ({ children }) => {
             navigate('/home');
           } else if (role === 'client') {
             navigate('/dashboard');
+          } else if (role === 'interviewer') {
+            navigate('/welcome');
           } else {
-            navigate('/dashboard'); // Default dashboard for other roles
+            navigate('/welcome'); // Default dashboard for other roles
           }
         } else {
           console.error('Authentication failed:', response.data.detail);

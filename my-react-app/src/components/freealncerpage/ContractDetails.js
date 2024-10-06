@@ -134,13 +134,6 @@ const ContractDetails = () => {
         <h1 className="text-4xl font-thin text-brand-dark-blue">
           {contract.title}
         </h1>
-        <span
-          className={`ml-3 text-lg font-medium ${getContractStatusStyle(
-            contract.status
-          )}`}
-        >
-          ({contract.status})
-        </span>
       </div>
       <p className="mb-2">
         Deadline: {new Date(contract.end_date).toLocaleDateString()}

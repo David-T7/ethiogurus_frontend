@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FaEdit } from 'react-icons/fa';
+import { FaEdit , FaDollarSign } from 'react-icons/fa';
 
 const ContractDetailsPage = () => {
   const { id: contractId } = useParams();
@@ -149,12 +149,21 @@ const ContractDetailsPage = () => {
       )}
 
       <div className="mt-6 flex justify-left space-x-4">
-        <button
+      {contract.status === 'pending' &&  <button
           onClick={handleUpdate}
           className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition"
         >
           <FaEdit className="inline mr-2" /> Edit Contract
         </button>
+       }
+
+      {contract.status === 'accepted' &&  <button
+          onClick={handleUpdate}
+          className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition"
+        >
+          <FaDollarSign className="inline mr-2" /> Deposit Fund
+        </button>
+       }
 
         {contract.status === 'draft' && ( // Conditionally render the send button
           <button
@@ -165,7 +174,7 @@ const ContractDetailsPage = () => {
           </button>
         )}
 
-{counterOffers.length > 0 && (
+{contract.status === 'pending' && counterOffers.length > 0 && (
             <button
               onClick={handleCheckCounterOffers}
               className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition duration-200"

@@ -103,78 +103,81 @@ const CounterOffer = () => {
     fetchClientData();
   }, []);
 
-  
-    const syncContractMilestones = async (contract_id , contractMilestones) => {
-      try {
-        // Compare current milestones with contractMilestones
- 
-        // 1. Milestones to add (those in `milestones` but not in `contractMilestones`)
-        const milestonesToAdd = milestones.filter(
-          (milestone) =>
-            !contractMilestones.some((contractMilestone) => contractMilestone.id === milestone.id)
-        );
-  
-        // 2. Milestones to remove (those in `contractMilestones` but not in `milestones`)
-        const milestonesToRemove = contractMilestones.filter(
-          (contractMilestone) =>
-            !milestones.some((milestone) => milestone.id === contractMilestone.id)
-        );
-  
-        // 3. Milestones to update (those in both but have changes)
-        const milestonesToUpdate = milestones.filter((milestone) =>
-          contractMilestones.some(
-            (contractMilestone) =>
-              contractMilestone.id === milestone.id &&
-              (contractMilestone.title !== milestone.title ||
-                contractMilestone.due_date !== milestone.due_date ||
-                contractMilestone.amount !== milestone.amount)
+  const syncContractMilestones = async (contract_id, contractMilestones) => {
+    try {
+      // Compare current milestones with contractMilestones
+
+      // 1. Milestones to add (those in `milestones` but not in `contractMilestones`)
+      const milestonesToAdd = milestones.filter(
+        (milestone) =>
+          !contractMilestones.some(
+            (contractMilestone) => contractMilestone.id === milestone.id
           )
-        );
-  
-        // Send API calls to sync the changes with the backend
-  
-         // 1. Add new milestones
+      );
+
+      // 2. Milestones to remove (those in `contractMilestones` but not in `milestones`)
+      const milestonesToRemove = contractMilestones.filter(
+        (contractMilestone) =>
+          !milestones.some((milestone) => milestone.id === contractMilestone.id)
+      );
+
+      // 3. Milestones to update (those in both but have changes)
+      const milestonesToUpdate = milestones.filter((milestone) =>
+        contractMilestones.some(
+          (contractMilestone) =>
+            contractMilestone.id === milestone.id &&
+            (contractMilestone.title !== milestone.title ||
+              contractMilestone.due_date !== milestone.due_date ||
+              contractMilestone.amount !== milestone.amount)
+        )
+      );
+
+      // Send API calls to sync the changes with the backend
+
+      // 1. Add new milestones
       for (const milestone of milestonesToAdd) {
         const updatedMilestone = {
           ...milestone, // Copy existing milestone properties
           contract: contract_id, // Append contract_id
         };
-        await axios.post(`http://127.0.0.1:8000/api/milestones/`, updatedMilestone, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        await axios.post(
+          `http://127.0.0.1:8000/api/milestones/`,
+          updatedMilestone,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
       }
-        // 2. Update existing milestones
-        for (const milestone of milestonesToUpdate) {
-          await axios.patch(
-            `http://127.0.0.1:8000/api/milestones/${milestone.id}/`,
-            milestone,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-        }
-  
-        // 3. Remove milestones
-        for (const milestone of milestonesToRemove) {
-          await axios.delete(
-            `http://127.0.0.1:8000/api/milestones/${milestone.id}/`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-        }
-  
-      } catch (error) {
-        console.error('Error syncing milestones:', error);
+      // 2. Update existing milestones
+      for (const milestone of milestonesToUpdate) {
+        await axios.patch(
+          `http://127.0.0.1:8000/api/milestones/${milestone.id}/`,
+          milestone,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
       }
-    };
 
+      // 3. Remove milestones
+      for (const milestone of milestonesToRemove) {
+        await axios.delete(
+          `http://127.0.0.1:8000/api/milestones/${milestone.id}/`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      }
+    } catch (error) {
+      console.error("Error syncing milestones:", error);
+    }
+  };
 
   const handleAccept = async () => {
     try {
@@ -190,7 +193,6 @@ const CounterOffer = () => {
         }
       );
 
-
       const milestonesResponse = await axios.get(
         `http://127.0.0.1:8000/api/contracts/${counterOffer.contract}/milestones/`,
         {
@@ -199,7 +201,7 @@ const CounterOffer = () => {
           },
         }
       );
-      syncContractMilestones(counterOffer.contract ,milestonesResponse.data )
+      syncContractMilestones(counterOffer.contract, milestonesResponse.data);
       // Prepare the contract payload and filter out null or empty values
       const contractPayload = {
         title: counterOffer.title,
@@ -209,15 +211,16 @@ const CounterOffer = () => {
         status: "accepted",
         milestone_based: counterOffer.milestone_based,
       };
-  
+
       // Filter contractPayload to only include non-null and non-empty values
       const filteredContractPayload = Object.fromEntries(
         Object.entries(contractPayload).filter(
-          ([key, value]) => value !== null && value !== "" && value !== undefined
+          ([key, value]) =>
+            value !== null && value !== "" && value !== undefined
         )
       );
       console.log("filtered contract payload:", filteredContractPayload);
-  
+
       await axios.patch(
         `http://127.0.0.1:8000/api/contracts/${counterOffer.contract}/`,
         filteredContractPayload,
@@ -227,7 +230,7 @@ const CounterOffer = () => {
           },
         }
       );
-  
+
       navigate(`/contract-counter-offer/${id}`);
     } catch (err) {
       console.error("Error:", err.response ? err.response.data : err);
@@ -251,14 +254,12 @@ const CounterOffer = () => {
           },
         }
       );
-      setCounterOffer(response.data)
+      setCounterOffer(response.data);
     } catch (err) {
       console.error("Error updating counter offer status:", err);
       setError("Failed to update counter offer status.");
     }
   };
-
-
 
   const handleCounterOffer = () => {
     navigate(`/create-counter-offer/${id}`);
@@ -339,14 +340,6 @@ const CounterOffer = () => {
               >
                 Accept
               </button>
-
-              <button
-                onClick={() => handleUpdateOfferStatus("rejected")}
-                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-200"
-              >
-                Reject
-              </button>
-
               <button
                 onClick={handleCounterOffer}
                 className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-200"
@@ -374,19 +367,32 @@ const CounterOffer = () => {
                 </button>
               </>
             )}
-
-    
         </div>
       )}
-       {counterOffer.status === "canceled" && counterOffer.sender == client?.id && (
-             <button
-             onClick={() => handleUpdateOfferStatus("pending")}
-             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-200"
-           >
-             Activate Offer
-           </button>
+      {counterOffer.status === "canceled" &&
+        counterOffer.sender == client?.id && (
+          <button
+            onClick={() => handleUpdateOfferStatus("pending")}
+            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-200"
+          >
+            Activate Offer
+          </button>
         )}
 
+      {counterOffer.status === "accepted" &&
+        counterOffer.sender == client?.id && (
+          <>
+          <h4 className="text-md font-normal text-brand-dark-blue">
+          Your counter offer has been accepted
+        </h4>
+          <button
+            onClick={() => handleAccept()}
+            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-200"
+          >
+            Approve Offer
+          </button>
+          </>
+        )}
     </div>
   );
 };
@@ -397,7 +403,7 @@ const getContractStatusStyle = (status) => {
     case "pending":
       return "text-blue-600";
     case "accepted":
-        return "text-green-600";  
+      return "text-green-600";
     case "rejected":
       return "text-red-600";
     default:

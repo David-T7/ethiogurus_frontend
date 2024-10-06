@@ -305,7 +305,6 @@ const SkillsPage = () => {
             appointmentID={appointment.id}
             onClose={handleCloseModal}
             setAppointmentDateSelected={setAppointmentDateSelected}
-
           />
         </div>
       )}

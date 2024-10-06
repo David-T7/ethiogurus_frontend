@@ -60,7 +60,7 @@ const FreelancerDashboard = () => {
             </div>
             <p className="text-gray-600 mb-4">Deadline: {project.deadline ?  project.deadline : "Not Specified"}</p>
             <Link
-              to={`/projects/${project.id}`}
+              to={`/myprojects/${project.id}`}
               className="text-blue-600 hover:underline flex items-center"
             >
               <FaCheckCircle className="mr-2" /> Show Details

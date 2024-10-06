@@ -71,11 +71,13 @@ const ProjectListPage = () => {
 // Helper function to get status styling
 const getStatusStyle = (status) => {
   switch (status) {
-    case 'Active':
+    case 'open':
       return 'bg-blue-500 text-white';
-    case 'Completed':
+    case 'active':
+      return 'bg-blue-500 text-white';
+    case 'completed':
       return 'bg-green-500 text-white';
-    case 'Pending':
+    case 'pending':
       return 'bg-yellow-500 text-black';
     default:
       return 'bg-gray-300 text-black';

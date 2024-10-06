@@ -137,7 +137,7 @@ const NotificationPage = () => {
   return (
     <div className="bg-gray-100 min-h-screen p-4">
       <header className="text-center mb-8 mt-2">
-        <p className="text-lg font-normal text-brand-blue">
+        <p className="text-lg font-normal text-brand-dark-blue">
           Stay updated with your recent alerts and messages.
         </p>
       </header>
@@ -191,7 +191,7 @@ const NotificationPage = () => {
                         </div>
                         <div>
                           <h3
-                            className={`text-lg font-semibold ${
+                            className={`text-xl font-normal ${
                               notification.read
                                 ? "text-gray-800"
                                 : "text-blue-800"

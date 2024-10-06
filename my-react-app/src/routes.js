@@ -71,6 +71,14 @@ import CounterOffers from './components/clientpage/CounterOffers';
 import CounterOffer from './components/clientpage/CounterOfferPage';
 import EditCounterOfferPage from './components/clientpage/EditCouterOfferPage';
 import CreateCounterOffer from './components/clientpage/CreateCounterOffer';
+import InterviewerDashboard from './components/interviewerPage/interviewerDashboard';
+import InterviewerLayout from './components/interviewerPage/interviewerLayoutPage';
+import AppointmentDetails from './components/interviewerPage/AppointmentDetails';
+import AppointmentsPage from './components/interviewerPage/AppointmentsPage';
+import InterviewsPage from './components/interviewerPage/InterviewsPage';
+import InterviewPage from './components/interviewerPage/InterviewPage';
+
+
 const RoutesConfig = () => {
   return (
       <Routes>
@@ -123,6 +131,7 @@ const RoutesConfig = () => {
         <Route path="/services" element={<Layout><ServicePage /></Layout>} />
         <Route path="/clients" element={<Layout><ClientsPage /></Layout>} />
         <Route path="/notification" element={<ClientLayout><NotificationPage /></ClientLayout>} />
+        <Route path="/message" element={<InterviewerLayout><NotificationPage /></InterviewerLayout>} />
         <Route path="/contracts" element={<ClientLayout><ContractsPage /></ClientLayout>} />
         <Route path="/contracts/:id" element={<ClientLayout><ContractDetailsPage /></ClientLayout>} />      
         <Route path="/contracts/:id/edit" element={<ClientLayout><EditContractPage /></ClientLayout>} />
@@ -151,7 +160,12 @@ const RoutesConfig = () => {
         <Route path='/test-terminated' element={<FreelancerProfileLayout><TestTerminatedPage/> </FreelancerProfileLayout>} />                
         <Route path='/select-appointment' element={<FreelancerProfileLayout><SelectAppointmentDate/> </FreelancerProfileLayout>} />                
         <Route path='/appointment-details' element={<FreelancerProfileLayout><AppointmentDetailsPage/> </FreelancerProfileLayout>} />                
-      
+        <Route path='/welcome' element={<InterviewerLayout><InterviewerDashboard/> </InterviewerLayout>} />                
+        <Route path='/appointment/:id' element={<InterviewerLayout><AppointmentDetails/> </InterviewerLayout>} />                
+        <Route path='/appointments' element={<InterviewerLayout><AppointmentsPage/> </InterviewerLayout>} />                
+        <Route path='/interviews' element={<InterviewerLayout><InterviewsPage/> </InterviewerLayout>} />                
+        <Route path='/interview/:id' element={<InterviewerLayout><InterviewPage/> </InterviewerLayout>} />                
+        
       </Routes>
   );
 };
