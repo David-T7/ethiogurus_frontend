@@ -191,7 +191,7 @@ const NotificationPage = () => {
                         </div>
                         <div>
                           <h3
-                            className={`text-xl font-normal ${
+                            className={`text-lg font-normal ${
                               notification.read
                                 ? "text-gray-800"
                                 : "text-blue-800"

@@ -9,7 +9,7 @@ const ContactPage = () => {
         
         {/* Contact Form */}
         <section className="flex-1  p-8 rounded-lg">
-          <h2 className="text-3xl font-normal text-center text-brand-blue mb-6">Contact Us</h2>
+          <h2 className="text-2xl font-normal text-center text-brand-blue mb-6">Contact Us</h2>
           <form className="flex flex-col gap-6">
             <div className="flex flex-col gap-2">
               <label htmlFor="name" className="text-lg font-normal text-brand-blue flex items-center gap-2">
@@ -55,7 +55,7 @@ const ContactPage = () => {
 
         {/* Contact Details */}
         <section className="flex-1 p-8 rounded-lg">
-          <h2 className="text-3xl font-normal text-center text-brand-blue mb-6">Get in Touch</h2>
+          <h2 className="text-2xl font-normal text-center text-brand-blue mb-6">Get in Touch</h2>
           <div className="flex flex-col gap-6">
             <div className="flex items-center gap-4">
               <FaEnvelope className="text-3xl text-brand-blue" />
@@ -74,7 +74,7 @@ const ContactPage = () => {
             <div className="flex items-center gap-4">
               <FaMapMarkerAlt className="text-3xl text-brand-blue" />
               <div>
-                <h3 className="text-xl font-semibold text-brand-blue">Address</h3>
+                <h3 className="text-xl font-normal text-brand-blue">Address</h3>
                 <p className="text-lg text-brand-gray-dark">123 Main Street, City, Country</p>
               </div>
             </div>
@@ -84,7 +84,7 @@ const ContactPage = () => {
 
       {/* Map Section */}
       <section className="mt-12">
-        <h2 className="text-3xl font-normal text-center text-brand-blue mb-6">Our Location</h2>
+        <h2 className="text-2xl font-normal text-center text-brand-blue mb-6">Our Location</h2>
         <div className="relative w-full h-64 rounded-lg overflow-hidden shadow-lg">
           <iframe
             className="absolute inset-0 w-full h-full border-none"

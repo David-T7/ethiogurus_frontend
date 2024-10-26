@@ -225,17 +225,19 @@ const SkillsPage = () => {
           const pendingInterview = pendingInterviews.find((interview) =>
             interview.skills_passed.includes(group.skills[0].title)
           );
+          console.log("penidng interview is ",pendingInterview)
 
           const appointmentDate = pendingInterview
             ? pendingInterview.appointment_date
             : null;
+          const interviewDone = pendingInterview?.done
 
           return (
             <div key={index} className="mb-8">
             <div className="flex justify-between items-center mb-4">
               <span className="text-2xl font-normal mr-2 flex items-center text-brand-dark-blue">
                 {group.category}
-              {!appointmentDate ? (
+              {!interviewDone ? !appointmentDate ? (
                 <button 
                 className="ml-2 flex items-center px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
                 onMouseEnter={() => handleCategoryMouseEnter(group.category)}
@@ -255,7 +257,7 @@ const SkillsPage = () => {
                 >
                 <span className="text-sm">Pending Interview..</span>
                 </button>
-              )}
+              ):<></>}
               
               </span>
             </div>

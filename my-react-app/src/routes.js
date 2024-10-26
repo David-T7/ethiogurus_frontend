@@ -77,7 +77,9 @@ import AppointmentDetails from './components/interviewerPage/AppointmentDetails'
 import AppointmentsPage from './components/interviewerPage/AppointmentsPage';
 import InterviewsPage from './components/interviewerPage/InterviewsPage';
 import InterviewPage from './components/interviewerPage/InterviewPage';
-
+import UpdateInterviewerProfile from './components/interviewerPage/UpdateProfilePage';
+import VerifyAccountPage from './components/freealncerpage/VerifyAccountPage';
+import LivelinessTest from './components/freealncerpage/LivelinessTest';
 
 const RoutesConfig = () => {
   return (
@@ -86,6 +88,7 @@ const RoutesConfig = () => {
         <Route path="/login" element={<Layout><LoginPage /></Layout>} />
         <Route path="/change-password" element={<ClientLayout><ChangePasswordPage /></ClientLayout>} />
         <Route path="/update-password" element={<FreelancerProfileLayout><ChangePasswordPage /></FreelancerProfileLayout>} />
+        <Route path="/updatePassword" element={<InterviewerLayout><ChangePasswordPage /></InterviewerLayout>} />
         <Route path="/forgot-password" element={<Layout><ForgotPasswordPage /></Layout>} />
         <Route path="/apply-freelancer" element={<Layout><ApplyFreelancer /></Layout>} />
         <Route path="/apply-freelancer/test-page" element={<FreelancerTestsPage />} />
@@ -151,7 +154,6 @@ const RoutesConfig = () => {
         <Route path="/messages/:id" element={<FreelancerProfileLayout><ContactUser/></FreelancerProfileLayout>} />
         <Route path="/submit-counter-offer/:id" element={<FreelancerProfileLayout><SubmitCounterOffer /> </FreelancerProfileLayout>} />
         <Route path="/setting" element={<FreelancerProfileLayout><FreelancerSettingsPage /> </FreelancerProfileLayout>} />        
-        <Route path="/setting" element={<FreelancerProfileLayout><FreelancerSettingsPage /> </FreelancerProfileLayout>} />        
         <Route path="/update-profile" element={<FreelancerProfileLayout><UpdateProfilePage /> </FreelancerProfileLayout>} />              
         <Route path="/notifications" element={<FreelancerProfileLayout><NotificationPage /></FreelancerProfileLayout>} />
         <Route path="/dispute-response/:id" element={<FreelancerProfileLayout><DisputeResponsePage /></FreelancerProfileLayout>} />
@@ -160,12 +162,14 @@ const RoutesConfig = () => {
         <Route path='/test-terminated' element={<FreelancerProfileLayout><TestTerminatedPage/> </FreelancerProfileLayout>} />                
         <Route path='/select-appointment' element={<FreelancerProfileLayout><SelectAppointmentDate/> </FreelancerProfileLayout>} />                
         <Route path='/appointment-details' element={<FreelancerProfileLayout><AppointmentDetailsPage/> </FreelancerProfileLayout>} />                
+        <Route path='/verify-account' element={<FreelancerProfileLayout><VerifyAccountPage/> </FreelancerProfileLayout>} />                
+        <Route path='/verificatoin-steps' element={<FreelancerProfileLayout><LivelinessTest/> </FreelancerProfileLayout>} />                
         <Route path='/welcome' element={<InterviewerLayout><InterviewerDashboard/> </InterviewerLayout>} />                
         <Route path='/appointment/:id' element={<InterviewerLayout><AppointmentDetails/> </InterviewerLayout>} />                
         <Route path='/appointments' element={<InterviewerLayout><AppointmentsPage/> </InterviewerLayout>} />                
         <Route path='/interviews' element={<InterviewerLayout><InterviewsPage/> </InterviewerLayout>} />                
         <Route path='/interview/:id' element={<InterviewerLayout><InterviewPage/> </InterviewerLayout>} />                
-        
+        <Route path='/myprofile' element={<InterviewerLayout><UpdateInterviewerProfile/> </InterviewerLayout>} />                        
       </Routes>
   );
 };

@@ -1,16 +1,20 @@
 import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useReducedMotion } from 'framer-motion';
 export const AuthContext = createContext();
 
 const AuthProvider = ({ children }) => {
   const [auth, setAuth] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate()
+  const token = localStorage.getItem('access');
+
   // Function to authenticate the user with the current access token
   const authenticate = async () => {
     console.log("access is ", localStorage.getItem('access'));
     const token = localStorage.getItem('access');
+  
     if (token) {
       try {
         console.log("token found");
@@ -24,21 +28,9 @@ const AuthProvider = ({ children }) => {
           });
           setAuth({ role: userResponse.data.role });
   
-          const role = userResponse.data.role;
-          console.log("role is ", role);
-  
-          if (role === 'admin') {
-            navigate('/admin-dashboard');
-          } else if (role === 'freelancer') {
-            console.log("navigating to home");
-            navigate('/home');
-          } else if (role === 'client') {
-            navigate('/dashboard');
-          } else if (role === 'interviewer') {
-            navigate('/welcome');
-          } else {
-            navigate('/welcome'); // Default dashboard for other roles
-          }
+          // Optionally log the user's role
+          console.log("role is ", userResponse.data.role);
+          // Do nothing else to stay on the same page
         } else {
           console.error('Authentication failed:', response.data.detail);
           await refreshToken();
@@ -46,13 +38,15 @@ const AuthProvider = ({ children }) => {
       } catch (error) {
         console.error('Error during authentication:', error);
         console.error('Error details:', error.response?.data || error.message);
-        navigate("/")
+        // Optionally navigate to login page in case of authentication error
+        navigate("/login");
       }
     } else {
       console.log("token not found");
-      logout(); // Log out the user if the request fails
+      logout(); // Log out the user if the token is not found
     }
   };
+  
   useEffect(() => {
     const loadAuth = async () => {
       console.log("loading....")
@@ -85,6 +79,16 @@ const AuthProvider = ({ children }) => {
 }
   }
 
+    const getRole = async () => {
+      if (isAuthenticated()){
+        const userResponse = await axios.get('http://127.0.0.1:8000/api/user/role/', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        return userResponse.data.role
+      }
+      return null
+    }
+
   const login = async (email, password) => {
     try {
       const response = await axios.post('http://127.0.0.1:8000/api/user/login/', { email, password });
@@ -111,7 +115,7 @@ const AuthProvider = ({ children }) => {
     localStorage.removeItem('access');
     localStorage.removeItem('refresh');
     setAuth(null);
-    navigate("/")
+    navigate("/login")
   };
 
   const refreshToken = async () => {
@@ -136,7 +140,7 @@ const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ auth, loading, isAuthenticated, login, logout, refreshToken, authenticate }}>
+    <AuthContext.Provider value={{ auth, loading,getRole, isAuthenticated, login, logout, refreshToken, authenticate }}>
       {children}
     </AuthContext.Provider>
   );

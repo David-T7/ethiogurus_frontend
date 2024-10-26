@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect , useContext } from 'react';
+import { Link, useLocation , useNavigate } from 'react-router-dom';
 import { FaBars, FaTimes, FaUserPlus } from 'react-icons/fa';
-
+import { AuthContext } from './AuthContext';
 const Layout = ({ children }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation(); // For determining the current route
-
+  const {getRole} = useContext(AuthContext);
+  const navigate = useNavigate()
   // Disable body scrolling when menu is open
   useEffect(() => {
     document.body.style.overflow = isMenuOpen ? 'hidden' : 'auto';
@@ -25,10 +26,32 @@ const Layout = ({ children }) => {
     };
   }, []);
 
+  useEffect(() => {
+    console.log("in layout redirect")
+    const redirect = async () => {
+      const role = await getRole();
+      console.log("role found in layout is ",role)
+      if (role === 'admin') {
+        navigate('/admin-dashboard');
+      } else if (role === 'freelancer') {
+        navigate('/home');
+      } else if (role === 'interviewer') {
+        navigate('/welcome');
+      } else if (role === 'client') {
+        navigate('/dashboard');
+      }
+    };
+
+    redirect();
+  }, [navigate]);
+
   const getLinkClasses = (path) => {
-    const baseClasses = 'relative px-2 py-1 transition-colors duration-300';
-    const activeClasses = 'text-brand-green font-semibold before:content-[""] before:absolute before:block before:w-full before:h-[2px] before:bg-brand-green before:bottom-0 before:left-0';
-    const hoverClasses = 'hover:text-brand-green hover:before:content-[""] hover:before:block hover:before:w-full hover:before:h-[2px] hover:before:bg-brand-green hover:before:bottom-0 hover:before:left-0';
+    const baseClasses =
+      "relative px-4 transition-colors duration-300 text-md font-normal";
+    const activeClasses =
+      'text-brand-green font-normal before:content-[""] before:absolute before:block before:w-full before:h-[2px] before:bg-brand-green before:bottom-0 before:left-0';
+    const hoverClasses =
+      'hover:text-brand-green hover:before:content-[""] hover:before:block hover:before:w-full hover:before:h-[2px] hover:before:bg-brand-green hover:before:bottom-0 hover:before:left-0';
 
     return location.pathname === path
       ? `${baseClasses} ${activeClasses}`
@@ -48,7 +71,7 @@ const Layout = ({ children }) => {
 
         {/* Top-left branding and navigation */}
         <div className="flex flex-col md:flex-row items-center space-x-6 w-full md:w-auto">
-          <Link to="/" className="text-2xl font-bold">EthioGurus</Link>
+          <Link to="/" className="text-2xl font-semibold">EthioGurus</Link>
           <nav className="hidden md:flex space-x-4">
             <Link to="/services" className={getLinkClasses('/services')}>Services</Link>
             <Link to="/clients" className={getLinkClasses('/clients')}>Clients</Link>
@@ -74,7 +97,7 @@ const Layout = ({ children }) => {
               <FaTimes />
             </button>
             <div className="flex flex-col items-center space-y-4">
-              <Link to="/" className="text-2xl font-bold" onClick={() => setIsMenuOpen(false)}>EthioGuru</Link>
+              <Link to="/" className="text-2xl font-semibold" onClick={() => setIsMenuOpen(false)}>EthioGuru</Link>
               <nav className="flex flex-col space-y-4">
                 <Link to="/services" className={getLinkClasses('/services')} onClick={() => setIsMenuOpen(false)}>Services</Link>
                 <Link to="/clients" className={getLinkClasses('/clients')} onClick={() => setIsMenuOpen(false)}>Clients</Link>

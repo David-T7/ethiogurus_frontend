@@ -1,12 +1,14 @@
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+// ChangePasswordPage.jsx
+
+import React, { useState } from 'react';
 import axios from 'axios';
-import { useState , useEffect } from 'react';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
+
 const ChangePasswordPage = () => {
-  
   const [profile, setProfile] = useState({
-    oldPassword:'',
-    newPassword:'',
-    confirmPassword:''
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: ''
   });
 
   const [passwordVisibility, setPasswordVisibility] = useState({
@@ -15,14 +17,14 @@ const ChangePasswordPage = () => {
     confirmPasswordVisible: false,
   });
 
+  const [errors, setErrors] = useState({}); // State to hold error messages
+
   const togglePasswordVisibility = (field) => {
     setPasswordVisibility((prevState) => ({
       ...prevState,
       [field]: !prevState[field],
     }));
   };
-
-
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -32,44 +34,42 @@ const ChangePasswordPage = () => {
     }));
   };
 
-
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(profile.oldPassword , profile.confirmPassword )
+    setErrors({}); // Reset errors
+
     if (profile.newPassword !== profile.confirmPassword) {
-        alert("Passwords do not match!");
-        return;
-      }
-    try {
-      
-    const data = {
-            'old_password': profile.oldPassword,
-            'new_password': profile.newPassword
+      setErrors({ confirmPassword: "Passwords do not match!" });
+      return;
     }
 
+    try {
+      const data = {
+        'old_password': profile.oldPassword,
+        'new_password': profile.newPassword
+      };
+
       const token = localStorage.getItem('access');
-      const role = localStorage.getItem('role');
-      await axios.post(`http://127.0.0.1:8000/api/user/change-password/`, data, {
+      const response = await axios.post(`http://127.0.0.1:8000/api/user/change-password/`, data, {
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
       });
 
-    //   // Fetch the updated profile data from the server
-    //   const response = await axios.get('http://127.0.0.1:8000/api/user/client/manage/', {
-    //     headers: {
-    //       Authorization: `Bearer ${token}`,
-    //     },
-    //   });
-
-    //   // Update the profile state with the new data
-    //   setProfile(response.data);
-    //   setUpdatedProfile(response.data); // Optionally clear updatedProfile state
-
-      alert('Profile updated successfully!');
+      alert('Password updated successfully!');
+      // Optionally, reset the form
+      setProfile({
+        oldPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
     } catch (err) {
-      alert('Failed to update profile.');
+      if (err.response && err.response.data) {
+        setErrors(err.response.data); // Set error messages from the backend
+      } else {
+        alert('Failed to update password.');
+      }
     }
   };
 
@@ -78,7 +78,7 @@ const ChangePasswordPage = () => {
       <h2 className="text-3xl font-thin text-brand-dark-blue mb-6 text-center">Change Password</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
 
-        {/*Old Password*/}
+        {/* Old Password */}
         <div className="mb-4 relative">
           <label htmlFor="oldPassword" className="block text-lg font-normal text-brand-blue mb-2">
             Old Password
@@ -89,7 +89,7 @@ const ChangePasswordPage = () => {
             name="oldPassword"
             value={profile.oldPassword}
             onChange={handleInputChange}
-            className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
+            className={`w-full border ${errors.old_password ? 'border-red-500' : 'border-gray-300'} p-2 rounded-lg focus:outline-none focus:border-blue-500`}
           />
           <span
             className="absolute right-3 top-10 text-gray-600 hover:text-gray-800 cursor-pointer"
@@ -97,9 +97,12 @@ const ChangePasswordPage = () => {
           >
             {passwordVisibility.oldPasswordVisible ? <FaEye /> : <FaEyeSlash />}
           </span>
+          {errors.old_password && (
+            <p className="text-red-500 text-sm mt-1">{errors.old_password}</p>
+          )}
         </div>
 
-        {/*New Password*/}
+        {/* New Password */}
         <div className="mb-4 relative">
           <label htmlFor="newPassword" className="block text-lg font-normal text-brand-blue mb-2">
             New Password
@@ -110,7 +113,7 @@ const ChangePasswordPage = () => {
             name="newPassword"
             value={profile.newPassword}
             onChange={handleInputChange}
-            className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
+            className={`w-full border ${errors.new_password ? 'border-red-500' : 'border-gray-300'} p-2 rounded-lg focus:outline-none focus:border-blue-500`}
           />
           <span
             className="absolute right-3 top-10 text-gray-600 hover:text-gray-800 cursor-pointer"
@@ -118,9 +121,12 @@ const ChangePasswordPage = () => {
           >
             {passwordVisibility.newPasswordVisible ? <FaEye /> : <FaEyeSlash />}
           </span>
+          {errors.new_password && (
+            <p className="text-red-500 text-sm mt-1">{errors.new_password}</p>
+          )}
         </div>
 
-        {/*Confirm Password*/}
+        {/* Confirm Password */}
         <div className="mb-4 relative">
           <label htmlFor="confirmPassword" className="block text-lg font-normal text-brand-blue mb-2">
             Confirm New Password
@@ -131,11 +137,17 @@ const ChangePasswordPage = () => {
             name="confirmPassword"
             value={profile.confirmPassword}
             onChange={handleInputChange}
-            className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
+            className={`w-full border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'} p-2 rounded-lg focus:outline-none focus:border-blue-500`}
           />
+          {errors.confirmPassword && (
+            <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
+          )}
         </div>
 
-        
+        {/* General Error Message */}
+        {errors.non_field_errors && (
+          <div className="text-red-500 text-center">{errors.non_field_errors}</div>
+        )}
 
         {/* Submit Button */}
         <div className="flex justify-center">

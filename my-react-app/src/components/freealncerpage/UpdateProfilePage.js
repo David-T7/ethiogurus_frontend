@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { FaCheckCircle } from 'react-icons/fa';
 
 const UpdateProfilePage = () => {
   const [profile, setProfile] = useState(null);
   const [updatedProfile, setUpdatedProfile] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [verificationStatus, setVerificationStatus] = useState(null);
+  const navigate = useNavigate()
+  const [freelancerData , setFreelacnerData] = useState(null)
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -16,7 +21,10 @@ const UpdateProfilePage = () => {
             Authorization: `Bearer ${token}`,
           },
         });
+        setFreelacnerData(response.data)
         setProfile(response.data);
+        setVerificationStatus(response.data.verified)
+        console.log("verifictation status is ",response.data.verified)
         setLoading(false);
       } catch (err) {
         setError('Failed to load profile data.');
@@ -172,6 +180,10 @@ const UpdateProfilePage = () => {
   if (error) {
     return <div>{error}</div>;
   }
+
+  const handleVerifyAccount = async () => {
+    navigate('/verify-account',{ state: { freelancerData } })
+};
 
   return (
     <div className="max-w-2xl mx-auto p-8 mt-8">
@@ -348,6 +360,21 @@ const UpdateProfilePage = () => {
             className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
             accept="image/*"
           />
+        </div>
+
+        
+          {/* Verify Account Button */}
+       <div className="mb-6">
+       <h3 className="text-xl font-normal text-brand-blue mb-4">Verification Status</h3>
+          {!verificationStatus && (<button type="button" onClick={handleVerifyAccount} className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-md">
+            Verify Account
+          </button>
+          )}
+          {verificationStatus && (
+        <p className="mt-2 text-green-500 flex items-center">
+          <FaCheckCircle className="mr-2" /> Verified
+        </p>
+      )}
         </div>
         <button
           type="submit"

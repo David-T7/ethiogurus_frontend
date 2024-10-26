@@ -35,7 +35,7 @@ const Clients = () => {
   return (
     <div className="container mx-auto py-12 px-6">
       <section className="mb-16">
-        <h2 className="text-3xl font-semibold text-center text-brand-blue mb-8">Companies We've Worked With</h2>
+        <h2 className="text-2xl font-normal text-center text-brand-blue mb-8">Companies We've Worked With</h2>
         <div className="flex flex-wrap justify-center items-center space-x-6 space-y-6">
           {companies.map((company, index) => (
             <div
@@ -53,7 +53,7 @@ const Clients = () => {
       </section>
       
       <section className="mb-16">
-        <h2 className="text-3xl font-semibold text-center text-brand-blue mb-8">Our Impact</h2>
+        <h2 className="text-2xl font-normal text-center text-brand-blue mb-8">Our Impact</h2>
         <div className="flex flex-col items-center">
           <p className="text-5xl font-bold text-brand-green">
             <CountUp end={totalClients} duration={3} separator="," />

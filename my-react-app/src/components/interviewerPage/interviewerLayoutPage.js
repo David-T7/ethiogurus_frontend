@@ -191,7 +191,7 @@ const InterviewerLayout = ({ children }) => {
                 </li>
                 <li>
                   <Link
-                    to="/update-profile"
+                    to="/myprofile"
                     className="flex items-center gap-2 p-2 text-gray-700 hover:bg-gray-100 rounded"
                   >
                     <FaUserEdit /> Update Profile
@@ -199,7 +199,7 @@ const InterviewerLayout = ({ children }) => {
                 </li>
                 <li>
                   <Link
-                    to="/update-password"
+                    to="/updatePassword"
                     className="flex items-center gap-2 p-2 text-gray-700 hover:bg-gray-100 rounded"
                   >
                     <FaLock /> Change Password

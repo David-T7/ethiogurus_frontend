@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { FaCheckCircle } from 'react-icons/fa';
 
 const FreelancerSettingsPage = () => {
   const [settings, setSettings] = useState({
@@ -16,6 +18,9 @@ const FreelancerSettingsPage = () => {
     paymentMethods: [],
   });
 
+  const [verificationStatus, setVerificationStatus] = useState('');
+  const navigate = useNavigate()
+  const [freelancerData , setFreelacnerData] = useState(null)
   useEffect(() => {
     const loadSettings = async () => {
       try {
@@ -23,8 +28,9 @@ const FreelancerSettingsPage = () => {
         const response = await axios.get('http://127.0.0.1:8000/api/user/freelancer/manage/', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const { availability_status: status, selected_payment_method: paymentMethods } = response.data;
-
+        setFreelacnerData(response.data)
+        const { availability_status: status, selected_payment_method: paymentMethods , verified } = response.data;
+        setVerificationStatus(verified)
         const localSettings = JSON.parse(localStorage.getItem('settings')) || {};
 
         setSettings({
@@ -143,6 +149,10 @@ const FreelancerSettingsPage = () => {
     } catch (error) {
       console.error('Error saving settings:', error);
     }
+  };
+
+  const handleVerifyAccount = async () => {
+      navigate('/verify-account' , { state: { freelancerData } })
   };
 
   return (
@@ -279,6 +289,20 @@ const FreelancerSettingsPage = () => {
             Add Payment Method
           </button>
         </div>
+
+         {/* Verify Account Button */}
+       <div className="mb-6">
+       <h3 className="text-xl font-normal text-brand-blue mb-4">Verification Status</h3>
+          {!verificationStatus && (<button type="button" onClick={handleVerifyAccount} className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-md">
+            Verify Account
+          </button>
+          )}
+          {verificationStatus && (
+        <p className="mt-2 text-green-500 flex items-center">
+          <FaCheckCircle className="mr-2" /> Verified
+        </p>
+      )}
+        </div>
         
         <button
           type="submit"
@@ -287,6 +311,7 @@ const FreelancerSettingsPage = () => {
           Save Settings
         </button>
       </form>
+
     </div>
   );
 };

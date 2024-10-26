@@ -29,6 +29,8 @@ const LoginPage = () => {
         navigate('/admin-dashboard');
       } else if (userData.role === 'freelancer') {
         navigate('/home');
+      } else if (userData.role === 'interviewer') {
+        navigate('/welcome');
       } else if (userData.role === 'client') {
         navigate('/dashboard');
       } else {

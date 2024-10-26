@@ -80,8 +80,8 @@ const InterviewPage = () => {
 
     try {
       const payload = {
-        feedback,
-        passed,
+        feedback:feedback,
+        passed:passed,
         done: true,
       };
 
@@ -117,6 +117,9 @@ const InterviewPage = () => {
 
     await axios.patch(
         `http://127.0.0.1:8000/api/appointments/${appointment.id}/done/`,
+        {
+
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`,
