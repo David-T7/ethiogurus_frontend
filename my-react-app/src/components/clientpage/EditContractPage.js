@@ -8,7 +8,9 @@ const EditContractPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [contract, setContract] = useState(null);
+  const [updatedContract , setUpdtedContract] = useState([])
   const [milestones, setMilestones] = useState([]);
+  const [updatedMilestones , setUpdtedMilestones] = useState([])
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [contractStatus, setContractStatus] = useState(null);
@@ -34,6 +36,7 @@ const EditContractPage = () => {
           }
         );
         setContract(response.data);
+        setUpdtedContract(response.data)
         setLoading(false);
       } catch (err) {
         console.error("Error fetching contract:", err);
@@ -72,28 +75,29 @@ const EditContractPage = () => {
     const fetchMilestones = async () => {
       try {
         const response = await axios.get(
-          `http://127.0.0.1:8000/api/contracts/${contractId}/milestones/`,
+          `http://127.0.0.1:8000/api/contracts/${contract?.contract_update ? contract.contract_update:contractId}/milestones/`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
         setMilestones(response.data);
+        setUpdtedMilestones(response.data)
       } catch (err) {
         console.error("Error fetching milestones:", err);
       }
     };
 
     fetchMilestones();
-  }, [contractId, token]);
+  }, [contract, token]);
 
   const handleUpdateContract = async () => {
     try {
       const response = await axios.patch(
         `http://127.0.0.1:8000/api/contracts/${contractId}/`,
         {
-          amount_agreed: contract.amount_agreed,
-          terms: contract.terms,
-          milestone_based: contract.milestone_based,
+          amount_agreed: updatedContract.amount_agreed,
+          terms: updatedContract.terms,
+          milestone_based: updatedContract.milestone_based,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -105,8 +109,27 @@ const EditContractPage = () => {
     }
   };
 
+  const handleCreateNewUpdateContract = async () => {
+    try {
+      updatedContract.status = "pending"
+      const response = await axios.post(
+        `http://127.0.0.1:8000/api/contracts/`,
+        updatedContract
+        ,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      console.log("Contract updated:", response.data);
+    } catch (error) {
+      console.error("Error updating contract:", error);
+    }
+  };
+
+
   const handleUpdate = async () => {
-    await handleUpdateContract();
+    checkForContractUpdate()
+    checkForUpdates()
     navigate(`/contracts/${contractId}`);
   };
 
@@ -134,6 +157,37 @@ const EditContractPage = () => {
     }
   };
 
+  const checkForUpdates = () => {
+    updatedMilestones.forEach((updatedMilestone) => {
+      const originalMilestone = milestones.find(
+        (milestone) => milestone.id === updatedMilestone.id
+      );
+
+      if (originalMilestone) {
+        const hasChanges = JSON.stringify(originalMilestone) !== JSON.stringify(updatedMilestone);
+
+        if (hasChanges) {
+          if (updatedMilestone.hasOwnProperty('milestone_update')) {
+            handleCreateNewUpdateMilestone(updatedMilestone);
+          } else {
+            handleUpdateMilestone(updatedMilestone.id, updatedMilestone);
+          }
+        }
+      }
+    });
+  };
+
+  const checkForContractUpdate = async () => {
+    if((contract.status === "active" || contract.status === "accepted") && !contract.contract_update){
+        if(updatedContract.amount_agreed !== contract.amount_agreed || updatedContract.terms !== contract.terms ){
+          await handleCreateNewUpdateContract()
+        }
+      }
+      else{
+          await handleUpdateContract()
+      }
+  }
+
   const handleUpdateMilestone = async (milestoneId, updatedMilestone) => {
     try {
       const response = await axios.patch(
@@ -149,6 +203,24 @@ const EditContractPage = () => {
     }
   };
 
+  const handleCreateNewUpdateMilestone = async (updatedMilestone) => {
+    console.log("updated milestone  before sending ",updatedMilestone)
+    try {
+      const response = await axios.post(
+        `http://127.0.0.1:8000/api/milestones/`
+        ,
+        updatedMilestone,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      console.log("Milestone updated for approval:", response.data);
+    } catch (error) {
+      console.error("Error updating milestone for approval:", error);
+    }
+  };
+
+
   const handleDeleteMilestone = async (index) => {
     const milestoneId = milestones[index].id;
     try {
@@ -160,26 +232,34 @@ const EditContractPage = () => {
       );
       const updatedMilestones = milestones.filter((_, i) => i !== index);
       setMilestones(updatedMilestones);
+      setUpdtedMilestones(updatedMilestones)
     } catch (error) {
       console.error("Error deleting milestone:", error);
     }
   };
 
   const handleMilestoneChange = (index, field, value) => {
-    const updatedMilestones = [...milestones];
-    updatedMilestones[index] = { ...updatedMilestones[index], [field]: value };
-    setMilestones(updatedMilestones);
+    // Create a new array with the updated milestone
+    const updated = updatedMilestones.map((milestone, i) =>
+      i === index ? { ...milestone, [field]: value } : milestone
+    );
+    setUpdtedMilestones(updated); // Update updatedMilestones state with the modified array
+  
+    // Optionally, add milestone_update if amount or due_date has changed
+    if (
+      milestones[index].due_date !== updated[index].due_date ||
+      milestones[index].amount !== updated[index].amount
+    ) {
+      updated[index].milestone_update = updated[index].id;
+      setUpdtedMilestones(updated); // Update again if milestone_update was modified
+    }
+  };
 
-    // Update milestone on the server
-    handleUpdateMilestone(updatedMilestones[index].id, {
-      contract: contractId,
-      title: updatedMilestones[index].title,
-      description: updatedMilestones[index].description || "",
-      amount: updatedMilestones[index].amount,
-      due_date: updatedMilestones[index].due_date,
-      is_completed: updatedMilestones[index].is_completed,
-      status: updatedMilestones[index].status,
-    });
+  const handleContractChange = (field, value) => {
+    // Create a new object with the updated contract
+    const updated = {...updatedContract, [field]: value }
+    setUpdtedContract(updated); // Update updatedMilestones state with the modified array
+    updated.contract_update = updated.id;
   };
 
   const handleAddMilestone = async () => {
@@ -187,7 +267,7 @@ const EditContractPage = () => {
       const response = await axios.post(
         `http://127.0.0.1:8000/api/milestones/`,
         {
-          contract: contractId,
+          contract: contract?.contract_update ? contract.contract_update : contractId,
           title: newMilestone.title,
           amount: newMilestone.amount,
           due_date: newMilestone.due_date,
@@ -200,6 +280,7 @@ const EditContractPage = () => {
       );
       console.log("Milestone added:", response.data);
       setMilestones([...milestones, response.data]);
+      setUpdtedMilestones([...updatedMilestones , response.data])
       await handleUpdateContract();
       setContract({ ...contract, milestone_based: true });
       setNewMilestone({
@@ -263,7 +344,7 @@ const EditContractPage = () => {
       </h1>
       {/* Create Dispute Button */}
       <div className="mt-6 flex justify-end space-x-4">
-        {contract?.status === "active" && !contract.milestone_based && (
+        {updatedContract?.status === "active" && !updatedContract.milestone_based && (
           <button
             onClick={handleCreateDispute}
             className="bg-red-500 text-white py-2 px-4 rounded"
@@ -273,7 +354,7 @@ const EditContractPage = () => {
         )}
 
         {/* Cancel Project Button */}
-        {["draft"].includes(contract?.status) && (
+        {["draft"].includes(updatedContract?.status) && (
           <button
             onClick={() => handleDeleteContract()}
             className="bg-gray-500 text-white hover:bg-gray-700 py-2 px-4 rounded"
@@ -281,8 +362,8 @@ const EditContractPage = () => {
             Cancel Contract
           </button>
         )}
-        {["inDispute"].includes(contract?.status) &&
-          !contract?.milestone_based && (
+        {["inDispute"].includes(updatedContract?.status) &&
+          !updatedContract?.milestone_based && (
             <button
               onClick={() => handleContractStatusUPdate("canceled")}
               className="bg-gray-500 text-white hover:bg-gray-700 py-2 px-4 rounded"
@@ -292,7 +373,7 @@ const EditContractPage = () => {
           )}
 
         {/* Cancel Project Button */}
-        {["canceled"].includes(contract?.status) && (
+        {["canceled"].includes(updatedContract?.status) && (
           <button
             onClick={() => handleContractStatusUPdate("pending")}
             className="bg-green-500 text-white hover:bg-green-700 py-2 px-4 rounded"
@@ -305,9 +386,9 @@ const EditContractPage = () => {
         <h2 className="text-xl font-normal text-gray-800 mb-4">Project Fee</h2>
         <input
           type="number"
-          value={contract?.amount_agreed}
+          value={updatedContract?.amount_agreed}
           onChange={(e) =>
-            setContract({ ...contract, amount_agreed: e.target.value })
+            handleContractChange("amount_agreed", e.target.value)
           }
           className="w-full border border-gray-300 p-4 rounded-lg focus:outline-none focus:border-blue-500"
         />
@@ -318,8 +399,10 @@ const EditContractPage = () => {
           Contract Terms
         </h2>
         <textarea
-          value={contract?.terms}
-          onChange={(e) => setContract({ ...contract, terms: e.target.value })}
+          value={updatedContract?.terms}
+          onChange={(e) =>  
+            handleContractChange("terms", e.target.value)
+          }
           className="w-full border border-gray-300 p-4 rounded-lg focus:outline-none focus:border-blue-500"
           rows="4"
         />
@@ -327,7 +410,7 @@ const EditContractPage = () => {
 
       <div className="mb-6">
         <h2 className="text-xl font-normal text-gray-800 mb-4">Milestones</h2>
-        {milestones.map((milestone, index) => (
+        {updatedMilestones.map((milestone, index) => (
           <div
             key={milestone.id}
             className="flex flex-col mb-4 border border-gray-200 p-4 rounded-lg relative"
@@ -368,7 +451,7 @@ const EditContractPage = () => {
                 className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:border-blue-500"
               />
             </div>
-            <div className="absolute top-2 right-2">
+            {(milestone.status === "pending" &&<div className="absolute top-2 right-2">
               <button
                 onClick={() => handleDeleteMilestone(index)}
                 className="text-red-500"
@@ -376,28 +459,18 @@ const EditContractPage = () => {
                 <FaTrash />
               </button>
             </div>
+            )}
             <div className="mt-6 flex justify-end space-x-4">
-              {( (disputes.length > 0 && milestone.status === "active" &&
-                !disputes.some(
-                  (dispute) => dispute.milestone === milestone.id && dispute.status ==="open"
-                )) && (
+              {(milestone.status === "active" &&
                   <button
                     onClick={() => handleCreateDispute(milestone.id)}
                     className="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded"
                   >
                     Create Dispute
                   </button>
-                ))}
+                )}
 
-              {(disputes.length === 0 && milestone.status === "active" &&(
-                  <button
-                    onClick={() => handleCreateDispute(milestone.id)}
-                    className="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded"
-                  >
-                    Create Dispute
-                  </button>
-                ))}
-              {disputes.length > 0 && milestone.status === "active" &&
+              {disputes.length > 0 && milestone.status === "inDispute" &&
                 disputes.some(
                   (dispute) =>
                     dispute.milestone === milestone.id &&
@@ -418,7 +491,7 @@ const EditContractPage = () => {
                   </>
                 )}
 
-              {disputes.length > 0 && milestone.status === "active" &&
+              {disputes.length > 0 && milestone.status === "inDispute" &&
                 disputes.some(
                   (dispute) =>
                     dispute.milestone === milestone.id &&

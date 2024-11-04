@@ -2,6 +2,9 @@ import React, { useState, useEffect , useContext } from 'react';
 import { Link, useLocation , useNavigate } from 'react-router-dom';
 import { FaBars, FaTimes, FaUserPlus } from 'react-icons/fa';
 import { AuthContext } from './AuthContext';
+import logo from "../images/EG_MIX_Logo.png"
+
+
 const Layout = ({ children }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation(); // For determining the current route
@@ -70,8 +73,16 @@ const Layout = ({ children }) => {
         </button>
 
         {/* Top-left branding and navigation */}
-        <div className="flex flex-col md:flex-row items-center space-x-6 w-full md:w-auto">
-          <Link to="/" className="text-2xl font-semibold">EthioGurus</Link>
+
+        <div className="flex flex-col md:flex-row items-center space-x-0 w-auto md:w-auto">
+          <Link to="/" className="flex items-center space-x-0">
+          <img src={logo} alt="EthioGurus Logo" className="w-20 h-12" /> {/* Adjust size as needed */}
+          <span className="font-normal text-2xl">EthioGurus</span>
+          </Link>
+        </div>
+        
+        <div className="flex flex-col md:flex-row items-center -left-10 space-x-6 w-auto md:w-auto">
+          {/* Top-left branding */}
           <nav className="hidden md:flex space-x-4">
             <Link to="/services" className={getLinkClasses('/services')}>Services</Link>
             <Link to="/clients" className={getLinkClasses('/clients')}>Clients</Link>
@@ -79,6 +90,7 @@ const Layout = ({ children }) => {
             <Link to="/about" className={getLinkClasses('/about')}>About Us</Link>
           </nav>
         </div>
+
 
         {/* Top-right navigation */}
         <nav className="hidden md:flex space-x-4">
@@ -97,7 +109,10 @@ const Layout = ({ children }) => {
               <FaTimes />
             </button>
             <div className="flex flex-col items-center space-y-4">
-              <Link to="/" className="text-2xl font-semibold" onClick={() => setIsMenuOpen(false)}>EthioGuru</Link>
+            <Link to="/" className="flex items-center space-x-0">
+            <img src={logo} alt="EthioGurus Logo" className="w-20 h-12" /> {/* Adjust size as needed */}
+            <span className="font-normal text-2xl">EthioGurus</span>
+            </Link>
               <nav className="flex flex-col space-y-4">
                 <Link to="/services" className={getLinkClasses('/services')} onClick={() => setIsMenuOpen(false)}>Services</Link>
                 <Link to="/clients" className={getLinkClasses('/clients')} onClick={() => setIsMenuOpen(false)}>Clients</Link>

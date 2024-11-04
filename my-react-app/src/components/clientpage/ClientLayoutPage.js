@@ -9,6 +9,8 @@ import {
   FaLock,
 } from "react-icons/fa";
 import profilePic from "../../images/default-profile-picture.png"; // Default profile picture
+import logo from "../../images/EG_MIX_Logo.png"
+
 import { AuthContext } from '../AuthContext'; // Update this path according to your project structure
 import { clientUserContext } from "../clientUserContext";
 const ClientLayout = ({ children }) => {
@@ -90,12 +92,14 @@ const ClientLayout = ({ children }) => {
         )}
 
         {/* Top-left branding */}
-        <Link
-          to="/dashboard"
-          className="text-xl font-bold md:text-2xl absolute left-6 top-6"
-        >
-          EthioGurus
-        </Link>
+        <div className="absolute left-6 top-6 flex items-center">
+       <Link to="/dashboard">
+      <img src={logo} alt="EthioGurus Logo" className="w-20 h-12" />
+      </Link> {/* Adjust size as needed */}
+      <Link to="/dashboard" className="font-normal text-2xl">
+        EthioGurus
+      </Link>
+    </div>
 
         {/* Top-right navigation */}
         <nav className="hidden md:flex space-x-4 absolute right-6 top-6 mr-20">
@@ -208,6 +212,9 @@ const ClientLayout = ({ children }) => {
                 <Link to="/projects" className={getLinkClasses("/projects")}>
                   Projects
                 </Link>
+                <Link to="/contracts" className={getLinkClasses("/contracts")}>
+            Contracts
+             </Link>
                 <Link to="/inbox" className={getLinkClasses("/inbox")}>
                   Inbox
                   {unreadMessages > 0 && (

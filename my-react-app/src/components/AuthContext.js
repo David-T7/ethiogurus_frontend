@@ -80,6 +80,7 @@ const AuthProvider = ({ children }) => {
   }
 
     const getRole = async () => {
+      try{
       if (isAuthenticated()){
         const userResponse = await axios.get('http://127.0.0.1:8000/api/user/role/', {
           headers: { Authorization: `Bearer ${token}` },
@@ -87,6 +88,11 @@ const AuthProvider = ({ children }) => {
         return userResponse.data.role
       }
       return null
+    }
+    catch(error){
+      console.error('Error during fetching role:', error);
+      console.error('Error details:', error.response?.data || error.message);
+    }
     }
 
   const login = async (email, password) => {

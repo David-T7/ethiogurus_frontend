@@ -112,9 +112,9 @@ const UpdateDispute = () => {
   };
 
   return (
-      <div className="max-w-4xl mx-auto p-6 mt-6">
+      <div className="max-w-2xl mx-auto p-6 mt-6">
         <h1 className="text-3xl font-thin text-brand-dark-blue mb-6 text-center">
-          Update Dispute for {dispute?.title}
+          Update Dispute
         </h1>
 
         {/* Display Error Message */}

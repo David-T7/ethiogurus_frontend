@@ -1,20 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 const CounterOffers = () => {
-  const { id:contractId } = useParams(); // Get contract ID from URL params
-  const [counterOffers, setCounterOffers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [client , setClientData] = useState(null)
-  const token = localStorage.getItem('access'); // Get access token
+  const [client, setClientData] = useState(null);
+  const token = localStorage.getItem('access');
+  const location = useLocation();
+  const counterOffers = location.state?.counterOffers || [];
+  const contract = location.state?.contract || {};
+  const navigate = useNavigate();
 
   useEffect(() => {
+    if (!token) {
+      // If no token, redirect to login
+      navigate('/login');
+      return;
+    }
+
     const fetchClientData = async () => {
       try {
         const response = await axios.get(
-          "http://127.0.0.1:8000/api/user/client/manage/",
+          'http://127.0.0.1:8000/api/user/client/manage/',
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -30,35 +38,52 @@ const CounterOffers = () => {
     };
 
     fetchClientData();
-  }, []);
+  }, [token, navigate]);
 
-  useEffect(() => {
-    const fetchCounterOffers = async () => {
-      try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/contracts/${contractId}/counter-offers/`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setCounterOffers(response.data); // Set counter offers related to the contract
-      } catch (error) {
-        console.error('Failed to fetch counter offers:', error);
-        setError(error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const handleCounterOffer = (id) => {
+    navigate(`/contract-counter-offer/${id}`, {
+      state: {
+        contract,
+        counterOffers,
+      },
+    });
+  };
 
-    fetchCounterOffers();
-  }, [contractId]);
+  // Conditionally load counter offers related to the contract
+  // Uncomment if dynamic loading is required
+  // useEffect(() => {
+  //   const fetchCounterOffers = async () => {
+  //     try {
+  //       const response = await axios.get(
+  //         `http://127.0.0.1:8000/api/contracts/${contract.contract_update || contract.id}/counter-offers/`,
+  //         {
+  //           headers: {
+  //             Authorization: `Bearer ${token}`,
+  //           },
+  //         }
+  //       );
+  //       setCounterOffers(response.data);
+  //     } catch (error) {
+  //       console.error('Failed to fetch counter offers:', error);
+  //       setError(error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
+  //   fetchCounterOffers();
+  // }, [contract, token]);
 
   if (loading) {
     return <div className="text-center py-8">Loading counter offers...</div>;
   }
 
   if (error) {
-    return <div className="text-center py-8">Failed to load counter offers. Please try again later.</div>;
+    return (
+      <div className="text-center py-8">
+        Failed to load counter offers. Please try again later.
+      </div>
+    );
   }
 
   if (counterOffers.length === 0) {
@@ -78,9 +103,12 @@ const CounterOffers = () => {
           </div>
           <p className="text-gray-600">Proposed Amount: {offer.proposed_amount} Birr</p>
           <p className="text-gray-600">Milestone Based: {offer.milestone_based ? 'Yes' : 'No'}</p>
-          <Link to={`/contract-counter-offer/${offer.id}`} className="text-blue-500 hover:underline mt-4 inline-block">
+          <button
+            onClick={() => handleCounterOffer(offer.id)}
+            className="text-blue-500 hover:underline mt-4 inline-block"
+          >
             View Details
-          </Link>
+          </button>
         </div>
       ))}
     </div>
@@ -90,14 +118,14 @@ const CounterOffers = () => {
 // Helper function to get offer status styling
 const getOfferStatusStyle = (status) => {
   switch (status) {
-    case "pending":
-      return "bg-blue-600 text-white";
-    case "accepted":
-        return "bg-green-600 text-white";  
-    case "rejected":
-      return "bg-red-600 text-white";
+    case 'pending':
+      return 'bg-yellow-600 text-black';
+    case 'accepted':
+      return 'bg-green-600 text-white';
+    case 'rejected':
+      return 'bg-red-600 text-white';
     default:
-      return "bg-gray-500 text-white";
+      return 'bg-gray-500 text-white';
   }
 };
 

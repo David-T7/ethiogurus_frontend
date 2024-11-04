@@ -84,7 +84,7 @@ const SubmitCounterOffer = () => {
     const fetchMileStone = async () => {
       try {
         const response = await axios.get(
-          `http://127.0.0.1:8000/api/contracts/${contractId}/milestones/`,
+          `http://127.0.0.1:8000/api/contracts/${contract.contract_update ? contract.contract_update :contractId}/milestones/`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -107,7 +107,7 @@ const SubmitCounterOffer = () => {
       }
     };
     fetchMileStone();
-  }, [contractId]);
+  }, [contract]);
 
 
 
@@ -185,7 +185,7 @@ const SubmitCounterOffer = () => {
     // Prepare the payload for the counter offer
     const counterOfferPayload = {
       title: offer.title,
-      contract: contractId,
+      contract:contract.contract_update ? contract.contract_update :contractId,
       sender: freelancer.id,
       proposed_amount: offer.proposed_amount,
       start_date: offer.start_date,

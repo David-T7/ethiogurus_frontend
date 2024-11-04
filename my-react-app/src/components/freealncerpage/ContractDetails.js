@@ -11,6 +11,10 @@ const ContractDetails = () => {
   const token = localStorage.getItem("access"); // Get the access token from localStorage
   const [counterOffers, setCounterOffers] = useState([]);
   const [milestones , setMIlestones]= useState([])
+  const [disputes, setDisputes] = useState([]);
+  const [freelancer , setFreelancer] = useState(null)
+
+
   useEffect(() => {
     // Fetch contract details using axios
     const fetchContract = async () => {
@@ -41,7 +45,7 @@ const ContractDetails = () => {
     const fetchContractMilestones = async () => {
       try {
         const response = await axios.get(
-          `http://127.0.0.1:8000/api/contract/${id}/milestones/`,
+          `http://127.0.0.1:8000/api/contracts/${contract?.contract_update ? contract.contract_update : contract.id}/milestones/`,
           {
             headers: {
               Authorization: `Bearer ${token}`, // Attach token
@@ -61,12 +65,58 @@ const ContractDetails = () => {
     }
   }, [contract]);
 
+
+  useEffect(() => {
+    const fetchDisputes = async () => {
+      try {
+        const response = await axios.get(
+          `http://127.0.0.1:8000/api/contracts/${contract.id}/disputes/`,
+
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        setDisputes(response.data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching contract disputes:", err);
+        // setError("Error fetching contract disputes . Please try again.");
+        setLoading(false);
+      }
+    };
+
+    fetchDisputes();
+  }, [contract]);
+
+  useEffect(() => {
+    const fetchFreelancer = async () => {
+      try {
+        const token = localStorage.getItem("access");
+        const response = await axios.get(
+          "http://127.0.0.1:8000/api/user/freelancer/manage/",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setFreelancer(response.data)
+      }
+      catch(error){
+        console.log("failed to fetch freelancer data")
+      }
+    }
+    fetchFreelancer()
+
+  } , [])
+
+
   useEffect(() => {
     const fetchCounterOffers = async () => {
       try {
         const token = localStorage.getItem("access"); // Get access token
         const response = await axios.get(
-          `http://127.0.0.1:8000/api/contracts/${id}/counter-offers/`,
+          `http://127.0.0.1:8000/api/contracts/${contract.contract_update ? contract.contract_update :id}/counter-offers/`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -84,22 +134,48 @@ const ContractDetails = () => {
     fetchCounterOffers();
   }, [contract]);
 
-  const handleAccept = async () => {
+  const handleAcceptContract = async () => {
     // Handle contract acceptance (POST request using axios)
     try {
-      await axios.post(`/api/freelancer-contracts/${id}/accept/`, null, {
+      await axios.patch(`http://127.0.0.1:8000/api/freelancer-contracts-update/${id}/`,{
+        status:"accepted"
+      },
+       {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
-
-      navigate("/freelancer-contracts"); // Navigate back to the contracts list after acceptance
+      navigate(`/mycontracts`); // Navigate back to the contracts list after acceptance
     } catch (err) {
       setError(
         err.response
           ? err.response.data.detail
           : "Failed to accept the contract"
       );
+    }
+  };
+
+
+  const handleAcceptMilestone = async (id) => {
+    // Handle contract acceptance (POST request using axios)
+    try {
+      const response = await axios.patch(`http://127.0.0.1:8000/api/freelancer-milestones-update/${id}/`,{
+        status:"accepted"
+      },
+       {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("response is ",response.data)
+
+    } catch (err) {
+      setError(
+        err.response
+          ? err.response.data.detail
+          : "Failed to accept the contract"
+      );
+      console.log("error is ",err)
     }
   };
 
@@ -110,10 +186,37 @@ const ContractDetails = () => {
     navigate(`/counter-offers/${id}`,
       {
         state:{
-          counterOffers:counterOffers
+          counterOffers:counterOffers,
+          contract:contract
         }
       }
     );
+  };
+
+  const handleCreateDispute = (milestoneId) => {
+    navigate(`/contractDispute/${contract.id}/createdispute`, {
+      state: {
+        milestoneId: milestoneId,
+      },
+    });
+  };
+
+  const handleRespondToDispute = (disputeId) => {
+    navigate(`/dispute-response/${disputeId}`);
+  };
+
+  const handleDisputes = () => {
+    navigate(`/disputes/${contract.id}` ,{
+      state: {
+        contract: contract,
+        freelancerId: freelancer.id
+      },
+    }
+    );
+  };
+
+  const navigateToUpdateDisputeResponse  = async (disputeId) => {
+    navigate(`/dispute-response/${disputeId}`);
   };
 
   if (loading) {
@@ -127,6 +230,8 @@ const ContractDetails = () => {
   if (!contract) {
     return <div className="text-center py-8">No contract found.</div>;
   }
+  const sortedMilestones = [...milestones].sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
+
 
   return (
     <div className="max-w-2xl mx-auto p-8 mt-8">
@@ -147,26 +252,53 @@ const ContractDetails = () => {
         Milestones
       </h3>
       <div className="border-t border-gray-200 pt-4">
-        {milestones.length > 0 ? (
-          milestones.map((milestone, index) => (
-            <div
-              key={milestone.id}
-              className={`py-4 ${
-                index < milestones.length - 1
-                  ? "border-b border-gray-300"
-                  : ""
-              }`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-lg font-semibold text-gray-800">
-                  {milestone.title}
-                </h4>
-              </div>
-              <p className="text-gray-600 mb-1">Due: {milestone.due_date}</p>
-              <p className="text-gray-600">Amount: {milestone.amount}</p>
+      {contract.milestone_based && milestones.length > 0 ? (
+        <div className="mb-6">
+          <h2 className="text-xl font-normal text-gray-800 mb-4">Milestones</h2>
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-[50%] border-t border-gray-300"></div>
             </div>
-          ))
-        ) : (
+            <div className="relative">
+              {sortedMilestones.map((milestone, index) => (
+                <div key={milestone.id} className="flex items-center mb-4 relative">
+                  <div className="absolute w-4 h-4 bg-blue-600 rounded-full text-white flex items-center justify-center -left-2">
+                    {index + 1}
+                  </div>
+                  <div className="ml-8 bg-white p-4 border border-gray-200 rounded-lg shadow-md">
+                    <h3 className="text-xl font-normal text-gray-800">{milestone.title}</h3>
+                    <p className="text-gray-600">Due Date: {new Date(milestone.due_date).toLocaleDateString()}</p>
+                    <p className="text-gray-600">Amount: {milestone.amount} Birr</p>
+                    <p className="text-gray-600">Status: {milestone.status}</p>
+                    {contract.status !== "pending"  && milestone.status === "pending" &&
+                    <button
+            onClick={() => handleAcceptMilestone(milestone.id)}
+            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-200"
+          >
+            Accept
+          </button>
+                  }
+                    {( (disputes.length > 0 && milestone.status === "active" &&
+                !disputes.some(
+                  (dispute) => dispute.milestone === milestone.id && dispute.status ==="open"
+                )) && (
+                  <button
+                    onClick={() => handleCreateDispute(milestone.id)}
+                    className="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded"
+                  >
+                    Create Dispute
+                  </button>
+                ))} 
+
+           </div> 
+         
+           </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )      
+           : (
           <p className="text-gray-600 mb-2">
             No milestones found for this contract.
           </p>
@@ -175,7 +307,7 @@ const ContractDetails = () => {
       {contract.status === "pending" && (
         <div className="flex space-x-4">
           <button
-            onClick={handleAccept}
+            onClick={handleAcceptContract}
             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-200"
           >
             Accept
@@ -195,8 +327,29 @@ const ContractDetails = () => {
               Make Counter Offer
             </button>
           )}
+
+{counterOffers.length > 0 && contract.status == "pending"  && (
+            <button
+              onClick={handleCounterOffer}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-200"
+            >
+              Make Counter Offer
+            </button>
+          )}
         </div>
+
+        
       )}
+       {disputes.length > 0 && <div className="mb-6">
+        <h3 className="text-3xl font-thin text-brand-dark-blue mb-2">Disputes</h3>
+        <button
+        onClick={handleDisputes}
+        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-200"
+      >
+        Check Disputes
+      </button>
+       </div>
+}
     </div>
   );
 };

@@ -11,6 +11,7 @@ import {
 import { AuthContext } from '../AuthContext'; // Update this path according to your project structure
 import { UserContext } from "../UserContext";
 import defaultProfilePic from "../../images/default-profile-picture.png"
+import logo from "../../images/EG_MIX_Logo.png"
 const FreelancerProfileLayout = ({ children }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false); // Dropdown menu for profile
@@ -123,14 +124,15 @@ const FreelancerProfileLayout = ({ children }) => {
             <FaBars />
           </button>
         )}
-
-        {/* Top-left branding */}
-        <Link
-          to="/home"
-          className="text-xl font-bold md:text-2xl absolute left-6 top-6"
-        >
-          EthioGurus
-        </Link>
+     {/* Top-left branding */}
+     <div className="absolute left-6 top-6 flex items-center">
+       <Link to="/home">
+      <img src={logo} alt="EthioGurus Logo" className="w-20 h-12" />
+      </Link> {/* Adjust size as needed */}
+      <Link to="/home" className="font-normal text-2xl">
+        EthioGurus
+      </Link>
+    </div>
 
         {/* Top-right navigation */}
         <nav className="hidden md:flex space-x-8 absolute right-6 top-6 mr-20">

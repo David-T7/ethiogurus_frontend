@@ -1,118 +1,174 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useParams  } from 'react-router-dom';
 import { FaUpload } from 'react-icons/fa';
+import axios from 'axios';
 
 const DisputeResponsePage = () => {
-  // Initial states
-  const [dispute, setDispute] = useState('');
-  const [refundOffer, setRefundOffer] = useState(null);
+  const { id: disputeId } = useParams();
+  const token = localStorage.getItem("access");
+  const [disputeDetails, setDisputeDetails] = useState({
+    title: '',
+    description: '',
+    return_type: '',
+    return_amount: '',
+    dispute: '',
+    got_response: false,
+  });
+
   const [response, setResponse] = useState({
     decision: '',
     comments: '',
+    title:'',
     documents: [],
-    counterOfferAmount: ''
+    counterOfferAmount: '',
+    counterReturnType: '',
   });
+  
+  const navigate = useNavigate()
+
 
   useEffect(() => {
-    // Fetch dispute and refund offer data from API
-    // This is just a mock implementation. Replace with actual API call.
     const fetchDisputeData = async () => {
-      // Example data
-      const disputeData = {
-        details: 'The client did not complete the project as agreed.',
-        refundOffer: {
-          type: 'partial', // 'full' or 'partial'
-          amount: '100' // Only applicable if 'partial'
-        }
-      };
-      setDispute(disputeData.details);
-      setRefundOffer(disputeData.refundOffer);
+      try {
+        const response = await axios.get(`http://127.0.0.1:8000/api/disputes/${disputeId}/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setDisputeDetails(response.data);
+      } catch (error) {
+        console.error('Error fetching dispute data:', error);
+      }
     };
-
     fetchDisputeData();
-  }, []);
+  }, [disputeId, token]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setResponse({
-      ...response,
-      [name]: value,
-    });
+    setResponse({ ...response, [name]: value });
   };
 
   const handleFileChange = (e) => {
-    setResponse({
-      ...response,
-      documents: Array.from(e.target.files),
-    });
+    setResponse({ ...response, documents: Array.from(e.target.files) });
   };
 
   const handleDecision = (decision) => {
     setResponse({ ...response, decision });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle submission logic here (e.g., API call)
-    console.log('Dispute response:', { ...response, refundOffer });
+
+    const formData = new FormData();
+    formData.append("title", response.title);
+    formData.append("description", response.comments);
+    formData.append("return_type", response.counterReturnType || disputeDetails.return_type);
+    formData.append("return_amount", response.counterOfferAmount || disputeDetails.return_amount);
+    formData.append("dispute", disputeId);
+
+    response.documents.forEach((file) => formData.append("documents", file));
+
+    try {
+      if (response.decision === 'accept') {
+        await axios.patch(`http://127.0.0.1:8000/api/disputes/${disputeId}/`, {
+          status: 'resolved',
+          got_response : true
+        }, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        alert("Dispute has been resolved.");
+      } else {
+        await axios.post('http://127.0.0.1:8000/api/dispute-response/', formData, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          },
+        });
+
+        await axios.patch(`http://127.0.0.1:8000/api/disputes/${disputeId}/`, {
+          got_response : true
+        }, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        alert("Response submitted successfully.");
+      }
+    } catch (error) {
+      console.error('Error submitting dispute response:', error);
+      alert("There was an error submitting your response.");
+    }
   };
+
 
   return (
     <div className="max-w-2xl mx-auto p-8 mt-8">
-      <h2 className="text-3xl font-normal text-brand-blue mb-6 text-center">Respond to Dispute</h2>
-
+      <h1 className="text-3xl font-thin text-brand-dark-blue mb-6">Respond to Dispute</h1>
+      
       {/* Display Dispute Details */}
       <div className="mb-6 p-4 border rounded-lg border-gray-300 bg-gray-50">
-        <h3 className="text-lg font-semibold text-brand-blue mb-2">Dispute Details</h3>
-        <p className="text-gray-800">{typeof dispute === 'string' ? dispute : 'No details available'}</p>
+      <h3 className="font-medium text-gray-700 mb-2">{disputeDetails.title}</h3>
+        <p className="text-gray-800">{disputeDetails.description}</p>
       </div>
 
-      {/* Display Refund Offer Information */}
-      {refundOffer && (
-        <div className="mb-6 p-4 border rounded-lg border-gray-300 bg-gray-50">
-          <h3 className="text-lg font-semibold text-brand-blue mb-2">Refund Offer Details</h3>
-          <p className="text-gray-800">
-            {refundOffer.type === 'full' ? 'Full Refund Offer' : 'Partial Refund Offer'}
-          </p>
-          {refundOffer.type === 'partial' && (
-            <p className="text-gray-800">Amount: ${refundOffer.amount}</p>
-          )}
-          <div className="flex space-x-4 mt-4">
-            <button
-              type="button"
-              onClick={() => handleDecision('accept')}
-              className={`w-full py-2 rounded-lg border ${
-                response.decision === 'accept' ? 'bg-green-500 text-white border-green-700' : 'border-gray-300'
-              }`}
-            >
-              Accept Refund
-            </button>
-            <button
-              type="button"
-              onClick={() => handleDecision('counter')}
-              className={`w-full py-2 rounded-lg border ${
-                response.decision === 'counter' ? 'bg-yellow-500 text-white border-yellow-700' : 'border-gray-300'
-              }`}
-            >
-              Counter Offer
-            </button>
-            <button
-              type="button"
-              onClick={() => handleDecision('reject')}
-              className={`w-full py-2 rounded-lg border ${
-                response.decision === 'reject' ? 'bg-red-500 text-white border-red-700' : 'border-gray-300'
-              }`}
-            >
-              Reject Refund
-            </button>
-          </div>
+      {/* Refund Offer Information */}
+      <div className="mb-6 p-4 border rounded-lg border-gray-300 bg-gray-50">
+      <h3 className="font-medium text-gray-700 mb-2">Refund Offer Details</h3>
+        <p className="text-gray-800">
+          {disputeDetails.return_type === 'full' ? 'Full Refund Offer' : 'Partial Refund Offer'}
+        </p>
+        {disputeDetails.return_type === 'partial' && (
+          <p className="text-gray-800">Amount: {disputeDetails.return_amount} Birr</p>
+        )}
+        <div className="flex space-x-4 mt-4">
+          <button
+            type="button"
+            onClick={() => handleDecision('accept')}
+            className={`w-full py-2 rounded-lg border ${
+              response.decision === 'accept' ? 'bg-green-500 text-white border-green-700' : 'border-gray-300'
+            }`}
+          >
+            Accept Refund
+          </button>
+          <button
+            type="button"
+            onClick={() => handleDecision('counter')}
+            className={`w-full py-2 rounded-lg border ${
+              response.decision === 'counter' ? 'bg-yellow-500 text-white border-yellow-700' : 'border-gray-300'
+            }`}
+          >
+            Counter Offer
+          </button>
+          <button
+            type="button"
+            onClick={() => handleDecision('reject')}
+            className={`w-full py-2 rounded-lg border ${
+              response.decision === 'reject' ? 'bg-red-500 text-white border-red-700' : 'border-gray-300'
+            }`}
+          >
+            Reject Refund
+          </button>
         </div>
-      )}
+      </div>
 
       {/* Counter Offer Form */}
       {response.decision === 'counter' && (
         <div className="mb-6 p-4 border rounded-lg border-gray-300 bg-gray-50">
-          <h3 className="text-lg font-semibold text-brand-blue mb-2">Counter Offer</h3>
-          <label htmlFor="counterOfferAmount" className="block text-lg font-normal text-brand-blue mb-2">
+          <label htmlFor="counterReturnType" className="block text-lg font-normal text-brand-blue mb-2">
+            Return Type
+          </label>
+          <select
+            id="counterReturnType"
+            name="counterReturnType"
+            value={response.counterReturnType}
+            onChange={handleInputChange}
+            className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
+          >
+            <option value="">
+              Select Return Type
+            </option>
+              <option value="partial">Partial</option>
+              <option value="full">Full</option>
+          </select>
+
+          <label htmlFor="counterOfferAmount" className="block text-lg font-normal text-brand-blue mt-4 mb-2">
             Proposed Amount
           </label>
           <input
@@ -121,22 +177,41 @@ const DisputeResponsePage = () => {
             name="counterOfferAmount"
             value={response.counterOfferAmount}
             onChange={handleInputChange}
-            placeholder="Enter counter offer amount"
+            placeholder="Enter counter offer amount in Birr"
             className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
           />
         </div>
       )}
 
+      {/* title */}
+      <div className="mb-6">
+        <label htmlFor="title" className="block text-lg font-normal text-brand-blue mb-2">
+          Title
+        </label>
+        <input
+          id="title"
+          name="title"
+          value={response.title}
+          onChange={handleInputChange}
+          placeholder='enter a title for your response'
+          className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
+        />
+      </div>
+
+      
+
+
       {/* Comments */}
       <div className="mb-6">
         <label htmlFor="comments" className="block text-lg font-normal text-brand-blue mb-2">
-          Comments
+          Comment
         </label>
         <textarea
           id="comments"
           name="comments"
           value={response.comments}
           onChange={handleInputChange}
+          placeholder='any comment about the dispute or your response'
           rows="4"
           className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
         />
@@ -167,6 +242,7 @@ const DisputeResponsePage = () => {
       <div className="flex justify-center">
         <button
           type="submit"
+          onClick={handleSubmit}
           className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md"
         >
           Submit Response

@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams , useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 const CounterOffersList = () => {
   const { id:contractId } = useParams(); // Get contract ID from URL params
-  const [counterOffers, setCounterOffers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [freelancer , setFreelancerData] = useState(null)
   const token = localStorage.getItem('access'); // Get access token
-
+  const location = useLocation()
+  const {counterOffers} = location.state || null
   useEffect(() => {
     const fetchFreelancerData = async () => {
       try {
@@ -32,25 +32,25 @@ const CounterOffersList = () => {
     fetchFreelancerData();
   }, [contractId]);
 
-  useEffect(() => {
-    const fetchCounterOffers = async () => {
-      try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/contracts/${contractId}/counter-offers/`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setCounterOffers(response.data); // Set counter offers related to the contract
-      } catch (error) {
-        console.error('Failed to fetch counter offers:', error);
-        setError(error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchCounterOffers = async () => {
+  //     try {
+  //       const response = await axios.get(`http://127.0.0.1:8000/api/contracts/${contract.contract_update ? contract.contract_update : contract.id}/counter-offers/`, {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       });
+  //       setCounterOffers(response.data); // Set counter offers related to the contract
+  //     } catch (error) {
+  //       console.error('Failed to fetch counter offers:', error);
+  //       setError(error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    fetchCounterOffers();
-  }, [contractId]);
+  //   fetchCounterOffers();
+  // }, [contract]);
 
 
   if (loading) {

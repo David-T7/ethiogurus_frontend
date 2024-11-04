@@ -1,10 +1,9 @@
 import React, { useState , useEffect} from 'react';
 import { useParams, useNavigate , useLocation } from 'react-router-dom';
-import ClientLayout from './ClientLayoutPage';
 import { FaUpload } from 'react-icons/fa';
 import axios from 'axios';
 
-const DisputePage = () => {
+const ContractDisputePage = () => {
   const { id:contractId } = useParams(); // Get contract ID from URL
   const navigate = useNavigate();
   const location = useLocation()
@@ -282,4 +281,4 @@ const DisputePage = () => {
   );
 };
 
-export default DisputePage;
+export default ContractDisputePage;
