@@ -33,6 +33,8 @@ const LoginPage = () => {
         navigate('/welcome');
       } else if (userData.role === 'client') {
         navigate('/dashboard');
+      } else if (userData.role === 'dispute-manager') {
+        navigate('/latest-disputes');
       } else {
         navigate('/dashboard'); // Default dashboard for other roles
       }

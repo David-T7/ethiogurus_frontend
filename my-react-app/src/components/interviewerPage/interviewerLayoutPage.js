@@ -11,6 +11,8 @@ import {
 import { AuthContext } from '../AuthContext'; // Update this path according to your project structure
 import { UserContext } from "../interviewerUserContext";
 import defaultProfilePic from "../../images/default-profile-picture.png"
+import logo from "../../images/EG_MIX_Logo.png"
+
 const InterviewerLayout = ({ children }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false); // Dropdown menu for profile
@@ -18,40 +20,6 @@ const InterviewerLayout = ({ children }) => {
   const menuRef = useRef(null); // Ref for the dropdown menu
   const { logout } = useContext(AuthContext);
   const navigate = useNavigate();
-
-  // // Fetch profile data on mount
-  // useEffect(() => {
-  //   const fetchProfileData = async () => {
-  //     try {
-  //       const token = localStorage.getItem('access');
-  //       const response = await axios.get('http://127.0.0.1:8000/api/user/freelancer/manage/', {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       });
-  //       const messageCountResponse = await axios.get('http://127.0.0.1:8000/api/user/messages/unread-count/', {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       });
-  //       const notifitcationCountResponse = await axios.get('http://127.0.0.1:8000/api/user/notifications/unread-count/', {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       });
-  //       console.log("response data is ",response.data)
-  //       const { profile_picture} = response.data;
-       
-  //       setProfilePicture(profile_picture || profilePic);
-  //       setUnreadMessages(messageCountResponse.count || 0);
-  //       setUnreadNotifications(notifitcationCountResponse.count || 0)
-  //     } catch (error) {
-  //       console.error('Failed to fetch profile data:', error);
-  //     }
-  //   };
-
-  //   fetchProfileData();
-  // }, []);
     const { profilePicture, unreadMessages, unreadNotifications:unreadNotification } = useContext(UserContext);
 
 
@@ -125,12 +93,14 @@ const InterviewerLayout = ({ children }) => {
         )}
 
         {/* Top-left branding */}
-        <Link
-          to="/welcome"
-          className="text-xl font-bold md:text-2xl absolute left-6 top-6"
-        >
-          EthioGurus
-        </Link>
+     <div className="absolute left-6 top-6 flex items-center">
+       <Link to="/welcome">
+      <img src={logo} alt="EthioGurus Logo" className="w-20 h-12" />
+      </Link> {/* Adjust size as needed */}
+      <Link to="/welcome" className="font-normal text-2xl">
+        EthioGurus
+      </Link>
+    </div>
 
         {/* Top-right navigation */}
         <nav className="hidden md:flex space-x-8 absolute right-6 top-6 mr-20">
@@ -234,13 +204,12 @@ const InterviewerLayout = ({ children }) => {
                 <FaTimes />
               </button>
               <div className="flex flex-col items-center space-y-4">
-                <Link
-                  to="/welcome"
-                  className="text-2xl font-bold"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  EthioGurus
-                </Link>
+              <Link to="/welcome">
+      <img src={logo} alt="EthioGurus Logo" className="w-20 h-12" />
+      </Link> {/* Adjust size as needed */}
+      <Link to="/welcome" className="font-normal text-2xl">
+        EthioGurus
+      </Link>
                 <nav className="flex flex-col space-y-4">
                   <Link
                     to="/myprojects"

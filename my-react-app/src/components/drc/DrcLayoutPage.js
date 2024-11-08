@@ -9,10 +9,11 @@ import {
   FaLock,
 } from "react-icons/fa";
 import { AuthContext } from '../AuthContext'; // Update this path according to your project structure
-import { UserContext } from "../UserContext";
+import { UserContext } from "../DisputeManagerContext";
 import defaultProfilePic from "../../images/default-profile-picture.png"
 import logo from "../../images/EG_MIX_Logo.png"
-const FreelancerProfileLayout = ({ children }) => {
+
+const DrcLayout = ({ children }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false); // Dropdown menu for profile
   const location = useLocation(); // For determining the current route
@@ -90,12 +91,13 @@ const FreelancerProfileLayout = ({ children }) => {
             <FaBars />
           </button>
         )}
-     {/* Top-left branding */}
+
+        {/* Top-left branding */}
      <div className="absolute left-6 top-6 flex items-center">
-       <Link to="/home">
+       <Link to="/latest-disputes">
       <img src={logo} alt="EthioGurus Logo" className="w-20 h-12" />
       </Link> {/* Adjust size as needed */}
-      <Link to="/home" className="font-normal text-2xl">
+      <Link to="/latest-disputes" className="font-normal text-2xl">
         EthioGurus
       </Link>
     </div>
@@ -103,35 +105,17 @@ const FreelancerProfileLayout = ({ children }) => {
         {/* Top-right navigation */}
         <nav className="hidden md:flex space-x-8 absolute right-6 top-6 mr-20">
           <Link
-            to="/myprojects"
-            className={getLinkClasses("/myprojects")}
+            to="/appointments"
+            className={getLinkClasses("/appointments")}
             onClick={() => setIsMenuOpen(false)}
           >
-            Projects
-          </Link>
-          <Link
-            to="/mycontracts"
-            className={getLinkClasses("/mycontracts")}
-            onClick={() => setIsMenuOpen(false)}
-          >
-            Contracts
+            Disputes
           </Link>
 
+
           <Link
-            to="/messages"
-            className={getLinkClasses("/messages")}
-            onClick={() => setIsMenuOpen(false)}
-          >
-            inbox
-            {unreadMessages > 0 && (
-              <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
-                {unreadMessages}
-              </span>
-            )}
-          </Link>
-          <Link
-            to="/notifications"
-            className={getLinkClasses("/notifications")}
+            to="/message"
+            className={getLinkClasses("/message")}
             onClick={() => setIsMenuOpen(false)}
           >
             Notification
@@ -141,13 +125,6 @@ const FreelancerProfileLayout = ({ children }) => {
               </span>
             )}
           </Link>
-          <Link
-                    to="/skills"
-                    className={getLinkClasses("/skills")}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Skills
-                  </Link>
         </nav>
 
         {/* Profile Picture and Dropdown Menu */}
@@ -178,7 +155,7 @@ const FreelancerProfileLayout = ({ children }) => {
                 </li>
                 <li>
                   <Link
-                    to="/update-profile"
+                    to="/myprofile"
                     className="flex items-center gap-2 p-2 text-gray-700 hover:bg-gray-100 rounded"
                   >
                     <FaUserEdit /> Update Profile
@@ -186,7 +163,7 @@ const FreelancerProfileLayout = ({ children }) => {
                 </li>
                 <li>
                   <Link
-                    to="/update-password"
+                    to="/updatePassword"
                     className="flex items-center gap-2 p-2 text-gray-700 hover:bg-gray-100 rounded"
                   >
                     <FaLock /> Change Password
@@ -221,10 +198,10 @@ const FreelancerProfileLayout = ({ children }) => {
                 <FaTimes />
               </button>
               <div className="flex flex-col items-center space-y-4">
-              <Link to="/home">
+              <Link to="/latest-disputes">
       <img src={logo} alt="EthioGurus Logo" className="w-20 h-12" />
       </Link> {/* Adjust size as needed */}
-      <Link to="/home" className="font-normal text-2xl">
+      <Link to="/latest-disputes" className="font-normal text-2xl">
         EthioGurus
       </Link>
                 <nav className="flex flex-col space-y-4">
@@ -233,31 +210,12 @@ const FreelancerProfileLayout = ({ children }) => {
                     className={getLinkClasses("/myprojects")}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Projects
+                    Disputes
                   </Link>
+                  
                   <Link
-                    to="/mycontracts"
-                    className={getLinkClasses("/mycontracts")}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Contracts
-                  </Link>
-
-                  <Link
-                    to="/messages"
-                    className={getLinkClasses("/messages")}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Inbox
-                    {unreadMessages > 0 && (
-                      <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
-                        {unreadMessages}
-                      </span>
-                    )}
-                  </Link>
-                  <Link
-                    to="/notifications"
-                    className={getLinkClasses("/notifications")}
+                    to="/message"
+                    className={getLinkClasses("/message")}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Notification
@@ -266,13 +224,6 @@ const FreelancerProfileLayout = ({ children }) => {
                 {unreadNotification}
               </span>
             )}
-                  </Link>
-                  <Link
-                    to="/skills"
-                    className={getLinkClasses("/skills")}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Skills
                   </Link>
                 </nav>
               </div>
@@ -285,4 +236,4 @@ const FreelancerProfileLayout = ({ children }) => {
   );
 };
 
-export default FreelancerProfileLayout;
+export default DrcLayout;

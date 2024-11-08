@@ -87,9 +87,11 @@ const DisputeResponseCounter = () => {
       description: response?.description,
       dispute: prevDisputeResponse.dispute,
       return_type: response?.counterReturnType || prevDisputeResponse.return_type,
-      return_amount: response?.counterOfferAmount || prevDisputeResponse.return_amount,
       response: response?.decision === 'accept' ? 'accepted' : response.decision === 'reject'  ? 'rejected' : 'counter_offer',
     };
+    if (response?.counterReturnType === "partial" || prevDisputeResponse.return_type === "partial"){
+      payload.return_amount =  response?.counterOfferAmount || prevDisputeResponse.return_amount
+    }
 
      // Validate required fields
      if (response.title.length === 0 || response.description.length===0 || response.decision.length===0) {

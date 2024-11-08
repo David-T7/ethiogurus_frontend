@@ -23,6 +23,7 @@ const DisputeResponsePage = () => {
     documents: [],
     counterOfferAmount: '',
     counterReturnType: '',
+    forwardToResolutionCenter:false,
   });
   
   const navigate = useNavigate()
@@ -76,7 +77,28 @@ const DisputeResponsePage = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         alert("Dispute has been resolved.");
-      } else {
+      } 
+      else if (response.decision === 'reject' && response.forwardToResolutionCenter ){
+        await axios.patch(`http://127.0.0.1:8000/api/disputes/${disputeId}/`, {
+           status: 'drc_forwarded',
+           got_response: true
+         }, {
+           headers: { Authorization: `Bearer ${token}` },
+         });
+         alert("Dispute has been rejected.");
+
+
+         await axios.post(`http://127.0.0.1:8000/api/drc-disputes/`, {
+          dispute: disputeDetails.id,
+        }, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        alert("Forwarded to DRC");
+       }
+
+       
+
+      else {
         await axios.post('http://127.0.0.1:8000/api/dispute-response/', formData, {
           headers: { 
             Authorization: `Bearer ${token}`,
@@ -182,6 +204,28 @@ const DisputeResponsePage = () => {
           />
         </div>
       )}
+
+
+      {/* Rejection Form */}
+{response.decision === 'reject' && (
+  <div className="mb-6 p-4 border rounded-lg border-gray-300 bg-gray-50">
+    <label htmlFor="forwardToResolutionCenter" className="block text-lg font-normal text-brand-blue mb-2">
+      Forward to Dispute Resolution Center
+    </label>
+    <input
+      type="checkbox"
+      id="forwardToResolutionCenter"
+      name="forwardToResolutionCenter"
+      checked={response.forwardToResolutionCenter || false}
+      onChange={(e) => setResponse(prevResponse => ({
+        ...prevResponse,
+        forwardToResolutionCenter: e.target.checked,
+      }))}
+      className="mr-2"
+    />
+    <label htmlFor="forwardToResolutionCenter" className="text-gray-700">Check to forward the dispute to the resolution center</label>
+  </div>
+)}
 
       {/* title */}
       <div className="mb-6">

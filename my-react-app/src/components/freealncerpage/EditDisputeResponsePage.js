@@ -92,9 +92,13 @@ const EditDisputeResponsePage = () => {
       description: response.description,
       dispute: response.dispute,
       return_type: response.counterReturnType || disputeDetails.return_type,
-      return_amount: response.counterOfferAmount || disputeDetails.return_amount,
       response: response.decision === 'accept' ? 'accepted' : response.decision === 'reject' ? 'rejected' : 'counter_offer',
     };
+
+    if (response.counterReturnType === "partial" || disputeDetails.return_type === "partial"){
+      payload.return_amount =  response?.counterOfferAmount || disputeDetails.return_amount
+    }
+
 
     // Handle document uploads and save IDs
     const uploadedIds = [];

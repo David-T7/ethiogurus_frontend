@@ -30,7 +30,7 @@ const ContractDisputeDetails = () => {
   }
 
   const handleRespondToDispute = (disputeId) => {
-    navigate(`/dispute-response/${disputeId}`);
+    navigate(`/send-response/${disputeId}`);
   };
 
   const handleUpdateDispute = (disputeId) => {

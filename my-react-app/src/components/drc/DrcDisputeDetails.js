@@ -3,12 +3,12 @@ import { useParams, useLocation , useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FaUpload } from 'react-icons/fa';
 
-const DisputeDetails = () => {
+const DrcDisputeDetails = () => {
   const { id: disputeId } = useParams();
   const [dispute, setDispute] = useState(null);
   const token = localStorage.getItem("access");
   const location = useLocation();
-  const { contract , freelancerId } = location.state || {}; // Assuming you have contract info passed down
+  const { drcForwardedItem} = location.state || {}; // Assuming you have contract info passed down
   const navigate = useNavigate()
   useEffect(() => {
     const fetchDisputeDetails = async () => {
@@ -29,20 +29,17 @@ const DisputeDetails = () => {
     return <p className="text-gray-600">Loading dispute details...</p>;
   }
 
-  const handleRespondToDispute = (disputeId) => {
-    navigate(`/dispute-response/${disputeId}`);
+  const handleRespolveDispute = (disputeId) => {
+    navigate(`/resolve-dispute/${disputeId}` , {
+      state:{
+        drcForwardedItem:drcForwardedItem,
+        dispute :dispute
+      }
+    });
   };
-
-  const handleEditDispute = (disputeId) => {
-    navigate(`/dispute/${disputeId}/edit`);
-  };
-
-  
 
   return (
-    <div className="max-w-xl mx-auto p-8 mt-8">
-      <h1 className="text-3xl font-thin text-brand-dark-blue mb-6">Dispute for {contract.title}</h1>
-      
+    <div className="max-w-xl mx-auto p-8 mt-8">      
       {/* Display Dispute Details */}
       <div
             className="dispute-card bg-white p-4 border border-gray-200 rounded-lg mb-6 shadow-sm relative"
@@ -74,22 +71,13 @@ const DisputeDetails = () => {
 
       {/* Submit Button */}
       <div className="flex justify-center">
-       {dispute.created_by === freelancerId ? (!dispute.got_response &&  
+
        <button
-          className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md"
-          onClick={() => handleEditDispute(dispute.id)}
-        >
-          Edit Dispute
-        </button>)
-        :
-        !dispute.got_response &&  
-       <button
-          onClick={() => handleRespondToDispute(dispute.id)}
+          onClick={() => handleRespolveDispute(dispute.id)}
           className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md"        
         >
-          Respond
+          Resolve
         </button>
-}
 
       </div>
     </div>
@@ -108,4 +96,4 @@ const getDisputeResponseStatus = (got_response) => {
     }
   };
 
-export default DisputeDetails;
+export default DrcDisputeDetails;

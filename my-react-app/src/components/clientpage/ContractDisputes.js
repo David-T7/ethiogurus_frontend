@@ -79,7 +79,7 @@ const ContractDisputes = () => {
               key={dispute.id}
               className="dispute-card bg-white p-4 border border-gray-200 rounded-lg mb-6 shadow-sm relative"
             >
-              <div className="absolute w-4 h-4 bg-blue-600 rounded-full text-white flex items-center justify-center right-8 top-4">
+              <div className="absolute w-4 h-4 bg-blue-600 rounded-full text-white flex items-center justify-center right-14 top-4">
                 <span className={`text-xs font-semibold rounded-full px-4 py-1 ${getDisputeStatusStyle(dispute.status)}`}>
                   {dispute.status}
                 </span>

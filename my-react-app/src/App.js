@@ -8,6 +8,7 @@ import { ProjectProvider } from './components/ProjectContext';
 import { SkillTestProvider } from './components/SkillTestContext';
 import { CameraProvider } from './components/freealncerpage/CameraContext';
 import { InterviewerUserProvider } from './components/interviewerUserContext';
+import { DisputeMangerUserProvider } from './components/DisputeManagerContext';
 const App = () => {
   return (
     <div className="App">
@@ -20,7 +21,9 @@ const App = () => {
       <UserProvider>
       <AuthProvider>
       <InterviewerUserProvider>
+      <DisputeMangerUserProvider>
         <Routes />
+      </DisputeMangerUserProvider>
       </InterviewerUserProvider>
       </AuthProvider>
       </UserProvider>

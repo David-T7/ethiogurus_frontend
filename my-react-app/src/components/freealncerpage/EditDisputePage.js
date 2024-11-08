@@ -1,69 +1,51 @@
-import React, { useState , useEffect} from 'react';
-import { useParams, useNavigate , useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { FaUpload } from 'react-icons/fa';
 import axios from 'axios';
 
-const ContractDisputePage = () => {
-  const { id:contractId } = useParams(); // Get contract ID from URL
+const EditDisputePage = () => {
+  const { id: disputeId } = useParams(); // Get dispute ID from URL
   const navigate = useNavigate();
-  const location = useLocation()
-  const [contract , setContract]= useState(null)
+  const [dispute, setDispute] = useState(null);
   const [title, setTitle] = useState('');
   const [disputeDetails, setDisputeDetails] = useState('');
   const [files, setFiles] = useState([]);
-  const [refundType, setRefundType] = useState('full'); // 'full' or 'partial'
+  const [refundType, setRefundType] = useState('full');
   const [refundAmount, setRefundAmount] = useState('');
-  const [milestone , setMilestone] = useState(null)
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   
   const token = localStorage.getItem('access');
-  const { milestoneId } = location.state || null;
+
+  useEffect(() => {
+    const fetchDispute = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get(`http://127.0.0.1:8000/api/disputes/${disputeId}/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setDispute(response.data);
+        setTitle(response.data.title);
+        setDisputeDetails(response.data.description);
+        setRefundType(response.data.return_type);
+        setRefundAmount(response.data.return_amount || '');
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching dispute:', err);
+        setError('Error fetching dispute details. Please try again.');
+        setLoading(false);
+      }
+    };
+
+    fetchDispute();
+  }, [disputeId, token]);
 
   // Handle file selection
   const handleFileChange = (e) => {
     setFiles([...e.target.files]);
   };
-
-  useEffect(() => {
-    
-    const fetchContract = async () => {
-      try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/contracts/${contractId}/`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setContract(response.data);
-        setLoading(false);
-      } catch (err) {
-        console.error('Error fetching contract:', err);
-        setError('Error fetching contract details. Please try again.');
-        setLoading(false);
-      }
-    };
-    if (milestoneId == null){
-    fetchContract();
-    }
-  }, [contractId, token ]);
-
-
-  useEffect(() => {
-    const fetchMilestone = async () => {
-      try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/milestones/${milestoneId}/`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setMilestone(response.data);
-        setLoading(false);
-      } catch (err) {
-        console.error('Error fetching Milestone:', err);
-        setError('Error fetching milestone details. Please try again.');
-        setLoading(false);
-      }
-    };
-
-    fetchMilestone();
-  }, [milestoneId]);
 
   // Handle form submission
   const handleSubmit = async (e) => {
@@ -89,11 +71,7 @@ const ContractDisputePage = () => {
     formData.append('description', disputeDetails);
     formData.append('return_type', refundType);
     if (refundType === "partial"){
-    formData.append('return_amount', refundAmount);
-    }
-    formData.append('contract', contractId); // Associate dispute with the contract
-    if (milestoneId){
-      formData.append('milestone', milestoneId); // Associate dispute with the contract
+      formData.append('return_amount', refundAmount);
     }
     // Append each file as 'supporting_documents'
     files.forEach((file) => {
@@ -101,18 +79,15 @@ const ContractDisputePage = () => {
     });
 
     try {
-      // Send POST request to create dispute
-      const response = await axios.post('http://127.0.0.1:8000/api/disputes/', formData, {
+      // Send PATCH request to update dispute
+      const response = await axios.patch(`http://127.0.0.1:8000/api/disputes/${disputeId}/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`,
         },
       });
 
-
-
-      console.log('Dispute submitted successfully:', response.data);
-      handleContractStatusUPdate("inDispute")
+      console.log('Dispute updated successfully:', response.data);
       setSuccess(true);
       // Optionally, reset the form
       setTitle('');
@@ -121,44 +96,31 @@ const ContractDisputePage = () => {
       setRefundType('full');
       setRefundAmount('');
 
-      // Redirect to contract details page to reflect changes
-      navigate(`/mycontracts/${contractId}`);
+      // Redirect to the dispute details page or any relevant page
+      navigate(-1); // Go back to the previous page
     } catch (err) {
-      console.error('Error submitting dispute:', err);
+      console.error('Error updating dispute:', err);
       if (err.response && err.response.data) {
-        // Display backend validation errors
         setError(JSON.stringify(err.response.data));
       } else {
-        setError('Failed to submit dispute. Please try again.');
+        setError('Failed to update dispute. Please try again.');
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleContractStatusUPdate = async (statusValue) => {
-    try {
-      await axios.patch(`http://127.0.0.1:8000/api/contracts/${contractId}/`, {
-        status: statusValue,
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      console.log('Contract status updated to canceled.');
-    } catch (error) {
-      console.error('Error canceling project:', error);
-    }
-  };
-
   return (
       <div className="max-w-2xl mx-auto p-6 mt-6">
         <h1 className="text-3xl font-thin text-brand-dark-blue mb-6 text-center">
-          File a Dispute for {milestone? milestone?.title :contract?.title}
+          Update Dispute
         </h1>
+
         {/* Display Error Message */}
         {error && <div className="text-red-500 mb-4">{error}</div>}
 
         {/* Display Success Message */}
-        {success && <div className="text-green-500 mb-4">Dispute submitted successfully!</div>}
+        {success && <div className="text-green-500 mb-4">Dispute updated successfully!</div>}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Dispute Title */}
@@ -273,7 +235,7 @@ const ContractDisputePage = () => {
               className={`bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               disabled={loading}
             >
-              {loading ? 'Submitting...' : 'Submit Dispute'}
+              {loading ? 'Submitting...' : 'Update Dispute'}
             </button>
           </div>
         </form>
@@ -281,4 +243,4 @@ const ContractDisputePage = () => {
   );
 };
 
-export default ContractDisputePage;
+export default EditDisputePage;

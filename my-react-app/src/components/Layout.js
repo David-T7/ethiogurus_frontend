@@ -43,6 +43,10 @@ const Layout = ({ children }) => {
       } else if (role === 'client') {
         navigate('/dashboard');
       }
+     else if (role === 'dispute-manager') {
+      navigate('/latest-disputes');
+    }
+      
     };
 
     redirect();

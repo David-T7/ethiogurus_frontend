@@ -90,6 +90,15 @@ import ContractDisputes from './components/clientpage/ContractDisputes';
 import ContractDisputeResponsePage from './components/clientpage/contractDisputeResponse';
 import CounterDisputeResponsePage from './components/clientpage/CounterDisputeResponse';
 import DisputeResponseCounter from './components/freealncerpage/DisputeReponseCounter';
+import EditDisputePage from './components/freealncerpage/EditDisputePage';
+import SendDisputeResponse from './components/clientpage/SendDisputeRepsponse';
+import DisputeManagerDashboard from './components/drc/DrcDashboard';
+import DrcLayout from './components/drc/DrcLayoutPage';
+import DisputeHistoryPage from './components/drc/DisputeHistoryPage';
+import DrcDisputeDetails from './components/drc/DrcDisputeDetails';
+import DrcDisputeResponseDetails from './components/drc/DrcDisputeResponseDetails';
+import ResolveDispute from './components/drc/ResolveDispute';
+
 
 const RoutesConfig = () => {
   return (
@@ -156,7 +165,7 @@ const RoutesConfig = () => {
         <Route path="/contract-counter-offer/:id" element={<ClientLayout><CounterOffer /></ClientLayout>} />
         <Route path="/create-counter-offer/:id" element={<ClientLayout><CreateCounterOffer /></ClientLayout>} />        
         <Route path="/edit-offer/:id" element={<ClientLayout><EditCounterOfferPage /></ClientLayout>} />
-  
+        <Route path="/send-response/:id" element={<SendDisputeResponse/>} />
         <Route path="/home" element={<FreelancerProfileLayout><FreelancerDashboard /></FreelancerProfileLayout>} />
         <Route path="/myprojects" element={<FreelancerProfileLayout><ProjectListPage /></FreelancerProfileLayout>} />
         <Route path="/myprojects/:id" element={<FreelancerProfileLayout><ProjectDetails /></FreelancerProfileLayout>} />
@@ -165,7 +174,7 @@ const RoutesConfig = () => {
         <Route path="/counter-offers/:id" element={<FreelancerProfileLayout><CounterOffersList /></FreelancerProfileLayout>} />        
         <Route path="/counter-offer/:id" element={<FreelancerProfileLayout><CounterOfferDetails /></FreelancerProfileLayout>} />        
         <Route path="/edit-counter-offer/:id" element={<FreelancerProfileLayout><EditCounterOffer /></FreelancerProfileLayout>} />        
-        <Route path="/counter-response/:id" element={<FreelancerProfileLayout><CounterDisputeResponsePage /></FreelancerProfileLayout>} />                
+        <Route path="/counter-response/:id" element={<FreelancerProfileLayout><DisputeResponseCounter /></FreelancerProfileLayout>} />                
         <Route path="/messages" element={<FreelancerInbox/>} />
         <Route path="/messages/:id" element={<FreelancerProfileLayout><ContactUser/></FreelancerProfileLayout>} />
         <Route path="/submit-counter-offer/:id" element={<FreelancerProfileLayout><SubmitCounterOffer /> </FreelancerProfileLayout>} />
@@ -174,6 +183,7 @@ const RoutesConfig = () => {
         <Route path="/notifications" element={<FreelancerProfileLayout><NotificationPage /></FreelancerProfileLayout>} />
         <Route path="/dispute-response/:id" element={<FreelancerProfileLayout><DisputeResponsePage /></FreelancerProfileLayout>} />
         <Route path="/dispute-response/:id/edit" element={<FreelancerProfileLayout><EditDisputeResponsePage /></FreelancerProfileLayout>} />
+        <Route path="/dispute/:id/edit" element={<FreelancerProfileLayout><EditDisputePage /></FreelancerProfileLayout>} />
         <Route path="/disputeresponse/:id" element={<FreelancerProfileLayout><DisputeResponseDetailsPage/></FreelancerProfileLayout>} />
         <Route path="/disputes/:id" element={<FreelancerProfileLayout><DisputesPage/></FreelancerProfileLayout>} />        
         <Route path="/dispute-details/:id" element={<FreelancerProfileLayout><DisputeDetails/></FreelancerProfileLayout>} />        
@@ -191,6 +201,12 @@ const RoutesConfig = () => {
         <Route path='/interviews' element={<InterviewerLayout><InterviewsPage/> </InterviewerLayout>} />                
         <Route path='/interview/:id' element={<InterviewerLayout><InterviewPage/> </InterviewerLayout>} />                
         <Route path='/myprofile' element={<InterviewerLayout><UpdateInterviewerProfile/> </InterviewerLayout>} />                        
+        <Route path='/latest-disputes' element={<DrcLayout><DisputeManagerDashboard/> </DrcLayout>} />                              
+        <Route path='/dispute-events/:id' element={<DrcLayout><DisputeHistoryPage/> </DrcLayout>} />                              
+        <Route path='/drc-dispute/:id' element={<DrcLayout><DrcDisputeDetails/> </DrcLayout>} />                              
+        <Route path='/drc-dispute-response/:id' element={<DrcLayout><DrcDisputeResponseDetails/> </DrcLayout>} />                              
+        <Route path='/resolve-dispute/:id' element={<DrcLayout><ResolveDispute/> </DrcLayout>} />                              
+
       </Routes>
   );
 };

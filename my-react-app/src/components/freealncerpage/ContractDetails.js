@@ -209,7 +209,7 @@ const ContractDetails = () => {
     navigate(`/disputes/${contract.id}` ,{
       state: {
         contract: contract,
-        freelancerId: freelancer.id
+        freelancerId: freelancer?.id
       },
     }
     );
@@ -278,7 +278,7 @@ const ContractDetails = () => {
             Accept
           </button>
                   }
-                    {( (disputes.length > 0 && milestone.status === "active" &&
+                    {( (milestone.status === "active" &&
                 !disputes.some(
                   (dispute) => dispute.milestone === milestone.id && dispute.status ==="open"
                 )) && (
