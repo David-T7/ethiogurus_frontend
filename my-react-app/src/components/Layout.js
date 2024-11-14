@@ -32,12 +32,17 @@ const Layout = ({ children }) => {
   useEffect(() => {
     console.log("in layout redirect")
     const redirect = async () => {
-      const role = await getRole();
+      const {role , assessment} = await getRole();
       console.log("role found in layout is ",role)
       if (role === 'admin') {
         navigate('/admin-dashboard');
       } else if (role === 'freelancer') {
+        if(assessment){
+          navigate('/assessment-progress')
+        }
+        else{
         navigate('/home');
+        }
       } else if (role === 'interviewer') {
         navigate('/welcome');
       } else if (role === 'client') {

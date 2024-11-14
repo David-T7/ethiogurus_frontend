@@ -98,6 +98,12 @@ import DisputeHistoryPage from './components/drc/DisputeHistoryPage';
 import DrcDisputeDetails from './components/drc/DrcDisputeDetails';
 import DrcDisputeResponseDetails from './components/drc/DrcDisputeResponseDetails';
 import ResolveDispute from './components/drc/ResolveDispute';
+import DrcForwardedDisputes from './components/drc/DrcForwardedDisputes';
+import UpdateDrcProfile from './components/drc/UpdateProfilePage';
+import DrcSettingsPage from './components/drc/DrcSettings';
+import AssessmentRoadmap from './components/assesment/AssesmentProgress';
+import AssessmentLayout from './components/assesment/assesmentLayout';
+import AssessmentsPage from './components/assesment/AssessmentsPage';
 
 
 const RoutesConfig = () => {
@@ -206,6 +212,14 @@ const RoutesConfig = () => {
         <Route path='/drc-dispute/:id' element={<DrcLayout><DrcDisputeDetails/> </DrcLayout>} />                              
         <Route path='/drc-dispute-response/:id' element={<DrcLayout><DrcDisputeResponseDetails/> </DrcLayout>} />                              
         <Route path='/resolve-dispute/:id' element={<DrcLayout><ResolveDispute/> </DrcLayout>} />                              
+        <Route path='/drc-notification' element={<DrcLayout><NotificationPage/> </DrcLayout>} />                              
+        <Route path='/drc-disputes' element={<DrcLayout><DrcForwardedDisputes/> </DrcLayout>} />                              
+        <Route path='/drc-update-profile' element={<DrcLayout><UpdateDrcProfile/> </DrcLayout>} />                              
+        <Route path='/drc-change-password' element={<DrcLayout><ChangePasswordPage/> </DrcLayout>} />                              
+        <Route path='/drc-settings' element={<DrcLayout><DrcSettingsPage/> </DrcLayout>} />                              
+        <Route path='/assessment/:id' element={<AssessmentLayout><AssessmentRoadmap/> </AssessmentLayout>} />                              
+        <Route path='/assessment-notifications' element={<AssessmentLayout><NotificationPage/> </AssessmentLayout>} />                              
+        <Route path='/assessments' element={<AssessmentLayout><AssessmentsPage/> </AssessmentLayout>} />                              
 
       </Routes>
   );

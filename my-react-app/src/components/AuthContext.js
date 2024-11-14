@@ -85,7 +85,9 @@ const AuthProvider = ({ children }) => {
         const userResponse = await axios.get('http://127.0.0.1:8000/api/user/role/', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        return userResponse.data.role
+        const role = userResponse.data.role
+        const assessment = userResponse.data.assessment
+        return { role , assessment} 
       }
       return null
     }
@@ -99,7 +101,7 @@ const AuthProvider = ({ children }) => {
     try {
       const response = await axios.post('http://127.0.0.1:8000/api/user/login/', { email, password });
       const { access, refresh } = response.data.token;
-      const { role } = response.data;
+      const { role , assessment } = response.data;
       // Save tokens to localStorage
       localStorage.setItem('access', access);
       localStorage.setItem('refresh', refresh);
@@ -109,7 +111,7 @@ const AuthProvider = ({ children }) => {
       // Set user role in state
       setAuth({ role });
   
-      return { role }; // Return role data
+      return { role, assessment}; // Return role data
     } catch (error) {
       console.error('Login failed:', error.response?.data?.detail || error.message);
       throw new Error('Login failed');

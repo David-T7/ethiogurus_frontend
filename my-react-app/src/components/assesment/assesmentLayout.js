@@ -9,11 +9,10 @@ import {
   FaLock,
 } from "react-icons/fa";
 import { AuthContext } from '../AuthContext'; // Update this path according to your project structure
-import { UserContext } from "../DisputeManagerContext";
+import { UserContext } from "../UserContext";
 import defaultProfilePic from "../../images/default-profile-picture.png"
 import logo from "../../images/EG_MIX_Logo.png"
-
-const DrcLayout = ({ children }) => {
+const AssessmentLayout = ({ children }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false); // Dropdown menu for profile
   const location = useLocation(); // For determining the current route
@@ -91,13 +90,12 @@ const DrcLayout = ({ children }) => {
             <FaBars />
           </button>
         )}
-
-        {/* Top-left branding */}
+     {/* Top-left branding */}
      <div className="absolute left-6 top-6 flex items-center">
-       <Link to="/latest-disputes">
+       <Link to="/home">
       <img src={logo} alt="EthioGurus Logo" className="w-20 h-12" />
       </Link> {/* Adjust size as needed */}
-      <Link to="/latest-disputes" className="font-normal text-2xl">
+      <Link to="/home" className="font-normal text-2xl">
         EthioGurus
       </Link>
     </div>
@@ -105,17 +103,20 @@ const DrcLayout = ({ children }) => {
         {/* Top-right navigation */}
         <nav className="hidden md:flex space-x-8 absolute right-6 top-6 mr-20">
           <Link
-            to="/drc-disputes"
-            className={getLinkClasses("/drc-disputes")}
+            to="/assessments"
+            className={getLinkClasses("/assessments")}
             onClick={() => setIsMenuOpen(false)}
           >
-            Disputes
+            Assessment
+            {unreadMessages > 0 && (
+              <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
+                {unreadMessages}
+              </span>
+            )}
           </Link>
-
-
           <Link
-            to="/drc-notification"
-            className={getLinkClasses("/drc-notification")}
+            to="/assessment-notifications"
+            className={getLinkClasses("/assessment-notifications")}
             onClick={() => setIsMenuOpen(false)}
           >
             Notification
@@ -147,7 +148,7 @@ const DrcLayout = ({ children }) => {
               <ul className="p-2">
                 <li>
                   <Link
-                    to="/drc-settings"
+                    to="/setting"
                     className="flex items-center gap-2 p-2 text-gray-700 hover:bg-gray-100 rounded"
                   >
                     <FaUserCog /> Settings
@@ -155,7 +156,7 @@ const DrcLayout = ({ children }) => {
                 </li>
                 <li>
                   <Link
-                    to="/drc-update-profile"
+                    to="/update-profile"
                     className="flex items-center gap-2 p-2 text-gray-700 hover:bg-gray-100 rounded"
                   >
                     <FaUserEdit /> Update Profile
@@ -163,7 +164,7 @@ const DrcLayout = ({ children }) => {
                 </li>
                 <li>
                   <Link
-                    to="/drc-change-password"
+                    to="/update-password"
                     className="flex items-center gap-2 p-2 text-gray-700 hover:bg-gray-100 rounded"
                   >
                     <FaLock /> Change Password
@@ -198,24 +199,28 @@ const DrcLayout = ({ children }) => {
                 <FaTimes />
               </button>
               <div className="flex flex-col items-center space-y-4">
-              <Link to="/latest-disputes">
+              <Link to="/home">
       <img src={logo} alt="EthioGurus Logo" className="w-20 h-12" />
       </Link> {/* Adjust size as needed */}
-      <Link to="/latest-disputes" className="font-normal text-2xl">
+      <Link to="/home" className="font-normal text-2xl">
         EthioGurus
       </Link>
                 <nav className="flex flex-col space-y-4">
                   <Link
-                    to="/drc-disputes"
-                    className={getLinkClasses("/drc-disputes")}
+                    to="/assessments"
+                    className={getLinkClasses("/assessments")}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Disputes
+                    Assessment
+                    {unreadMessages > 0 && (
+                      <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
+                        {unreadMessages}
+                      </span>
+                    )}
                   </Link>
-                  
                   <Link
-                    to="/drc-notification"
-                    className={getLinkClasses("/drc-notification")}
+                    to="/assessment-notifications"
+                    className={getLinkClasses("/assessment-notifications")}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Notification
@@ -236,4 +241,4 @@ const DrcLayout = ({ children }) => {
   );
 };
 
-export default DrcLayout;
+export default AssessmentLayout;

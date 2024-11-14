@@ -2,12 +2,15 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const DisputeManagerDashboard = () => {
+const DrcForwardedDisputes = () => {
   const [drcForwarded, setDrcForwarded] = useState([]);
   const [disputeDetails, setDisputeDetails] = useState({});
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const token = localStorage.getItem("access");
   const navigate = useNavigate();
+
+  const disputesPerPage = 3;
 
   useEffect(() => {
     const fetchDRCForwarded = async () => {
@@ -16,11 +19,9 @@ const DisputeManagerDashboard = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        // Sort by `created_at` and `updated_at` in descending order, then take the top 5 recent disputes
+        // Sort disputes by `created_at` in descending order
         const sortedDisputes = response.data.latest_disputes
           .sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at))
-          .slice(0, 5);
-
         setDrcForwarded(sortedDisputes);
 
         // Fetch full details for each dispute
@@ -68,6 +69,24 @@ const DisputeManagerDashboard = () => {
     });
   };
 
+  const handleNextPage = () => {
+    setCurrentPage((prevPage) => prevPage + 1);
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage((prevPage) => prevPage - 1);
+  };
+
+  // Calculate the start and end indexes for the current page
+  const startIndex = (currentPage - 1) * disputesPerPage;
+  const endIndex = startIndex + disputesPerPage;
+
+  // Get the disputes for the current page
+  const currentDisputes = drcForwarded.slice(startIndex, endIndex);
+
+  // Calculate total pages
+  const totalPages = Math.ceil(drcForwarded.length / disputesPerPage);
+
   if (error) {
     return <div className="text-center py-8 text-red-500">{error}</div>;
   }
@@ -75,16 +94,18 @@ const DisputeManagerDashboard = () => {
   return (
     <div className="max-w-xl mx-auto p-8 mt-8">
       <section className="mb-12">
-        <h2 className="text-lg font-normal text-brand-dark-blue mb-6">Latest Disputes Assigned</h2>
-        {drcForwarded.length === 0 ? (
+        <h2 className="text-2xl font-thin text-brand-dark-blue mb-6">Forwarded Disputes</h2>
+        {currentDisputes.length === 0 ? (
           <p className="text-gray-500 text-center">No disputes assigned.</p>
         ) : (
-          drcForwarded.map((drcForwardedItem) => {
+          currentDisputes.map((drcForwardedItem) => {
             const dispute = disputeDetails[drcForwardedItem.dispute];
             return (
               <div key={drcForwardedItem.id} className="border border-gray-300 rounded-lg p-4 mb-4 shadow-sm">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-xl font-normal text-gray-800">{dispute ? dispute.title : 'Loading...'}</h3>
+                  <h3 className="text-xl font-normal text-gray-800">
+                    {dispute ? dispute.title : 'Loading...'}
+                  </h3>
                   <span className={`text-xs font-semibold rounded-full px-4 py-1 ${getDRCForwardedStatusStyle(drcForwardedItem?.solved)}`}>
                     {drcForwardedItem.solved ? "solved" : 'not solved'}
                   </span>
@@ -102,6 +123,27 @@ const DisputeManagerDashboard = () => {
             );
           })
         )}
+
+        {/* Pagination Controls */}
+        <div className="flex justify-between items-center mt-4">
+          <button
+            onClick={handlePrevPage}
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <span className="text-gray-600">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
       </section>
     </div>
   );
@@ -119,4 +161,4 @@ const getDRCForwardedStatusStyle = (status) => {
   }
 };
 
-export default DisputeManagerDashboard;
+export default DrcForwardedDisputes;

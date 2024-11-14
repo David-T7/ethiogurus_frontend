@@ -223,7 +223,8 @@ const InterviewsPage = () => {
               </div>
               <p className="text-gray-600">Freelancer: {interview.freelancer_data.full_name}</p>
               <p className="text-gray-600">Appointment Date: {new Date(interview.appointment_data.appointment_date).toLocaleString()}</p>
-              <p className="text-gray-600">Interviewer: {interview.interviewer}</p>
+              <p className="text-gray-600">Interview Type: {interview.appointment_data.interview_type}</p>
+
               <Link to={`/interview/${interview.id}`} className="text-blue-500 hover:underline">
                 View Details
               </Link>

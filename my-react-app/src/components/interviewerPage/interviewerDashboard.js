@@ -49,9 +49,10 @@ const InterviewerDashboard = () => {
               {appointment.done ? "done" : "pending"}
             </span>
             </div>
-                  <p className="text-gray-600">Skills Passed: {appointment.skills_passed}</p>
+                  {appointment.interview_type != "soft_skills_assessment" && <p className="text-gray-600">Skills Passed: {appointment.skills_passed}</p>}
                   <p className="text-gray-600">Appointment Date: {new Date(appointment.appointment_date).toLocaleString()}</p>
-              
+                  <p className="text-gray-600">Type: {appointment.interview_type}</p>
+
                   <Link 
                     to={`/appointment/${appointment.id}`} 
                    className="text-blue-500 hover:underline mt-4 inline-block"

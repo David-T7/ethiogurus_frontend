@@ -23,12 +23,17 @@ const LoginPage = () => {
 
     try {
       const userData = await login(email, password); // Assume login returns user data
-      
+      console.log("use data is ",userData)
       // Redirect based on role
       if (userData.role === 'admin') {
         navigate('/admin-dashboard');
       } else if (userData.role === 'freelancer') {
+        if(userData.assessment){
+          navigate('/assessment-progress')
+        }
+        else{
         navigate('/home');
+        }
       } else if (userData.role === 'interviewer') {
         navigate('/welcome');
       } else if (userData.role === 'client') {

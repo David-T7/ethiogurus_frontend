@@ -14,7 +14,9 @@ const InterviewPage = () => {
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [feedback, setFeedback] = useState("");
-  const [passed, setPassed] = useState(false);
+  const [passed, setPassed] = useState(true);
+  const [onHold, setOnHold] = useState(false);
+  const [onHoldDuration, setOnHoldDuration] = useState(""); // Duration state
   const [submitting, setSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState(null);
 
@@ -33,8 +35,8 @@ const InterviewPage = () => {
 
         const interviewData = interviewResponse.data;
         setInterview(interviewData);
-        setPassed(interviewData.passed)
-        setFeedback(interviewData.feedback)
+        setPassed(interviewData.passed);
+        setFeedback(interviewData.feedback);
 
         // Fetch freelancer data
         const freelancerResponse = await axios.get(
@@ -79,9 +81,10 @@ const InterviewPage = () => {
     setSubmissionError(null);
 
     try {
+      // Prepare the payload
       const payload = {
-        feedback:feedback,
-        passed:passed,
+        feedback: feedback,
+        passed: passed,
         done: true,
       };
 
@@ -96,41 +99,69 @@ const InterviewPage = () => {
           },
         }
       );
-
       const verificationPayload = {
-        freelancer_id : freelancer.id,
-        category : appointment.category,
-        skills_passed : appointment.skills_passed
+        freelancer_id: freelancer.id,
+        category: appointment.category,
+        skills_passed: appointment.skills_passed,
       };
 
-      if(response.data.passed){
-      await axios.post(
-        `http://127.0.0.1:8000/api/user/verify-skills/`,
-        verificationPayload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      if (response.data.passed) {
+        if(appointment.interview_type != "soft_skills_assessment"){
+        await axios.post(
+          `http://127.0.0.1:8000/api/user/verify-skills/`,
+          verificationPayload,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+      }
 
-    await axios.patch(
-        `http://127.0.0.1:8000/api/appointments/${appointment.id}/done/`,
-        {
-
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
+        await axios.patch(
+          `http://127.0.0.1:8000/api/full-assessment/${appointment.freelancer}/update/`,
+          {
+            soft_skills_assessment:true
           },
-        }
-      );
-    }
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      }
+
+      else{
+        await axios.patch(
+          `http://127.0.0.1:8000/api/full-assessment/${appointment.freelancer}/update/`,
+          {
+            on_hold:true,
+            on_hold_duration:onHoldDuration
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      }
+
+        await axios.patch(
+          `http://127.0.0.1:8000/api/appointments/${appointment.id}/done/`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+      
       // Update local state with the new interview data
       setInterview(response.data);
-      setPassed(response.data.passed)
-      setFeedback(response.data.feedback)
+      setPassed(response.data.passed);
+      setFeedback(response.data.feedback);
       setIsModalOpen(false);
       setSubmitting(false);
     } catch (err) {
@@ -168,44 +199,33 @@ const InterviewPage = () => {
 
       {/* Category */}
       <div className="flex items-center mb-2">
-        <h1 className="text-xl font-normal text-brand-dark-blue">Category</h1>
-      </div>
-
-      <div className="flex items-center mb-2">
         <h1 className="text-xl font-thin text-brand-dark-blue">
-          {appointment.category}
+          <span className="font-normal">Category:</span> {appointment.category}
         </h1>
       </div>
 
       {/* Freelancer */}
       <div className="flex items-center mb-2">
-        <h1 className="text-xl font-normal text-brand-dark-blue">Freelancer</h1>
-      </div>
-
-      <div className="flex items-center mb-2">
         <h1 className="text-xl font-thin text-brand-dark-blue">
-          {freelancer.full_name}
+          <span className="font-normal">Freelancer:</span> {freelancer.full_name}
         </h1>
       </div>
 
-      <div className="flex items-center mb-2">
-        <h1 className="text-xl font-normal text-brand-dark-blue">Skills Passed</h1>
-      </div>
-      <div className="flex items-center mb-2">
-      <h1 className="text-xl font-thin text-brand-dark-blue">
-          {appointment.skills_passed}
-      </h1>
-      </div>
+      {appointment.category !== "Soft Skills" && (
+        <>
+          <div className="flex items-center mb-2">
+            <h1 className="text-xl font-thin text-brand-dark-blue">
+              <span className="font-normal">Skills Passed:</span>
+              {appointment.skills_passed}
+            </h1>
+          </div>
+        </>
+      )}
 
       {/* Appointment Date */}
       <div className="flex items-center mb-2">
-        <h1 className="text-xl font-normal text-brand-dark-blue">
-          Appointment Date
-        </h1>
-      </div>
-
-      <div className="flex items-center mb-2">
         <h1 className="text-xl font-thin text-brand-dark-blue">
+          <span className="font-normal">Selected Date:</span>{" "}
           {new Date(appointment.appointment_date).toLocaleString()}
         </h1>
       </div>
@@ -214,9 +234,7 @@ const InterviewPage = () => {
       {interview.done && (
         <>
           <div className="flex items-center mb-2">
-            <h1 className="text-xl font-normal text-brand-dark-blue">
-              Feedback
-            </h1>
+            <h1 className="text-xl font-normal text-brand-dark-blue">Feedback</h1>
           </div>
 
           <div className="flex items-center mb-2">
@@ -250,7 +268,7 @@ const InterviewPage = () => {
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg w-11/12 max-w-md">
-            <h2 className="text-2xl font-normal text-brand-blue mb-4">
+            <h2 className="text-2xl font-thin text-brand-dark-blue mb-4">
               {interview.done ? "Update Interview Result" : "Submit Interview Result"}
             </h2>
             <form onSubmit={handleSubmit}>
@@ -269,54 +287,58 @@ const InterviewPage = () => {
                 ></textarea>
               </div>
 
-              {/* Interview Status */}
+              {/* Passed Field */}
               <div className="mb-4">
-                <label className="block text-gray-700 mb-2" htmlFor="passed">
-                  Interview Status
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={passed}
+                    onChange={() => setPassed(!passed)}
+                    className="mr-2"
+                  />
+                  Passed
                 </label>
-                <select
-                  id="passed"
-                  value={passed ? "passed" : "not_passed"}
-                  onChange={(e) => setPassed(e.target.value === "passed")}
-                  required
-                  className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-                >
-                  <option value="passed">Passed</option>
-                  <option value="not_passed">Not Passed</option>
-                </select>
               </div>
 
-              {/* Submission Error */}
-              {submissionError && (
-                <div className="text-red-500 mb-4">{submissionError}</div>
+              {/* On Hold Duration (if failed) */}
+              {!passed && (
+                <div className="mb-4">
+                  <label className="block text-gray-700 mb-2" htmlFor="onHoldDuration">
+                    Duration on Hold (in days)
+                  </label>
+                  <input
+                    type="number"
+                    id="onHoldDuration"
+                    value={onHoldDuration}
+                    onChange={(e) => setOnHoldDuration(e.target.value)}
+                    required
+                    className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
+                    min="1"
+                  />
+                </div>
               )}
 
-              {/* Form Buttons */}
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg mr-2 hover:bg-gray-400"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className={`px-4 py-2 rounded-lg ${
-                    submitting
-                      ? "bg-blue-300 text-blue-500 cursor-not-allowed"
-                      : "bg-blue-500 text-white hover:bg-blue-600"
-                  }`}
-                >
-                  {submitting
-                    ? "Submitting..."
-                    : interview.done
-                    ? "Update Result"
-                    : "Submit Result"}
-                </button>
-              </div>
+              {/* Error Message */}
+              {submissionError && (
+                <div className="text-red-500 text-sm mb-4">{submissionError}</div>
+              )}
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
+                disabled={submitting}
+              >
+                {submitting ? "Submitting..." : "Submit"}
+              </button>
             </form>
+
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="mt-4 text-gray-500 hover:text-gray-700"
+            >
+              Close
+            </button>
           </div>
         </div>
       )}

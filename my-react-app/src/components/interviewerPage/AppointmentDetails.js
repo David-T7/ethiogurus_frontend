@@ -105,30 +105,24 @@ const AppointmentDetails = () => {
         Appointment Details
       </h1>
       <div className="flex items-center mb-2">
-        <h1 className="text-xl font-normal text-brand-dark-blue">Category</h1>
-      </div>
-      <div className="flex items-center mb-2">
       <h1 className="text-xl font-thin text-brand-dark-blue">
-          {appointment.category}
+      <span className="font-normal">Type:</span> {appointment.interview_type}
       </h1>
       </div>
 
-      <div className="flex items-center mb-2">
-        <h1 className="text-xl font-normal text-brand-dark-blue">Skills Passed</h1>
-      </div>
+      {appointment.category!= "Soft Skills" && <>
       <div className="flex items-center mb-2">
       <h1 className="text-xl font-thin text-brand-dark-blue">
-          {appointment.skills_passed}
+        <span className="font-normal">Skills Passed</span>{appointment.skills_passed}
       </h1>
       </div>
+      </>}
 
-      <div className="flex items-center mb-2"> 
-        <h1 className="text-xl font-normal text-brand-dark-blue">Selected Date:</h1>
-      </div>
+
       <div className="flex items-center mb-2">
      
       <h1 className="text-xl font-thin text-brand-dark-blue">
-          {new Date(appointment.appointment_date).toLocaleString()}
+      <span className="font-normal">Selected Date</span>: {new Date(appointment.appointment_date).toLocaleString()}
         </h1>
         </div>
 

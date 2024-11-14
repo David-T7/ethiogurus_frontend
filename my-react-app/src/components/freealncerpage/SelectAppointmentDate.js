@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from "axios";
 
 const SelectAppointmentDate = ({ appointmentOptions, appointmentID, setAppointmentDateSelected=false,onClose }) => {
@@ -9,41 +9,48 @@ const SelectAppointmentDate = ({ appointmentOptions, appointmentID, setAppointme
     setSelectedOption(option); // Set selected option with both date and interviewer_id
     setShowConfirmation(true); // Show confirmation popup
   };
+  useEffect( () => {
+    console.log("appointment id is",appointmentID)
+    console.log("appointment date options ",appointmentOptions)
+  }
+    ,[]
+  )
 
   const handleConfirm = async () => {
-    // This is where you will send the selected date, interviewer_id, and appointmentID to the backend
-    console.log("selected date is",selectedOption)
+    // Ensure date is in the correct ISO format
+    const formattedDate = new Date(selectedOption.date).toISOString();
+  
+    console.log("selected date is", selectedOption);
     console.log('Confirmed appointment:', {
       appointmentID,
-      date: selectedOption.date,
-      interviewer_id: selectedOption.interviewer_id
+      date: formattedDate,
+      interviewer_id: selectedOption.interviewer_id,
     });
-
+  
     const token = localStorage.getItem("access");
     try {
       const response = await axios.post(
         "http://127.0.0.1:8000/api/user/select-appointment/",
         {
           appointment_id: appointmentID,
-          date: selectedOption.date,
-          interviewer_id: selectedOption.interviewer_id
+          date: formattedDate,  // Using formattedDate here
+          interviewer_id: selectedOption.interviewer_id,
         },
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json', // Optional, but ensures you're sending JSON
+            'Content-Type': 'application/json',
           },
         }
       );
       console.log('Appointment confirmed:', response.data);
-      setAppointmentDateSelected(true)
+      setAppointmentDateSelected(true);
       onClose(); // Close the modal after confirmation
-
     } catch (error) {
       console.error("Error during confirming appointment date:", error);
-      // You may want to show an error message to the user here
     }
-};
+  };
+  
   const handleCancel = () => {
     setShowConfirmation(false);
     setSelectedOption(null); // Reset selected option
@@ -51,7 +58,7 @@ const SelectAppointmentDate = ({ appointmentOptions, appointmentID, setAppointme
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-      <h2 className="text-lg font-semibold mb-2">Select an Interview Date</h2>
+      <h2 className="text-lg font-normal text-brand-dark-blue mb-2">Select an Interview Date</h2>
       <p className="text-gray-600 mb-4">Please choose a date from the following options:</p>
       <ul>
         {appointmentOptions.length === 0 ? (
