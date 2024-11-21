@@ -1,12 +1,19 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate , useLocation} from 'react-router-dom';
 
 const TestTerminatedPage = () => {
   const navigate = useNavigate();
+  const location = useLocation()
+  const startingPath = location.pathname.split('/').slice(0, 2).join('/'); // e.g., '/assessment-camera-check'
 
-  const handleGoBack = () => {
-    navigate('/skills'); // Redirect to home or any other page
-  };
+  const handleReturnToSkillsPage = () => {
+    if (startingPath === "/theory-skill-test" || startingPath === "/coding-skill-test"){
+      navigate('/my-skills')
+    }
+    else{
+      navigate('/skills')
+    }
+}
 
   return (
     <div className="flex flex-col justify-top items-center min-h-screen bg-gray-100">
@@ -20,7 +27,7 @@ const TestTerminatedPage = () => {
         </p>
         <button
           className="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition duration-300"
-          onClick={handleGoBack}
+          onClick={handleReturnToSkillsPage}
         >
           Go Back to Home
         </button>

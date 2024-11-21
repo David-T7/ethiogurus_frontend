@@ -3,9 +3,9 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 
 const AssessmentsPage = () => {
-  const [assessments, setAssessments] = useState([]); // Initialize as an empty array
+  const [assessments, setAssessments] = useState([]);
   const [error, setError] = useState(null);
-  const [visibleCount, setVisibleCount] = useState(5); // Initially show 5 assessments
+  const [visibleCount, setVisibleCount] = useState(5);
   const token = localStorage.getItem("access");
 
   useEffect(() => {
@@ -16,14 +16,7 @@ const AssessmentsPage = () => {
             Authorization: `Bearer ${token}`,
           },
         });
-
-        // Convert object to array if needed and set state
-        const assessmentsData = response.data.reduce((acc, assessment) => {
-          acc.push(assessment); // Push assessments into an array
-          return acc;
-        }, []);
-
-        setAssessments(assessmentsData);
+        setAssessments(response.data);
       } catch (err) {
         setError(err.response ? err.response.data.detail : 'Failed to fetch assessments');
       }
@@ -32,18 +25,16 @@ const AssessmentsPage = () => {
     fetchAssessments();
   }, [token]);
 
-  // Function to handle "See More" and "See Less" functionality
   const handleSeeMore = () => {
-    setVisibleCount((prevCount) => prevCount + 5); // Show more assessments
+    setVisibleCount((prevCount) => prevCount + 5);
   };
 
   const handleSeeLess = () => {
-    setVisibleCount(5); // Reset to show only the first 5 assessments
+    setVisibleCount(5);
   };
 
   return (
     <div className="max-w-2xl mx-auto p-8 mt-8">
-      {/* Latest Assessments Section */}
       <section className="mb-12">
         {assessments.length === 0 ? (
           <p className="text-gray-500 text-center">No assessments available.</p>
@@ -55,46 +46,46 @@ const AssessmentsPage = () => {
                   {assessment.finished ? "Completed" : "In Progress"} Assessment
                 </h3>
                 <span
-                    className={`text-xs font-semibold rounded-full px-4 py-1 text-white ${
-            assessment.finished
-      ? "bg-green-500"
-      : assessment.on_hold
-      ? "bg-yellow-500"
-      : "bg-blue-500"
-  }`}
->
-  {assessment.finished || assessment.on_hold
-    ? assessment.passed
-      ? "Passed"
-      : "Failed"
-    : "In Progress"}
-</span>
+                  className={`text-xs font-semibold rounded-full px-4 py-1 text-white ${
+                    assessment.finished
+                      ? "bg-green-500"
+                      : assessment.on_hold
+                      ? "bg-yellow-500"
+                      : "bg-blue-500"
+                  }`}
+                >
+                  {assessment.finished || assessment.on_hold
+                    ? assessment.passed
+                      ? "Passed"
+                      : "Failed"
+                    : "In Progress"}
+                </span>
               </div>
               <p className="text-gray-600">Start Date: {new Date(assessment.created_at).toLocaleString()}</p>
 
               <div className="mt-2">
                 <p className="text-gray-600">
-                  Soft Skills Assessment:{" "}
-                  <span className={`font-semibold ${assessment.soft_skills_assessment ? "text-green-500" : "text-red-500"}`}>
-                    {assessment.soft_skills_assessment ? "Completed" : "Not Completed"}
+                  Soft Skills Assessment Status:{" "}
+                  <span className={`font-semibold ${
+                    assessment.soft_skills_assessment_status === "passed" ? "text-green-500" : "text-red-500"
+                  }`}>
+                    {assessment.soft_skills_assessment_status.replace('_', ' ')}
                   </span>
                 </p>
                 <p className="text-gray-600">
-                  Depth Skill Assessment:{" "}
-                  <span className={`font-semibold ${assessment.depth_skill_assessment ? "text-green-500" : "text-red-500"}`}>
-                    {assessment.depth_skill_assessment ? "Completed" : "Not Completed"}
-                  </span>
-                </p>
-                <p className="text-gray-600">
-                  Live Assessment:{" "}
-                  <span className={`font-semibold ${assessment.live_assessment ? "text-green-500" : "text-red-500"}`}>
-                    {assessment.live_assessment ? "Completed" : "Not Completed"}
+                  Depth Skill Assessment Status:{" "}
+                  <span className={`font-semibold ${
+                    assessment.depth_skill_assessment_status === "passed" ? "text-green-500" : "text-red-500"
+                  }`}>
+                    {assessment.depth_skill_assessment_status.replace('_', ' ')}
                   </span>
                 </p>
               </div>
 
-              <Link  to={{ pathname: `/assessment/${assessment.id}`}}
-                    className="text-blue-500 hover:underline">
+              <Link 
+                to={{ pathname: `/assessment/${assessment.id}` }}
+                className="text-blue-500 hover:underline mt-4 inline-block"
+              >
                 View Details
               </Link>
             </div>
@@ -102,7 +93,7 @@ const AssessmentsPage = () => {
         )}
 
         {assessments.length > visibleCount && (
-          <button onClick={handleSeeMore} className="bg-blue-500 text-white px-4 py-2 rounded">
+          <button onClick={handleSeeMore} className="bg-blue-500 text-white px-4 py-2 rounded mt-4">
             See More
           </button>
         )}
@@ -114,7 +105,6 @@ const AssessmentsPage = () => {
         )}
       </section>
 
-      {/* Error Handling */}
       {error && <div className="text-red-500 text-center mt-4">{error}</div>}
     </div>
   );

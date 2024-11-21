@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate ,} from 'react-router-dom';
 
 const TestResultPage = () => {
   const location = useLocation();
@@ -7,7 +7,7 @@ const TestResultPage = () => {
   
   // Extract data from location state
   const { questions, selectedAnswers, correctAnswers } = location.state || {};
-
+  const startingPath = location.pathname.split('/').slice(0, 2).join('/'); // e.g., '/assessment-camera-check'
   // Check if required data exists
   if (!questions || !selectedAnswers || !correctAnswers) {
     return <div>Error: Missing data.</div>;
@@ -27,6 +27,15 @@ const TestResultPage = () => {
   const score = calculateScore();
   const totalQuestions = questions.length;
   const percentage = ((score / totalQuestions) * 100).toFixed(2);
+
+  const handleReturnToSkillsPage = () => {
+      if (startingPath === "/skill-test-result"){
+        navigate('/my-skills')
+      }
+      else{
+        navigate('/skills')
+      }
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-8 bg-gray-100">
@@ -59,7 +68,7 @@ const TestResultPage = () => {
 
           <div className="mt-8 flex justify-center">
             <button
-              onClick={() => navigate('/skills')}
+              onClick={ handleReturnToSkillsPage}
               className="px-6 py-2 rounded-lg bg-brand-blue text-white font-semibold hover:bg-brand-dark-blue transition-colors duration-300"
             >
               Return to skills page

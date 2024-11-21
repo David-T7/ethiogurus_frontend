@@ -74,24 +74,23 @@ const InterviewPage = () => {
     fetchInterviewDetails();
   }, [id, token]);
 
-  // Handle form submission for feedback and status update
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     setSubmissionError(null);
-
+  
     try {
-      // Prepare the payload
-      const payload = {
+      // Prepare the initial payload for the interview update
+      const interviewPayload = {
         feedback: feedback,
         passed: passed,
         done: true,
       };
-
+  
       // Update interview data
       const response = await axios.patch(
         `http://127.0.0.1:8000/api/interviews/${id}/`,
-        payload,
+        interviewPayload,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -99,46 +98,63 @@ const InterviewPage = () => {
           },
         }
       );
-      const verificationPayload = {
-        freelancer_id: freelancer.id,
-        category: appointment.category,
-        skills_passed: appointment.skills_passed,
-      };
-
+  
+      // If the interview was passed and it's not a soft skills assessment, verify skills
       if (response.data.passed) {
-        if(appointment.interview_type != "soft_skills_assessment"){
-        await axios.post(
-          `http://127.0.0.1:8000/api/user/verify-skills/`,
-          verificationPayload,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-      }
-
+        if (appointment.interview_type !== "soft_skills_assessment") {
+          const verificationPayload = {
+            freelancer_id: freelancer.id,
+            category: appointment.category,
+            skills_passed: appointment.skills_passed,
+          };
+          await axios.post(
+            `http://127.0.0.1:8000/api/user/verify-skills/`,
+            verificationPayload,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+        }
+  
+        // Prepare dynamic status update for assessment based on interview type
+        const fieldToUpdate = `${appointment.interview_type}_status`;
+        const assessmentUpdatePayload = {
+          [fieldToUpdate]: "passed",
+        };
+  
+        // If the interview type is "soft_skills_assessment", set the next step to pending
+        if (appointment.interview_type === "soft_skills_assessment") {
+          assessmentUpdatePayload.depth_skill_assessment_status = "pending";
+        }
+  
         await axios.patch(
           `http://127.0.0.1:8000/api/full-assessment/${appointment.freelancer}/update/`,
-          {
-            soft_skills_assessment:true
-          },
+          assessmentUpdatePayload,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
-      }
-
-      else{
+      } else {
+        // If the assessment is on hold or failed
+        const fieldToUpdate = `${appointment.interview_type}_status`;
+        const assessmentUpdatePayload = onHold
+          ? {
+              on_hold: true,
+              [fieldToUpdate]: "on_hold",
+              on_hold_duration: onHoldDuration,
+            }
+          : {
+              [fieldToUpdate]: "failed",
+            };
+  
         await axios.patch(
           `http://127.0.0.1:8000/api/full-assessment/${appointment.freelancer}/update/`,
-          {
-            on_hold:true,
-            on_hold_duration:onHoldDuration
-          },
+          assessmentUpdatePayload,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -146,18 +162,18 @@ const InterviewPage = () => {
           }
         );
       }
-
-        await axios.patch(
-          `http://127.0.0.1:8000/api/appointments/${appointment.id}/done/`,
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-      
+  
+      // Mark the appointment as done
+      await axios.patch(
+        `http://127.0.0.1:8000/api/appointments/${appointment.id}/done/`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
       // Update local state with the new interview data
       setInterview(response.data);
       setPassed(response.data.passed);
@@ -166,13 +182,12 @@ const InterviewPage = () => {
       setSubmitting(false);
     } catch (err) {
       setSubmissionError(
-        err.response
-          ? err.response.data.detail
-          : "Failed to submit interview results"
+        err.response ? err.response.data.detail : "Failed to submit interview results"
       );
       setSubmitting(false);
     }
   };
+  
 
   if (loading) {
     return <div className="text-center py-8">Loading interview details...</div>;
@@ -200,7 +215,7 @@ const InterviewPage = () => {
       {/* Category */}
       <div className="flex items-center mb-2">
         <h1 className="text-xl font-thin text-brand-dark-blue">
-          <span className="font-normal">Category:</span> {appointment.category}
+          <span className="font-normal">Category:</span> {appointment.category ?appointment.category : appointment.interview_type }
         </h1>
       </div>
 
@@ -211,7 +226,7 @@ const InterviewPage = () => {
         </h1>
       </div>
 
-      {appointment.category !== "Soft Skills" && (
+      {appointment.interview_type !== "soft_skills_assessment" && (
         <>
           <div className="flex items-center mb-2">
             <h1 className="text-xl font-thin text-brand-dark-blue">

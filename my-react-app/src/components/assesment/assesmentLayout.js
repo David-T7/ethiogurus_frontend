@@ -126,6 +126,15 @@ const AssessmentLayout = ({ children }) => {
               </span>
             )}
           </Link>
+          <Link
+                    to="/my-skills"
+                    className={getLinkClasses("/my-skills")}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Skills
+          </Link>
+
+
         </nav>
 
         {/* Profile Picture and Dropdown Menu */}
@@ -230,6 +239,13 @@ const AssessmentLayout = ({ children }) => {
               </span>
             )}
                   </Link>
+                  <Link
+                    to="/my-skills"
+                    className={getLinkClasses("/my-skills")}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Skills
+          </Link>
                 </nav>
               </div>
             </nav>

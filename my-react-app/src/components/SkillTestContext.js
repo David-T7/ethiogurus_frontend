@@ -6,7 +6,7 @@ const SkillTestContext = createContext();
 const SkillTestProvider = ({ children }) => {
   const [skillTests, setSkillTests] = useState({
     theoretical: null,
-    coding: null,
+    practical: null,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -15,9 +15,10 @@ const SkillTestProvider = ({ children }) => {
     setLoading(true);
     try {
       let url = '';
+      console.log("id is ",id , " type is",type)
       if (type === 'theoretical') {
         url = `http://127.0.0.1:8001/api/skilltests/${id}/`;
-      } else if (type === 'coding') {
+      } else if (type === 'practical') {
         url = `http://127.0.0.1:8002/api/practical-test/${id}/`;
       } else {
         throw new Error('Invalid test type');
@@ -28,8 +29,8 @@ const SkillTestProvider = ({ children }) => {
       }},);
       if (type === 'theoretical') {
         setSkillTests((prev) => ({ ...prev, theoretical: response.data }));
-      } else if (type === 'coding') {
-        setSkillTests((prev) => ({ ...prev, coding: response.data }));
+      } else if (type === 'practical') {
+        setSkillTests((prev) => ({ ...prev, practical: response.data }));
       }
       setLoading(false);
     } catch (err) {

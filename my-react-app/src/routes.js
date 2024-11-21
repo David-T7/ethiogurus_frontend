@@ -104,7 +104,8 @@ import DrcSettingsPage from './components/drc/DrcSettings';
 import AssessmentRoadmap from './components/assesment/AssesmentProgress';
 import AssessmentLayout from './components/assesment/assesmentLayout';
 import AssessmentsPage from './components/assesment/AssessmentsPage';
-
+import DepthSkillTestPage from './components/assesment/DepthSkillPage';
+import SoftSkillTestPage from './components/assesment/SoftSkillTestPage';
 
 const RoutesConfig = () => {
   return (
@@ -220,6 +221,16 @@ const RoutesConfig = () => {
         <Route path='/assessment/:id' element={<AssessmentLayout><AssessmentRoadmap/> </AssessmentLayout>} />                              
         <Route path='/assessment-notifications' element={<AssessmentLayout><NotificationPage/> </AssessmentLayout>} />                              
         <Route path='/assessments' element={<AssessmentLayout><AssessmentsPage/> </AssessmentLayout>} />                              
+        <Route path='/depth-skill-test' element={<AssessmentLayout><DepthSkillTestPage/> </AssessmentLayout>} />                              
+        <Route path="/assessment-camera-check/:id/:type" element={<AssessmentLayout><CameraCheckPage/></AssessmentLayout>} />
+        <Route path="/skill-test/:id/:type" element={<AssessmentLayout><TestDetailPage /></AssessmentLayout>} />
+        <Route path="/theory-skill-test/:id" element={<AssessmentLayout><TestPage /></AssessmentLayout>} />
+        <Route path="/coding-skill-test/:id" element={<AssessmentLayout><CodingTestPage /></AssessmentLayout>} />
+        <Route path='/skill-test-terminated' element={<AssessmentLayout><TestTerminatedPage/> </AssessmentLayout>} />                
+        <Route path='/soft-skill-test' element={<AssessmentLayout><SoftSkillTestPage/> </AssessmentLayout>} />                
+        <Route path='/skill-test-result' element={<AssessmentLayout><TestResultPage/> </AssessmentLayout>} />                
+        <Route path='/my-skills' element={<AssessmentLayout><SkillsPage/> </AssessmentLayout>} />                
+        <Route path='/practical-test-result/:id' element={<AssessmentLayout><CodingTestResultPage/> </AssessmentLayout>} />                
 
       </Routes>
   );

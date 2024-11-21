@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useRef } from 'react';
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate , useLocation } from "react-router-dom";
 
 // Create the CameraContext
 export const CameraContext = createContext();
@@ -20,6 +20,8 @@ export const CameraProvider = ({ children }) => {
   const token = localStorage.getItem("access");
   const navigate = useNavigate();
   const canvasRef = useRef(document.createElement('canvas')); // Reusable canvas
+  const location = useLocation()
+  const startingPath = location.pathname.split('/').slice(0, 2).join('/'); // e.g., '/assessment-camera-check'
 
   // Retry with backoff
   const retryWithBackoff = async (fn, retries = 3, delay = 1000) => {
@@ -137,7 +139,13 @@ const captureAndSendScreenshot = async () => {
       }
     } else if (data.action === 'terminate') {
       setIsTerminated(true);
+      console.log("test is terminated")
+      if(startingPath === "/theory-skill-test" || startingPath === "/coding-skill-test" ){
+      navigate('/skill-test-terminated');
+      }
+      else{
       navigate('/test-terminated');
+      }
     } else {
       if (testStatus !== "continued") {
         setTestStatus("continued");

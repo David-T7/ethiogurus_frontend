@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { MdPending } from "react-icons/md";
 import { MdHourglassEmpty } from "react-icons/md";
 import { FaGlassWhiskey } from "react-icons/fa"; // Import glass icon
-import SelectAppointmentDate from './SelectAppointmentDate'; // Import the new component
+// import SelectAppointmentDate from './SelectAppointmentDate'; // Import the new component
 
 const SkillsPage = () => {
   const [skills, setSkills] = useState([]);
@@ -198,6 +198,16 @@ const SkillsPage = () => {
     };
   };
 
+  const softSkillTestComplted = (types, bothPracticalTheoretical) => {
+    if (
+      bothPracticalTheoretical &&
+      (!types.includes("practical") || !types.includes("theoretical"))
+    ) {
+      return false
+    }
+    return true
+  };
+
   const isValidAppointmentDate = (date) => {
     return date instanceof Date && !isNaN(date);
   };
@@ -207,12 +217,13 @@ const SkillsPage = () => {
       {skills.length > 0 ? (
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-normal ml-6 text-brand-blue">Skills</h1>
-          <button
+          {softSkillTestComplted && <button
             onClick={() => navigate("/new-test")}
             className="px-4 py-2 bg-brand-green text-white rounded-lg hover:bg-brand-dark-blue transition-colors duration-300"
           >
             <span className="mr-2">New Skill Test</span>
           </button>
+          }
         </div>
       ) : (
         <p className="text-lg text-brand-dark-gray text-center">
@@ -237,7 +248,7 @@ const SkillsPage = () => {
             <div className="flex justify-between items-center mb-4">
               <span className="text-2xl font-normal mr-2 flex items-center text-brand-dark-blue">
                 {group.category}
-              {!interviewDone ? !appointmentDate ? (
+              {/* {!interviewDone ? !appointmentDate ? (
                 <button 
                 className="ml-2 flex items-center px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
                 onMouseEnter={() => handleCategoryMouseEnter(group.category)}
@@ -257,7 +268,7 @@ const SkillsPage = () => {
                 >
                 <span className="text-sm">Pending Interview..</span>
                 </button>
-              ):<></>}
+              ):<></>} */}
               
               </span>
             </div>
@@ -300,7 +311,7 @@ const SkillsPage = () => {
         })}
       </div>
        {/* Modal for changing the appointment date */}
-     {modalIsOpen && (
+     {/* {modalIsOpen && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
           <SelectAppointmentDate
             appointmentOptions={appointment.appointment_date_options} // Provide available slots
@@ -309,7 +320,7 @@ const SkillsPage = () => {
             setAppointmentDateSelected={setAppointmentDateSelected}
           />
         </div>
-      )}
+      )} */}
     </div>
   );
 };

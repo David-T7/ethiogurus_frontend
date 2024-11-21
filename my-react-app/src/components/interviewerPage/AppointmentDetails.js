@@ -110,7 +110,7 @@ const AppointmentDetails = () => {
       </h1>
       </div>
 
-      {appointment.category!= "Soft Skills" && <>
+      {appointment.interview_type !== "soft_skills_assessment" && <>
       <div className="flex items-center mb-2">
       <h1 className="text-xl font-thin text-brand-dark-blue">
         <span className="font-normal">Skills Passed</span>{appointment.skills_passed}

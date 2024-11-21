@@ -30,9 +30,9 @@ const SkillDetailsModal = ({ skill, codingTests, theoreticalTests, onClose, onSt
                   className="flex justify-between items-center p-2 border border-brand-gray-light rounded-lg hover:bg-brand-gray-light transition-colors duration-300"
                   whileHover={{ scale: 1.02 }}
                 >
-                  <p className="text-brand-gray-dark">{test.skill_type} Coding Test </p>
+                  <p className="text-brand-gray-dark">{test.skill_type} Practical Test </p>
                   <button
-                    onClick={() => onStartTest(test.id, 'coding')}
+                    onClick={() => onStartTest(test.id, 'practical')}
                     className="py-2 px-4 rounded bg-brand-green text-white hover:bg-brand-dark-green transition-transform duration-300 transform hover:scale-105"
                   >
                     Start Test
@@ -41,7 +41,7 @@ const SkillDetailsModal = ({ skill, codingTests, theoreticalTests, onClose, onSt
               ))}
             </ul>
           ) : (
-            <p className="text-brand-gray-dark">No coding tests available.</p>
+            <p className="text-brand-gray-dark">No Practical tests available.</p>
           )}
         </div>
 

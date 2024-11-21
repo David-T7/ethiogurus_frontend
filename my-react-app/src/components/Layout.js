@@ -30,32 +30,45 @@ const Layout = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    console.log("in layout redirect")
+    console.log("in layout redirect");
+
     const redirect = async () => {
-      const {role , assessment} = await getRole();
-      console.log("role found in layout is ",role)
-      if (role === 'admin') {
-        navigate('/admin-dashboard');
-      } else if (role === 'freelancer') {
-        if(assessment){
-          navigate('/assessment-progress')
+      try {
+        const data = await getRole();
+
+        // Check if data is defined and has the required properties
+        if (data && typeof data.role !== 'undefined') {
+          const { role, assessment } = data;
+          console.log("role found in layout is ", role);
+
+          // Perform redirection based on role
+          if (role === 'admin') {
+            navigate('/admin-dashboard');
+          } else if (role === 'freelancer') {
+            if (assessment) {
+              navigate('/assessments');
+            } else {
+              navigate('/home');
+            }
+          } else if (role === 'interviewer') {
+            navigate('/welcome');
+          } else if (role === 'client') {
+            navigate('/dashboard');
+          } else if (role === 'dispute-manager') {
+            navigate('/latest-disputes');
+          }
+        } else {
+          console.error("Invalid data returned from getRole", data);
+          // Optionally handle cases where data or role is undefined
         }
-        else{
-        navigate('/home');
-        }
-      } else if (role === 'interviewer') {
-        navigate('/welcome');
-      } else if (role === 'client') {
-        navigate('/dashboard');
+      } catch (error) {
+        console.error("Error in redirecting:", error);
       }
-     else if (role === 'dispute-manager') {
-      navigate('/latest-disputes');
-    }
-      
     };
 
     redirect();
   }, [navigate]);
+
 
   const getLinkClasses = (path) => {
     const baseClasses =

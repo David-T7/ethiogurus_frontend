@@ -68,7 +68,7 @@ const AppointmentsPage = () => {
     const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0); // End of last month
 
     const matchesSearch = (appointment) =>
-      appointment.category.toLowerCase().includes(searchTerm.toLowerCase());
+      appointment.category?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = (appointment) =>
       !statusFilter ||
@@ -166,7 +166,7 @@ const AppointmentsPage = () => {
             >
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-xl font-normal text-gray-800">
-                  {appointment.category}
+                  {appointment.category?appointment.category : appointment.interview_type}
                 </h3>
                 <span
                   className={`text-xs font-semibold rounded-full px-4 py-1 text-white ${
@@ -176,9 +176,10 @@ const AppointmentsPage = () => {
                   {appointment.done ? "Done" : "Pending"}
                 </span>
               </div>
-              <p className="text-gray-600">
+              {appointment.interview_type !== "soft_skills_assessment" && <p className="text-gray-600">
                 Skills Passed: {appointment.skills_passed}
               </p>
+                }
               <p className="text-gray-600">
                 Appointment Date:{" "}
                 {new Date(appointment.appointment_date).toLocaleString()}

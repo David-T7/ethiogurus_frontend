@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate , useParams} from 'react-router-dom';
+import { useNavigate , useParams , useLocation } from 'react-router-dom';
 
 const CameraCheckPage = () => {
   const [cameraAccessible, setCameraAccessible] = useState(null);
   const navigate = useNavigate();
   const { id, type } = useParams();
-
+  const location = useLocation()
+  // Get the first segment of the path
+  const startingPath = location.pathname.split('/').slice(0, 2).join('/'); // e.g., '/assessment-camera-check'
+  console.log("starting path is ",startingPath)
   useEffect(() => {
     const checkCameraAccess = async () => {
       try {
@@ -21,8 +24,13 @@ const CameraCheckPage = () => {
   }, []);
 
   const handleProceed = () => {
-    navigate(`/test/${id}/${type}`); // Replace '/test-details' with the actual route to TestDetailPage
-  };
+    if(startingPath === "/assessment-camera-check"){
+      navigate(`/skill-test/${id}/${type}`); // Replace '/test-details' with the actual route to TestDetailPage
+    }
+    else{
+      navigate(`/test/${id}/${type}`); // Replace '/test-details' with the actual route to TestDetailPage
+    }
+    };
 
   if (cameraAccessible === null) {
     return <div className="text-center">Checking camera access...</div>;
@@ -41,10 +49,14 @@ const CameraCheckPage = () => {
     <div className="flex flex-col items-center justify-top min-h-screen p-4 bg-gray-100">
       <div className="w-full max-w-xl bg-white shadow-lg rounded-lg overflow-hidden">
       <div className="p-6 bg-gradient-to-r from-brand-blue to-brand-dark-blue text-white">
+      <div className="flex justify-center mt-2">
       <h2 className="text-2xl font-normal">Camera Access Enabled</h2>
-          <p className="mt-4">Your camera is enabled. You can now proceed to the test.</p>
         </div>
-        <div className="p-6">
+        </div>
+        <div className="flex justify-center mt-2">
+        <p className="mt-4">Your camera is enabled. You can now proceed to the test.</p>
+        </div>
+        <div className="flex justify-center mt-2 mb-2">
           <button
             onClick={handleProceed}
             className="bg-brand-green text-white font-semibold py-3 px-8 rounded-lg hover:bg-brand-dark-green transition-colors duration-300"

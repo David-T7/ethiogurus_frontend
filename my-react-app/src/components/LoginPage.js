@@ -29,7 +29,7 @@ const LoginPage = () => {
         navigate('/admin-dashboard');
       } else if (userData.role === 'freelancer') {
         if(userData.assessment){
-          navigate('/assessment-progress')
+          navigate('/assessments')
         }
         else{
         navigate('/home');

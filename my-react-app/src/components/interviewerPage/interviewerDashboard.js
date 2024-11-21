@@ -44,7 +44,7 @@ const InterviewerDashboard = () => {
             appointments.map(appointment => (
               <div key={appointment.id} className="border border-gray-300 rounded-lg p-4 mb-4 shadow-sm">
               <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-xl font-normal text-gray-800">{appointment.category}</h3>
+                  <h3 className="text-xl font-normal text-gray-800">{appointment.category?appointment.category : appointment.interview_type}</h3>
                   <span className={`text-xs font-semibold rounded-full px-4 py-1 text-white  ${appointment.done ? "bg-green-500":"bg-blue-500"}`}>
               {appointment.done ? "done" : "pending"}
             </span>

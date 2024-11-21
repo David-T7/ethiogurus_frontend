@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaLock, FaCheckCircle, FaHourglassHalf } from 'react-icons/fa';
-import { useParams , useLocation } from 'react-router-dom';
+import { useParams , useNavigate} from 'react-router-dom';
 import axios from 'axios';
 import SelectAppointmentDate from '../freealncerpage/SelectAppointmentDate';
 const AssessmentRoadmap = () => {
@@ -14,7 +14,7 @@ const AssessmentRoadmap = () => {
   const [appointmentDateSelected, setAppointmentDateSelected] = useState(false);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
-  const location = useLocation();
+  const navigate = useNavigate()
   useEffect(() => {
     const fetchAssessment = async () => {
       try {
@@ -63,9 +63,8 @@ const AssessmentRoadmap = () => {
   if (!assessment) return <div className="text-center py-8">No assessment data found.</div>;
 
   const roadmapSteps = [
-    { key: 'soft_skills_assessment', label: 'Soft Skills Assessment', description: 'Understand your soft skills for various roles.' },
-    { key: 'depth_skill_assessment', label: 'Depth Skill Assessment', description: 'Evaluate your in-depth knowledge and expertise in relevant skills.' },
-    { key: 'live_assessment', label: 'Live Assessment', description: 'Assess your live problem-solving and coding skills.' },
+    { key: 'soft_skills_assessment_status', label: 'Soft Skills Assessment', description: 'Understand your soft skills for various roles.' },
+    { key: 'depth_skill_assessment_status', label: 'Depth Skill Assessment', description: 'Evaluate your in-depth knowledge and expertise in relevant skills.' },
   ];
 
   const openModal = (step) => {
@@ -79,7 +78,11 @@ const AssessmentRoadmap = () => {
   };
 
   const getAppointmentForStep = (stepKey) => {
-    return appointments.find((appointment) => appointment.interview_type === stepKey && !appointment.done);
+    // Remove the '_status' suffix from the stepKey
+    const trimmedStepKey = stepKey.replace('_status', '');
+    
+    // Find an appointment that matches the trimmed stepKey
+    return appointments.find((appointment) => appointment.interview_type === trimmedStepKey && !appointment.done);
   };
 
   const handleSelectDate = (appointment) => {
@@ -90,6 +93,23 @@ const AssessmentRoadmap = () => {
     setSelectedAppointment({ ...appointment, appointment_date_options: parsedOptions });
     setModalIsOpen(true); // Open modal after setting selected appointment
   };
+
+  const handleStartSkillTest = (assessment_type) => {
+      if(assessment_type === "depth_skill_assessment_status"){
+      navigate('/depth-skill-test' , {
+        state:{
+          'assessment':assessment
+        }
+      })
+    }
+    else if (assessment_type === "soft_skills_assessment_status"){
+      navigate('/soft-skill-test' , {
+        state:{
+          'assessment':assessment
+        }
+      })
+    }
+  }
 
 
   return (
@@ -104,11 +124,11 @@ const AssessmentRoadmap = () => {
             <div key={step.key} className="flex flex-col items-center">
               {/* Step Icon */}
               <div className={`flex items-center justify-center w-12 h-12 rounded-full mb-2 ${
-                assessment[step.key] ? 'bg-green-500' : appointment ? 'bg-yellow-500' : 'bg-gray-300'
+                assessment[step.key]==="passed" ? 'bg-green-500' : appointment || assessment[step.key]==="pending"  ? 'bg-yellow-500' : 'bg-gray-300'
               }`}>
-                {assessment[step.key] ? (
+                {assessment[step.key] === "passed" ? (
                   <FaCheckCircle className="text-white" />
-                ) : appointment ? (
+                ) : appointment || assessment[step.key]==="pending" ? (
                   <FaHourglassHalf className="text-white" />
                 ) : (
                   <FaLock className="text-white" />
@@ -119,8 +139,8 @@ const AssessmentRoadmap = () => {
               <div className="text-center">
                 <h3 className="text-lg font-semibold text-brand-dark-blue">{step.label}</h3>
                 <p className="text-sm text-gray-600 mt-1">
-                  {assessment[step.key] ? 'Completed' : appointment ? appointment.appointment_date 
-                  ?'Pending Interview':
+                  {assessment[step.key]==="passed" ? 'Completed' :  appointment ? appointment.appointment_date 
+                  ?'Pending Interview': 
             
                   <div className="flex justify-center mt-2">
                   <button 
@@ -130,8 +150,18 @@ const AssessmentRoadmap = () => {
                     <span className="text-sm">Select Interview Date</span>
                   </button>
                 </div>
-                  : 'Not Started'}
+                  : assessment[step.key]==="pending" ? 'pending':'Not Started'}
                 </p>
+                {assessment[step.key]==="pending" &&
+               <div className="flex justify-center mt-2">
+               <button 
+                 className="flex items-center px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
+                 onClick={() => handleStartSkillTest(step.key)}
+               >
+                 <span className="text-sm">{step.key === "soft_skills_assessment_status" ? "Start Soft Skill Test" : "Start Depth Skill Test"}</span>
+               </button>
+             </div>
+        }
 
                 {appointment && appointment.appointment_date && (
                   
@@ -158,15 +188,6 @@ const AssessmentRoadmap = () => {
           );
         })}
       </div>
-
-      {/* Overall assessment status */}
-      <div className="mt-8 p-4 bg-gray-100 rounded-lg shadow-lg text-center">
-        <h3 className="text-xl font-normal text-brand-dark-blue">Overall Status:</h3>
-        <span className={`text-lg font-semibold ${assessment.finished ? 'text-green-500' : 'text-yellow-500'}`}>
-          {assessment.finished ? 'Assessment Completed' : 'Assessment In Progress'}
-        </span>
-      </div>
-
       {/* Modal */}
       {isModalOpen && selectedStep && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">

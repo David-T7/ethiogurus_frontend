@@ -1,5 +1,5 @@
 import React, { useState, useEffect , useContext , useRef} from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams , useLocation} from "react-router-dom";
 import axios from "axios";
 import FollowUpModal from "./FollowUpModal";
 import beepSound from "../../audio/beepbeepbeep-53921.mp3";
@@ -28,8 +28,10 @@ const CodingTestPage = () => {
   const [textareaShake, setTextareaShake] = useState(false);
   const warningSoundRef = useRef(new Audio(beepSound));
   const followupWarningSoundRef = useRef(new Audio(beepSound));
-
+  const location = useLocation()
+  const startingPath = location.pathname.split('/').slice(0, 2).join('/'); // e.g., '/assessment-camera-check'
   const { startCamera, stopCamera,errorMessage , setErrorMessage, isTerminated, setFreelancerID_, videoRef , showModal ,isPaused, setIsPaused , setShowModal ,updateVideoSource , cameraStream } = useContext(CameraContext);
+  const [isSubmitting, setIsSubmitting] = useState(false); // State to track submission status
 
 
   useEffect(() => {
@@ -226,24 +228,35 @@ useEffect(() => {
 
   const handleNextQuestion = async () => {
     const currentQuestion = testData[currentQuestionIndex];
+    
     if (currentQuestion && !answers[currentQuestion.id]) {
       // Trigger the shaking effect by adding a class
       setTextareaShake(true);
       setTimeout(() => setTextareaShake(false), 500); // Remove the shake class after the animation
       return;
     }
-
-    const responseData = await submitCurrentAnswer();
-    if (responseData.score == 0) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    } else {
-      setFollowUpFinished(false);
-      if (currentQuestionIndex === testData.length - 1) {
-        await fetchFollowUpQuestions(responseData.id);
-        setFinalQuestion(true);
+  
+    setIsSubmitting(true); // Set submitting state to true
+    try {
+      const responseData = await submitCurrentAnswer();
+  
+      if (responseData.score === 0) {
+        // No follow-up needed, move to next question
+        setCurrentQuestionIndex(currentQuestionIndex + 1);
       } else {
-        await fetchFollowUpQuestions(responseData.id);
+        setFollowUpFinished(false);
+        if (currentQuestionIndex === testData.length - 1) {
+          // Fetch follow-up questions for the last question
+          await fetchFollowUpQuestions(responseData.id);
+          setFinalQuestion(true);
+        } else {
+          await fetchFollowUpQuestions(responseData.id);
+        }
       }
+    } catch (error) {
+      console.error("Error during question submission:", error);
+    } finally {
+      setIsSubmitting(false); // Reset submitting state
     }
   };
 
@@ -393,10 +406,21 @@ useEffect(() => {
       const { submission } = finalizeResponse.data;
 
       if (submission.passed) {
+        if(currentTest.category === "Soft Skills"){
+          await updateSoftSkills(currentTest.skill_type)
+        }
+        else{
         await updateFreelancerSkills(currentTest.skill_type);
+        }
       }
-
-      navigate(`/coding-test-result/${submissionId}`, {
+      else{
+        await updateAssessmentStatus(submission.score , 70)
+      }
+      let testResultUrl = "/coding-test-result" 
+      if(startingPath === "/coding-skill-test" ){
+          testResultUrl = "/practical-test-result"
+      }
+      navigate(`${testResultUrl}/${submissionId}`, {
         state: {
           currentTest,
           submission_id: submissionId,
@@ -404,6 +428,128 @@ useEffect(() => {
       });
     } catch (error) {
       console.error("Failed to finalize test", error);
+    }
+  };
+
+  const updateAssessmentStatus = async ( score, passingScore) => {
+    let onhold = false;
+    let onholdDuration = 0;
+  
+    // Determine onhold and dynamic onholdDuration based on the passingScore
+    if (score < passingScore) {
+      onhold = true;
+      
+      // Calculate how far below the passing score the freelancer's score is
+      const scoreGap = passingScore - score;
+  
+      // Adjust onholdDuration based on scoreGap
+      if (scoreGap <= 10) {
+        onholdDuration = 15; // Hold for 15 days if score is within 10 points of passing
+      } else if (scoreGap <= 20) {
+        onholdDuration = 30; // Hold for 30 days if score is within 20 points of passing
+      } else {
+        onholdDuration = 45; // Hold for 45 days if score is more than 20 points below passing
+      }
+    }
+  
+    // Construct payload for the update
+    const assessmentUpdatePayload = {
+      on_hold: onhold,
+      on_hold_duration: onholdDuration,
+    };
+  
+    try {
+      // Send patch request to update the assessment
+      const response = await axios.patch(
+        `http://127.0.0.1:8000/api/full-assessment/${freelancerId}/update/`,
+        assessmentUpdatePayload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      // Check if the request was successful
+      if (response.status === 200) {
+        console.log("Assessment updated successfully:", response.data);
+        return response.data;
+      } else {
+        console.error("Failed to update assessment:", response.status);
+      }
+    } catch (error) {
+      console.error("Error updating assessment:", error);
+    }
+  };
+
+  const updateSoftSkills = async (skillType) => {
+    try {
+      // Fetch freelancer's current profile data
+      const freelancerResponse = await axios.get(
+        "http://127.0.0.1:8000/api/user/freelancer/manage/",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      const freelancer = freelancerResponse.data;
+      
+      // Handle freelancer.skills based on its type
+      let currentSkills = Array.isArray(freelancer.skills) ? freelancer.skills : [];
+    
+
+      // Append the new skill under the appropriate category with both_practical_theoretical field
+      const newSkill = {
+        category: "Soft Skills",
+        skill: skillType,
+        type: "practical", // Default to theoretical
+        both_practical_theoretical: true,
+      };
+  
+      // Check if the skill already exists
+      const skillExists = currentSkills.some(skill =>
+        skill.category === "Soft Skills" && skill.skill.toLowerCase() === skillType.toLowerCase()
+      );
+
+      const theoreticalSkillExists = currentSkills.some(skill =>
+        skill.category === "Soft Skills" && skill.type === "theoretical" && skill.skill.toLowerCase() === skillType.toLowerCase()
+      );
+  
+      if (!skillExists) {
+        currentSkills.push(newSkill);
+        if(theoreticalSkillExists){
+          await axios.patch(
+            `http://127.0.0.1:8000/api/full-assessment/${freelancerId}/update/`,
+            {
+              depth_skill_assessment_status:"pending",
+              soft_skills_assessment_status :"passed"
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            } )   
+        }
+      }
+  
+      // Patch the freelancer profile with the updated skills (as a JSON string)
+      await axios.patch(
+        `http://127.0.0.1:8000/api/user/freelancer/manage/`,
+        {
+          skills: JSON.stringify(currentSkills), // Convert array to JSON string for storage
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      console.log("Freelancer skills updated successfully under the category:", "Soft skills");
+    } catch (error) {
+      console.error("Failed to update freelancer skills", error);
     }
   };
 
@@ -523,7 +669,7 @@ useEffect(() => {
         <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
           <div className="p-6 bg-gradient-to-r from-brand-blue to-brand-dark-blue text-white">
             <h1 className="text-4xl font-normal mb-2">
-              {currentTest?.skill_type} Coding Test
+              {currentTest?.skill_type} Practical Test
             </h1>
             <p className="mt-2 text-lg">Time Remaining: {formatTime(timer)}</p>
           </div>
@@ -547,21 +693,22 @@ useEffect(() => {
               />
             </div>
             <div className="flex justify-between">
-                <button
+                {/* <button
                   className="bg-blue-500 text-white py-2 px-6 rounded-md hover:bg-blue-600"
                   onClick={handlePreviousQuestion}
                   disabled={currentQuestionIndex === 0}
                 >
                   Previous
-                </button>
+                </button> */}
                 <button
-                  className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
-                  onClick={handleNextQuestion}
-                >
-                  {currentQuestionIndex === testData.length - 1
-                    ? "Finish Test"
-                    : "Next Question"}
-                </button>
+  className={`ml-auto py-2 px-4 mr-2 rounded ${
+    isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-brand-blue hover:bg-brand-dark-blue"
+  } text-white`}
+  onClick={handleNextQuestion}
+  disabled={isSubmitting} // Disable the button when submitting
+>
+  {isSubmitting ? "Submitting..." : currentQuestionIndex === testData.length - 1 ? "Finish Test" : "Next Question"}
+</button>
               </div>
           </div>
         </div>
