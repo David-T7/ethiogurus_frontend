@@ -8,6 +8,7 @@ const TestDetailPage = () => {
   const { skillTests, loading, error, fetchSkillTests } = useContext(SkillTestContext);
   const location = useLocation()
   const startingPath = location.pathname.split('/').slice(0, 2).join('/'); // e.g., '/assessment-camera-check'
+  const testDetails = type === 'theoretical' ? skillTests.theoretical : skillTests.practical;
 
   useEffect(() => {
     fetchSkillTests(id, type);
@@ -16,10 +17,18 @@ const TestDetailPage = () => {
   const handleTestStart = () => {
     if (type === 'theoretical') {
       if(startingPath === "/skill-test"){
-        navigate(`/theory-skill-test/${id}`);
+        navigate(`/theory-skill-test/${id}`,{
+          state:{
+            testDetails:testDetails
+          }
+        });
       }
       else{
-      navigate(`/theory-test/${id}`);
+      navigate(`/theory-test/${id}`,{
+        state:{
+          testDetails:testDetails
+        }
+      });
       }
     } else if (type === 'practical') {
       if(startingPath === "/skill-test"){
@@ -34,7 +43,6 @@ const TestDetailPage = () => {
   if (loading) return <div className="text-center">Loading...</div>;
   if (error) return <div className="text-center text-red-500">{error}</div>;
 
-  const testDetails = type === 'theoretical' ? skillTests.theoretical : skillTests.practical;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-8 bg-gray-100">

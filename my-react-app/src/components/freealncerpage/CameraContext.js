@@ -124,7 +124,12 @@ const captureAndSendScreenshot = async () => {
     } catch (error) {
       console.error('Failed to verify screenshot after retries:', error);
       setIsTerminated(true);
+      if(startingPath === "/theory-skill-test" || startingPath === "/coding-skill-test" ){
+        navigate('/skill-test-terminated');
+      }
+      else{
       navigate('/test-terminated');
+      }
     }
   }, 'image/jpeg');
 };

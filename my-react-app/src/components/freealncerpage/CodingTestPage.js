@@ -32,8 +32,7 @@ const CodingTestPage = () => {
   const startingPath = location.pathname.split('/').slice(0, 2).join('/'); // e.g., '/assessment-camera-check'
   const { startCamera, stopCamera,errorMessage , setErrorMessage, isTerminated, setFreelancerID_, videoRef , showModal ,isPaused, setIsPaused , setShowModal ,updateVideoSource , cameraStream } = useContext(CameraContext);
   const [isSubmitting, setIsSubmitting] = useState(false); // State to track submission status
-
-
+  const {testDetails} = location.state || null 
   useEffect(() => {
     const fetchTestData = async () => {
       try {
@@ -588,8 +587,9 @@ useEffect(() => {
       let currentSkills = Array.isArray(freelancer.skills) ? freelancer.skills : [];
   
       // Define the category
-      const category = matchingService.name;
-  
+      // const category = matchingService.name;
+      const category = testDetails?.category
+
       // Fetch theoretical and practical tests
       const theoreticalTestsResponse = await axios.get("http://127.0.0.1:8001/api/skilltests/", {
         headers: {
@@ -627,20 +627,67 @@ useEffect(() => {
         currentSkills.push(newSkill);
       }
   
-      // Patch the freelancer profile with the updated skills (as a JSON string)
-      await axios.patch(
-        `http://127.0.0.1:8000/api/user/freelancer/manage/`,
-        {
-          skills: JSON.stringify(currentSkills), // Convert array to JSON string for storage
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      try {
+        // Step 1: Patch the freelancer profile with the updated skills
+        const updatedFreelancerResponse = await axios.patch(
+          `http://127.0.0.1:8000/api/user/freelancer/manage/`,
+          { skills: JSON.stringify(currentSkills) },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      
+        console.log("Freelancer skills updated successfully:", updatedFreelancerResponse.data);
+      
+        // Step 2: Use the updated data from the response
+        const updatedFreelancer = updatedFreelancerResponse.data;
+      
+        let updatedSkills;
+      
+        // Check if skills is a JSON string and parse it
+        if (typeof updatedFreelancer.skills === "string") {
+          try {
+            updatedSkills = JSON.parse(updatedFreelancer.skills);
+          } catch (parseError) {
+            console.error("Failed to parse skills JSON:", parseError);
+            return;
+          }
+        } else if (Array.isArray(updatedFreelancer.skills)) {
+          updatedSkills = updatedFreelancer.skills;
+        } else {
+          console.error("Unexpected format for skills:", updatedFreelancer.skills);
+          return;
         }
-      );
-  
-      console.log("Freelancer skills updated successfully under the category:", category);
+      
+        // Step 3: Count the skills in the same category
+        const skillsInCategory = updatedSkills.filter(skill => skill.category === category).length;
+        console.log("Skills in the same category:", skillsInCategory);
+      
+        // Step 4: Update assessment status if the category has >= 2 skills
+        if (skillsInCategory >= 2) {
+          const assessmentUpdatePayload = {
+            depth_skill_assessment_status: "passed",
+            finished: true,
+            passed:true
+          };
+      
+          const assessmentResponse = await axios.patch(
+            `http://127.0.0.1:8000/api/full-assessment/${updatedFreelancer.id}/update/`,
+            assessmentUpdatePayload,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+      
+          console.log(`Assessment for category ${category} marked as finished:`, assessmentResponse.data);
+        }
+      } catch (error) {
+        // Improved error handling
+        if (error.response) {
+          console.error("Error response:", error.response.data);
+        } else if (error.request) {
+          console.error("No response received:", error.request);
+        } else {
+          console.error("Error setting up request:", error.message);
+        }
+        console.error("Failed to update freelancer skills:", error);
+      }
     } catch (error) {
       console.error("Failed to update freelancer skills", error);
     }
