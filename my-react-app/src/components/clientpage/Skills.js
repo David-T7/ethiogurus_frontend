@@ -1,40 +1,36 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+
+const fetchSkills = async () => {
+  const response = await axios.get("http://127.0.0.1:8000/api/technologies/");
+  return response.data;
+};
+
+const fetchRecommendedSkills = async () => {
+  const response = await axios.get("http://127.0.0.1:8000/api/skill-search/");
+  return response.data;
+};
 
 const Skills = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [filteredSkills, setFilteredSkills] = useState([]);
-  const [allSkills, setAllSkills] = useState([]);
-  const [recommendedSkills, setRecommendedSkills] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    // Fetch skills and recommended skills using Axios
-    const fetchSkills = async () => {
-      try {
-        const skillsResponse = await axios.get(
-          "http://127.0.0.1:8000/api/technologies/"
-        );
-        const recommendedSkillsResponse = await axios.get(
-          "http://127.0.0.1:8000/api/skill-search/"
-        );
+  // Fetch all skills
+  const { data: allSkills = [], isLoading: skillsLoading, isError: skillsError } = useQuery({
+    queryKey: ["allSkills"],
+    queryFn: fetchSkills,
+  });
 
-        setAllSkills(skillsResponse.data); // Set all skills fetched from the backend
-        setRecommendedSkills(recommendedSkillsResponse.data); // Set recommended skills fetched from the backend
-        console.log(
-          "Recommended Skills Response:",
-          recommendedSkillsResponse.data
-        );
-      } catch (error) {
-        console.error("Error fetching skills:", error);
-      }
-    };
-
-    fetchSkills();
-  }, []);
+  // Fetch recommended skills
+  const { data: recommendedSkills = [], isLoading: recommendedLoading, isError: recommendedError } = useQuery({
+    queryKey: ["recommendedSkills"],
+    queryFn: fetchRecommendedSkills,
+  });
 
   const handleSearchChange = (e) => {
     const term = e.target.value;
@@ -66,37 +62,41 @@ const Skills = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    // Assuming selectedSkills is an array of skill objects
-    // Extract just the names of the skills
-    const skillNames = selectedSkills.map(skill => skill.name); // Adjust based on the actual structure of selectedSkills
 
-    // Store the names of the skills in localStorage as JSON
+    const skillNames = selectedSkills.map((skill) => skill.name);
     localStorage.setItem("selectedSkills", JSON.stringify(skillNames));
 
     try {
-        // Send the skill names in the POST request
-        axios.post("http://127.0.0.1:8000/api/skill-search/", {
-            skill_names: skillNames,
-        });
+      axios.post("http://127.0.0.1:8000/api/skill-search/", { skill_names: skillNames });
     } catch (error) {
-        console.error("Error posting selected skills:", error);
+      console.error("Error posting selected skills:", error);
     }
 
-    let nextPath = "/hire-talent/budget-estimate"; // Default path for Layout
-    // Check current route to determine the next path
-    if (location.pathname.startsWith("/create-project")) {
-        nextPath = "/create-project/budget-estimate"; // Update this path if needed
-    }
-
-    // Navigate to the determined next path
+    const nextPath = location.pathname.startsWith("/create-project")
+      ? "/create-project/budget-estimate"
+      : "/hire-talent/budget-estimate";
     navigate(nextPath);
-};
+  };
 
   const handleBack = () => {
-    // Navigate back to the previous step
     navigate(-1);
   };
+
+  if (skillsLoading || recommendedLoading) {
+    return (
+      <div className="flex justify-center py-6">
+        <span>Loading...</span>
+      </div>
+    );
+  }
+
+  if (skillsError || recommendedError) {
+    return (
+      <div className="flex justify-center py-6">
+        <span>Error loading skills</span>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-12 px-6">
@@ -143,9 +143,7 @@ const Skills = () => {
                     <span className="mr-2">{skill.name}</span>
                     <button
                       onClick={() =>
-                        setSelectedSkills(
-                          selectedSkills.filter((s) => s.id !== skill.id)
-                        )
+                        setSelectedSkills(selectedSkills.filter((s) => s.id !== skill.id))
                       }
                       className="text-red-500 hover:text-red-700"
                     >
@@ -163,15 +161,13 @@ const Skills = () => {
               </h3>
               <div className="flex flex-wrap gap-4">
                 {recommendedSkills.map((skill) => {
-                  // Convert the string to an object
-                  let skillData ;
-                  
+                  let skillData;
+
                   try {
                     skillData = JSON.parse(skill.skill_name.replace(/'/g, '"'));
-                } catch (e) {
-                    // If parsing fails, handle it as a simple string instead
-                    skillData = { name: skill.skill_name }; // Wrap it in an object if needed
-                }
+                  } catch {
+                    skillData = { name: skill.skill_name };
+                  }
                   return (
                     <button
                       key={skill.id}
@@ -179,13 +175,11 @@ const Skills = () => {
                       onClick={() => handleRecommendedSkillAdd(skillData)}
                       className="bg-brand-blue text-white p-2 rounded-lg hover:bg-brand-dark-blue transition"
                     >
-                      <span className="mr-2">{skillData.name}</span>{" "}
-                      {/* Access the 'name' property */}
+                      <span className="mr-2">{skillData.name}</span>
                       <span className="text-white text-lg">+</span>
                     </button>
                   );
                 })}
-                
               </div>
             </div>
           )}
@@ -200,7 +194,7 @@ const Skills = () => {
               </button>
               <button
                 type="submit"
-                disabled={selectedSkills.length === 0} // Disable if no skills are selected
+                disabled={selectedSkills.length === 0}
                 className={`bg-brand-blue text-white py-3 px-6 rounded-lg hover:bg-brand-dark-blue transition text-lg ${
                   selectedSkills.length === 0
                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"

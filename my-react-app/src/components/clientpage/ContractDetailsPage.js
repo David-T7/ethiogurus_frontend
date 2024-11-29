@@ -1,186 +1,150 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { FaEdit , FaDollarSign } from 'react-icons/fa';
-import { FaExclamationTriangle } from 'react-icons/fa';
+import React from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { FaEdit, FaDollarSign, FaExclamationTriangle } from "react-icons/fa";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+
+const fetchContractDetails = async ({ queryKey }) => {
+  const [_, contractId] = queryKey;
+  const token = localStorage.getItem("access");
+  const response = await axios.get(`http://127.0.0.1:8000/api/contracts/${contractId}/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+const fetchMilestones = async ({ queryKey }) => {
+  const [_, contractId] = queryKey;
+  const token = localStorage.getItem("access");
+  const response = await axios.get(
+    `http://127.0.0.1:8000/api/contracts/${contractId}/milestones/`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return response.data;
+};
+
+const fetchCounterOffers = async ({ queryKey }) => {
+  const [_, contractId] = queryKey;
+  const token = localStorage.getItem("access");
+  const response = await axios.get(
+    `http://127.0.0.1:8000/api/contracts/${contractId}/counter-offers/`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return response.data;
+};
+
+const fetchDisputes = async ({ queryKey }) => {
+  const [_, contractId] = queryKey;
+  const token = localStorage.getItem("access");
+  const response = await axios.get(
+    `http://127.0.0.1:8000/api/contracts/${contractId}/disputes/`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  return response.data;
+};
+
+const fetchClientData = async () => {
+  const token = localStorage.getItem("access");
+  const response = await axios.get("http://127.0.0.1:8000/api/user/client/manage/", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
 
 const ContractDetailsPage = () => {
   const { id: contractId } = useParams();
-  const [contract, setContract] = useState(null);
-  const [milestones, setMilestones] = useState([]); // State to store milestones
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [counterOffers, setCounterOffers] = useState([]);
-  const [client , setClient] = useState(null)
-  const [disputes, setDisputes] = useState([]);
-  const token = localStorage.getItem('access');
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const token = localStorage.getItem("access");
 
-  useEffect(() => {
-    const fetchContractDetails = async () => {
-      try {
+  const { data: contract, isLoading: loadingContract } = useQuery({
+    queryKey: ["contractDetails", contractId],
+    queryFn: fetchContractDetails,
+  });
 
-        // Fetch the contract details
-        const contractResponse = await axios.get(`http://127.0.0.1:8000/api/contracts/${contractId}/`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setContract(contractResponse.data);
-        
-        // Fetch milestones for the contract
-        const milestonesResponse = await axios.get(`http://127.0.0.1:8000/api/contracts/${contractResponse.data.contract_update ? contractResponse.data.contract_update : contractId}/milestones/`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setMilestones(milestonesResponse.data); // Store fetched milestones
+  const { data: milestones = [], isLoading: loadingMilestones } = useQuery({
+    queryKey: ["milestones", contract?.contract_update || contractId],
+    queryFn: fetchMilestones,
+    enabled: !!contract,
+  });
 
-      } catch (err) {
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { data: counterOffers = [] } = useQuery({
+    queryKey: ["counterOffers", contract?.contract_update || contractId],
+    queryFn: fetchCounterOffers,
+    enabled: !!contract,
+  });
 
-    fetchContractDetails();
-  }, [contractId]);
+  const { data: disputes = [] } = useQuery({
+    queryKey: ["disputes", contract?.id],
+    queryFn: fetchDisputes,
+    enabled: !!contract,
+  });
 
+  const { data: client } = useQuery({
+    queryKey: ["client"],
+    queryFn: fetchClientData,
+  });
 
-  useEffect(() => {
-    const fetchDisputes = async () => {
-      try {
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/contracts/${contract.id}/disputes/`,
+  const updateContractMutation = useMutation({
+    mutationFn: (status) =>
+      axios.patch(
+        `http://127.0.0.1:8000/api/contracts/${contractId}/`,
+        { status },
+        { headers: { Authorization: `Bearer ${token}` } }
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["contractDetails", contractId]);
+      alert("Contract updated successfully!");
+      navigate("/contracts");
+    },
+    onError: (error) => {
+      console.error("Error updating contract:", error);
+      alert("Failed to update contract.");
+    },
+  });
 
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setDisputes(response.data);
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching contract disputes:", err);
-        // setError("Error fetching contract disputes . Please try again.");
-        setLoading(false);
-      }
-    };
-
-    fetchDisputes();
-  }, [contract]);
-  
-
-  const handleUpdate = () => {
-    navigate(`/contracts/${contractId}/edit`);
-  };
-
-  const handleDispute = (milestoneId) => {
-    navigate(`/contract/${contractId}/createdispute`,{state: {milestoneId:milestoneId}});
-  }
-
-  const handleContractUpdate = () => {
-    navigate(`/contracts/${contractId}/edit`);
-  }
-
-  const handleCounterOffer = () => {
-    navigate(`/contract-counter-offer/${contractId}`);
-  };
-  const handleCheckCounterOffers = () => {
-    console.log("contract is ",contract)
-    console.log("counter offer is ",counterOffers)
-
-    navigate(`/contract-counter-offers/${contractId}`,
-      {
-        state:{
-          counterOffers:counterOffers,
-          contract:contract
-        }
-      }
-    );
-  };
-
-  useEffect(() => {
-    const fetchCounterOffers = async () => {
-      try {
-        const token = localStorage.getItem("access"); // Get access token
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/contracts/${contract.contract_update ? contract.contract_update :contractId}/counter-offers/`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setCounterOffers(response.data); // Set counter offers related to the contract
-      } catch (error) {
-        console.error("Failed to fetch counter offers:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCounterOffers();
-  }, [contract]);
-
-  useEffect(() => {
-    const fetchClient = async () => {
-      try {
-        const token = localStorage.getItem("access");
-        const response = await axios.get(
-          "http://127.0.0.1:8000/api/user/client/manage/",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setClient(response.data)
-      }
-      catch(error){
-        console.log("failed to fetch freelancer data")
-      }
-    }
-    fetchClient()
-
-  } , [])
-
-
-  const handleDisputes = () => {
-    navigate(`/contract-disputes/${contract.id}` ,{
-      state: {
-        contract: contract,
-        clientId: client.id,
-        milestones : milestones
-      },
-    }
-    );
-  };
-
+  const handleUpdate = () => navigate(`/contracts/${contractId}/edit`);
 
   const handleSendContract = async () => {
     try {
-      const token = localStorage.getItem('access');
-      // Update the contract status to pending
-      await axios.patch(`http://127.0.0.1:8000/api/contracts/${contractId}/`, { status: 'pending' }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      // Fetch the updated contract details
-      const updatedContractResponse = await axios.get(`http://127.0.0.1:8000/api/contracts/${contractId}/`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setContract(updatedContractResponse.data);
-
-      alert('Contract sent and status updated to pending successfully!'); // Provide feedback to the user
-
-    } catch (err) {
-      alert('Failed to send contract or update status. Please try again.'); // Handle error appropriately
+      await axios.patch(
+        `http://127.0.0.1:8000/api/contracts/${contractId}/`,
+        { status: "pending" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      queryClient.invalidateQueries(["contractDetails", contractId]);
+      alert("Contract sent successfully!");
+    } catch (error) {
+      console.error("Error sending contract:", error);
+      alert("Failed to send contract.");
     }
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>{error}</div>;
+  const handleDisputes = () =>
+    navigate(`/contract-disputes/${contract?.id}`, {
+      state: {
+        contract,
+        clientId: client?.id,
+        milestones,
+      },
+    });
+
+  const handleDispute = (milestoneId) =>
+    navigate(`/contract/${contractId}/createdispute`, { state: { milestoneId } });
+
+  const handleCheckCounterOffers = () =>
+    navigate(`/contract-counter-offers/${contractId}`, {
+      state: { counterOffers, contract },
+    });
+
+  const sortedMilestones = milestones.sort(
+    (a, b) => new Date(a.due_date) - new Date(b.due_date)
+  );
+
+  if (loadingContract || loadingMilestones) return <div>Loading...</div>;
   if (!contract) return <div>No contract found.</div>;
 
-  // Safely access projectFee
   const projectFee = contract.amount_agreed;
-
-  const sortedMilestones = [...milestones].sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
 
   return (
     <div className="max-w-3xl mx-auto p-8 mt-8">
@@ -222,35 +186,39 @@ const ContractDetailsPage = () => {
         </div>
       )}
 
-{disputes.length > 0 &&  <div className="mb-6">
-        <h3 className="text-3xl font-thin text-brand-dark-blue mb-2">Disputes</h3>
-        <button
-        onClick={handleDisputes}
-        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-200"
-      >
-        Check Disputes
-      </button>
-       </div>
-}
+      {disputes.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-3xl font-thin text-brand-dark-blue mb-2">Disputes</h3>
+          <button
+            onClick={handleDisputes}
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition duration-200"
+          >
+            Check Disputes
+          </button>
+        </div>
+      )}
 
       <div className="mt-6 flex justify-left space-x-4">
-      {contract.status === 'pending' &&  <button
-          onClick={handleUpdate}
-          className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition"
-        >
-          <FaEdit className="inline mr-2" /> Edit Contract
-        </button>
-       }
+      {(contract.status === "pending" || contract.status === "active") && (
+          <>
+            <button
+              onClick={handleUpdate}
+              className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition"
+            >
+              <FaEdit className="inline mr-2" /> Edit Contract
+            </button>
+            {counterOffers.length > 0 && (
+              <button
+                onClick={handleCheckCounterOffers}
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition"
+              >
+                Check Counter Offers
+              </button>
+            )}
+          </>
+        )}
 
-      {contract.status === 'accepted' &&  <button
-          onClick={handleUpdate}
-          className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition"
-        >
-          <FaDollarSign className="inline mr-2" /> Deposit Fund
-        </button>
-       }
-
-        {contract.status === 'draft' && ( // Conditionally render the send button
+        {contract.status === "draft" && (
           <button
             onClick={handleSendContract}
             className="bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition"
@@ -259,31 +227,23 @@ const ContractDetailsPage = () => {
           </button>
         )}
 
-{contract.status === 'pending' && counterOffers.length > 0 && (
-            <button
-              onClick={handleCheckCounterOffers}
-              className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition duration-200"
-            >
-              Check Counter Offers
-            </button>
-          ) }
+        {contract.status === "accepted" && (
+          <button
+            onClick={() => updateContractMutation.mutate("active")}
+            className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition"
+          >
+            Activate Project
+          </button>
+        )}
 
-{contract.status === 'active' && (
-            <button
-              onClick={handleContractUpdate}
-              className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition duration-200"
-            >
-              Update Contract
-            </button>
-          ) }
-
-{contract.status === 'active' && !contract.milestone_based &&  
-                    <button onClick={() => handleDispute(null)}
-          className="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition"
-        >
-          <FaExclamationTriangle className="inline mr-2" /> Create Dispute
-        </button>
-       }
+        {contract.status === "active" && !contract.milestone_based && (
+          <button
+            onClick={() => handleDispute(null)}
+            className="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition"
+          >
+            <FaExclamationTriangle className="inline mr-2" /> Create Dispute
+          </button>
+        )}
       </div>
     </div>
   );

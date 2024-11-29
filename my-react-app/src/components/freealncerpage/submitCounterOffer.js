@@ -210,18 +210,18 @@ const SubmitCounterOffer = () => {
       console.log("Counter offer submitted:", response.data);
 
 
-      await axios.patch(
-        `http://127.0.0.1:8000/api/freelancer-contracts-update/${response.data.contract}/`,
-        {
-          freelancer_accepted_terms:"true"
-        }
-        ,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      // await axios.patch(
+      //   `http://127.0.0.1:8000/api/freelancer-contracts-update/${response.data.contract}/`,
+      //   {
+      //     freelancer_accepted_terms:"true"
+      //   }
+      //   ,
+      //   {
+      //     headers: {
+      //       Authorization: `Bearer ${token}`,
+      //     },
+      //   }
+      // );
 
 
 

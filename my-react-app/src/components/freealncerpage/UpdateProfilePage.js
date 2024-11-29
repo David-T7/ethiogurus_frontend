@@ -1,194 +1,141 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import { FaCheckCircle } from 'react-icons/fa';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { FaCheckCircle } from "react-icons/fa";
+import { useQuery, useMutation } from "@tanstack/react-query";
+
+// Function to fetch the profile data
+const fetchProfile = async () => {
+  const token = localStorage.getItem("access");
+  const response = await axios.get("http://127.0.0.1:8000/api/user/freelancer/manage/", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};
+
+// Function to update the profile data
+const updateProfile = async (updatedProfile) => {
+  const formData = new FormData();
+  for (const key in updatedProfile) {
+    if (key === "certifications" || key === "portfolio") {
+      formData.append(key, JSON.stringify(updatedProfile[key]));
+    } else {
+      formData.append(key, updatedProfile[key]);
+    }
+  }
+  const token = localStorage.getItem("access");
+  await axios.patch("http://127.0.0.1:8000/api/user/freelancer/manage/", formData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
 
 const UpdateProfilePage = () => {
-  const [profile, setProfile] = useState(null);
+  const navigate = useNavigate();
   const [updatedProfile, setUpdatedProfile] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [verificationStatus, setVerificationStatus] = useState(null);
-  const navigate = useNavigate()
-  const [freelancerData , setFreelacnerData] = useState(null)
+
+  // Use React Query to fetch the profile data
+  const { data: profile, isLoading, isError, error } = useQuery({
+    queryKey: ["profile"],
+    queryFn: fetchProfile,
+  });
+
+  // Use React Query to handle profile updates
+  const mutation = useMutation({
+    mutationFn: updateProfile,
+    onSuccess: () => {
+      alert("Profile updated successfully!");
+    },
+    onError: () => {
+      alert("Failed to update profile.");
+    },
+  });
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = localStorage.getItem('access');
-        const response = await axios.get('http://127.0.0.1:8000/api/user/freelancer/manage/', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setFreelacnerData(response.data)
-        setProfile(response.data);
-        setVerificationStatus(response.data.verified)
-        console.log("verifictation status is ",response.data.verified)
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to load profile data.');
-        setLoading(false);
-      }
-    };
+    if (profile) {
+      setVerificationStatus(profile.verified);
+    }
+  }, [profile]);
 
-    fetchProfile();
-  }, []);
-
+  // Handlers for form inputs
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setProfile((prevProfile) => ({
-      ...prevProfile,
-      [name]: value,
-    }));
-    setUpdatedProfile((prevProfile) => ({
-      ...prevProfile,
+    setUpdatedProfile((prev) => ({
+      ...prev,
       [name]: value,
     }));
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    setProfile((prevProfile) => ({
-      ...prevProfile,
-      profile_picture: file,
-    }));
-    setUpdatedProfile((prevProfile) => ({
-      ...prevProfile,
+    setUpdatedProfile((prev) => ({
+      ...prev,
       profile_picture: file,
     }));
   };
 
   const initializeFieldIfEmpty = (fieldName) => {
-    console.log("certification was ",profile.certifications)
-    if (!updatedProfile[fieldName]) {
-      setUpdatedProfile((prevProfile) => ({
-        ...prevProfile,
-        [fieldName]: [...(profile[fieldName] || [])],
-      }));
-    }
+    setUpdatedProfile((prev) => ({
+      ...prev,
+      [fieldName]: [...(prev[fieldName] || profile?.[fieldName] || [])],
+    }));
   };
 
   const handleCertificationChange = (index, field, value) => {
-    initializeFieldIfEmpty('certifications');
-    const newCertifications = [...updatedProfile.certifications];
-    newCertifications[index] = { ...newCertifications[index], [field]: value };
-    setProfile((prevProfile) => ({
-      ...prevProfile,
-      certifications: newCertifications,
-    }));
-    setUpdatedProfile((prevProfile) => ({
-      ...prevProfile,
-      certifications: newCertifications,
-    }));
+    initializeFieldIfEmpty("certifications");
+    setUpdatedProfile((prev) => {
+      const certifications = [...(prev.certifications || [])];
+      certifications[index] = { ...certifications[index], [field]: value };
+      return { ...prev, certifications };
+    });
   };
 
   const handlePortfolioChange = (index, field, value) => {
-    initializeFieldIfEmpty('portfolio');
-    const newPortfolioLinks = [...updatedProfile.portfolio];
-    newPortfolioLinks[index] = { ...newPortfolioLinks[index], [field]: value };
-    setProfile((prevProfile) => ({
-      ...prevProfile,
-      portfolio: newPortfolioLinks,
-    }));
-    setUpdatedProfile((prevProfile) => ({
-      ...prevProfile,
-      portfolio: newPortfolioLinks,
-    }));
+    initializeFieldIfEmpty("portfolio");
+    setUpdatedProfile((prev) => {
+      const portfolio = [...(prev.portfolio || [])];
+      portfolio[index] = { ...portfolio[index], [field]: value };
+      return { ...prev, portfolio };
+    });
   };
 
   const addCertification = () => {
-    initializeFieldIfEmpty('certifications');
-    let newCertifications = []
-    if (updatedProfile.certifications){
-      newCertifications = [...updatedProfile.certifications, { title: '', link: '' }];
-    }
-    else{
-      newCertifications = [{ title: '', link: '' }];
-    }
-    setProfile((prevProfile) => ({
-      ...prevProfile,
-      certifications: newCertifications,
-    }));
-    setUpdatedProfile((prevProfile) => ({
-      ...prevProfile,
-      certifications: newCertifications,
-    }));
+    initializeFieldIfEmpty("certifications");
+    setUpdatedProfile((prev) => {
+      const certifications = [...(prev.certifications || []), { title: "", link: "" }];
+      return { ...prev, certifications };
+    });
   };
 
   const addPortfolioLink = () => {
-    initializeFieldIfEmpty('portfolio');
-    let newPortfolioLinks = []
-    if (updatedProfile.portfolio){
-      newPortfolioLinks = [...updatedProfile.portfolio, { title: '', link: '' }];
-    }
-    else{
-      newPortfolioLinks = [{ title: '', link: '' }];
-    }
-    setProfile((prevProfile) => ({
-      ...prevProfile,
-      portfolio: newPortfolioLinks,
-    }));
-    setUpdatedProfile((prevProfile) => ({
-      ...prevProfile,
-      portfolio: newPortfolioLinks,
-    }));
+    initializeFieldIfEmpty("portfolio");
+    setUpdatedProfile((prev) => {
+      const portfolio = [...(prev.portfolio || []), { title: "", link: "" }];
+      return { ...prev, portfolio };
+    });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    try {
-      const formData = new FormData();
-
-      for (const key in updatedProfile) {
-        if (key === 'certifications' || key === 'portfolio') {
-          formData.append(key, JSON.stringify(updatedProfile[key]));
-        } else {
-          formData.append(key, updatedProfile[key]);
-        }
-      }
-
-      const token = localStorage.getItem('access');
-
-      await axios.patch('http://127.0.0.1:8000/api/user/freelancer/manage/', formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      // Fetch the updated profile data from the server
-      const response = await axios.get('http://127.0.0.1:8000/api/user/freelancer/manage/', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      // Update the profile state with the new data
-      setProfile(response.data);
-      setUpdatedProfile(response.data); // Optionally clear updatedProfile state
-
-      alert('Profile updated successfully!');
-    } catch (err) {
-      setError('Failed to update profile.');
-    }
+    mutation.mutate(updatedProfile);
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  const handleVerifyAccount = () => {
+    navigate("/verify-account", { state: { freelancerData: profile } });
+  };
 
-  if (error) {
-    return <div>{error}</div>;
-  }
-
-  const handleVerifyAccount = async () => {
-    navigate('/verify-account',{ state: { freelancerData } })
-};
+  if (isLoading) return <div>Loading...</div>;
+  if (isError) return <div>Error: {error.message}</div>;
 
   return (
     <div className="max-w-2xl mx-auto p-8 mt-8">
       <h1 className="text-3xl font-thin text-brand-dark-blue mb-6">Update Profile</h1>
       <form onSubmit={handleSubmit} encType="multipart/form-data">
+        {/* Full Name */}
         <div className="mb-4">
           <label htmlFor="full_name" className="block text-lg font-normal text-brand-blue mb-2">
             Full Name
@@ -197,12 +144,14 @@ const UpdateProfilePage = () => {
             type="text"
             id="full_name"
             name="full_name"
-            value={profile.full_name}
+            defaultValue={profile.full_name}
             onChange={handleInputChange}
             className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
             required
           />
         </div>
+
+        {/* Email */}
         <div className="mb-4">
           <label htmlFor="email" className="block text-lg font-normal text-brand-blue mb-2">
             Email Address
@@ -211,13 +160,14 @@ const UpdateProfilePage = () => {
             type="email"
             id="email"
             name="email"
-            value={profile.email}
+            defaultValue={profile.email}
             onChange={handleInputChange}
             className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
             required
           />
         </div>
 
+        {/* Address */}
         <div className="mb-4">
           <label htmlFor="address" className="block text-lg font-normal text-brand-blue mb-2">
             Address
@@ -226,11 +176,13 @@ const UpdateProfilePage = () => {
             type="text"
             id="address"
             name="address"
-            value={profile.address}
+            defaultValue={profile.address}
             onChange={handleInputChange}
             className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
           />
         </div>
+
+        {/* Bio */}
         <div className="mb-4">
           <label htmlFor="bio" className="block text-lg font-normal text-brand-blue mb-2">
             Bio
@@ -238,12 +190,14 @@ const UpdateProfilePage = () => {
           <textarea
             id="bio"
             name="bio"
-            value={profile.bio}
+            defaultValue={profile.bio}
             onChange={handleInputChange}
-            className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none h-40 focus:border-blue-500"
+            className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
             rows="4"
           />
         </div>
+
+        {/* Working Hours */}
         <div className="mb-4">
           <label htmlFor="preferred_working_hours" className="block text-lg font-normal text-brand-blue mb-2">
             Preferred Working Hours
@@ -251,7 +205,7 @@ const UpdateProfilePage = () => {
           <select
             id="preferred_working_hours"
             name="preferred_working_hours"
-            value={profile.preferred_working_hours}
+            defaultValue={profile.preferred_working_hours}
             onChange={handleInputChange}
             className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
             required
@@ -262,92 +216,8 @@ const UpdateProfilePage = () => {
             <option value="hourly">Hourly</option>
           </select>
         </div>
-        <div className="mb-4">
-        <label htmlFor="certification" className="block text-lg font-normal text-brand-blue mb-2">
-        Certifications
-        </label>
-          {profile.certifications && profile.certifications.length > 0  && profile.certifications.map((certification, index) => (
-            <div key={index} className="mb-4 border-b border-gray-300 pb-4">
-              <div className="mb-2">
-                <label htmlFor={`certTitle_${index}`} className="block text-md font-normal text-brand-blue mb-2">
-                  Title
-                </label>
-                <input
-                  type="text"
-                  id={`certTitle_${index}`}
-                  name="certification"
-                  value={certification.title}
-                  onChange={(e) => handleCertificationChange(index, 'title', e.target.value)}
-                  className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-                  required
-                />
-              </div>
-              <div className="mb-2">
-                <label htmlFor={`certLink_${index}`} className="block text-md font-normal text-brand-blue mb-2">
-                  Link
-                </label>
-                <input
-                  type="url"
-                  id={`certLink_${index}`}
-                  value={certification.link}
-                  onChange={(e) => handleCertificationChange(index, 'link', e.target.value)}
-                  className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-                  required
-                />
-              </div>
-            </div>
-          ))}
-          <button
-            type="button"
-            onClick={addCertification}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-200"
-          >
-            Add Certification
-          </button>
-        </div>
-        <div className="mb-4">
-        <label htmlFor="portfolio" className="block text-lg font-normal text-brand-blue mb-2">
-        Portfolio       
-        </label>
-          {profile.portfolio && profile.portfolio.length > 0 && profile.portfolio.map((link, index) => (
-            <div key={index} className="mb-4 border-b border-gray-300 pb-4">
-              <div className="mb-2">
-                <label htmlFor={`portfolioTitle_${index}`} className="block text-md font-normal text-brand-blue mb-2">
-                  Title
-                </label>
-                <input
-                  type="text"
-                  id={`portfolioTitle_${index}`}
-                  name='portfolio'
-                  value={link.title}
-                  onChange={(e) => handlePortfolioChange(index, 'title', e.target.value)}
-                  className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-                  required
-                />
-              </div>
-              <div className="mb-2">
-                <label htmlFor={`portfolioLink_${index}`} className="block text-md font-normal text-brand-blue mb-2">
-                  Link
-                </label>
-                <input
-                  type="url"
-                  id={`portfolioLink_${index}`}
-                  value={link.link}
-                  onChange={(e) => handlePortfolioChange(index, 'link', e.target.value)}
-                  className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-                  required
-                />
-              </div>
-            </div>
-          ))}
-          <button
-            type="button"
-            onClick={addPortfolioLink}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-200"
-          >
-            Add Portfolio Link
-          </button>
-        </div>
+
+        {/* Profile Picture */}
         <div className="mb-4">
           <label htmlFor="profile_picture" className="block text-lg font-normal text-brand-blue mb-2">
             Profile Picture
@@ -362,20 +232,80 @@ const UpdateProfilePage = () => {
           />
         </div>
 
-        
-          {/* Verify Account Button */}
-       <div className="mb-6">
-       <h3 className="text-xl font-normal text-brand-blue mb-4">Verification Status</h3>
-          {!verificationStatus && (<button type="button" onClick={handleVerifyAccount} className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-md">
-            Verify Account
+        {/* Certifications */}
+        <div className="mb-4">
+          <label htmlFor="certifications" className="block text-lg font-normal text-brand-blue mb-2">
+            Certifications
+          </label>
+          {(updatedProfile.certifications || profile.certifications || []).map((item, index) => (
+            <div key={index} className="mb-4">
+              <input
+                type="text"
+                placeholder="Title"
+                value={item.title || ""}
+                onChange={(e) => handleCertificationChange(index, "title", e.target.value)}
+                className="w-full border p-2 rounded"
+              />
+              <input
+                type="url"
+                placeholder="Link"
+                value={item.link || ""}
+                onChange={(e) => handleCertificationChange(index, "link", e.target.value)}
+                className="w-full border p-2 rounded mt-2"
+              />
+            </div>
+          ))}
+          <button type="button" onClick={addCertification} className="bg-blue-500 text-white px-4 py-2 rounded">
+            Add Certification
           </button>
-          )}
-          {verificationStatus && (
-        <p className="mt-2 text-green-500 flex items-center">
-          <FaCheckCircle className="mr-2" /> Verified
-        </p>
-      )}
         </div>
+
+        {/* Portfolio */}
+        <div className="mb-4">
+          <label htmlFor="portfolio" className="block text-lg font-normal text-brand-blue mb-2">
+            Portfolio
+          </label>
+          {(updatedProfile.portfolio || profile.portfolio || []).map((item, index) => (
+            <div key={index} className="mb-4">
+              <input
+                type="text"
+                placeholder="Title"
+                value={item.title || ""}
+                onChange={(e) => handlePortfolioChange(index, "title", e.target.value)}
+                className="w-full border p-2 rounded"
+              />
+              <input
+                type="url"
+                placeholder="Link"
+                value={item.link || ""}
+                onChange={(e) => handlePortfolioChange(index, "link", e.target.value)}
+                className="w-full border p-2 rounded mt-2"
+              />
+            </div>
+          ))}
+          <button type="button" onClick={addPortfolioLink} className="bg-blue-500 text-white px-4 py-2 rounded">
+            Add Portfolio Link
+          </button>
+        </div>
+
+        {/* Verify Account */}
+        <div className="mb-6">
+          <h3 className="text-xl font-normal text-brand-blue mb-4">Verification Status</h3>
+          {!verificationStatus ? (
+            <button
+              type="button"
+              onClick={handleVerifyAccount}
+              className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-md"
+            >
+              Verify Account
+            </button>
+          ) : (
+            <p className="mt-2 text-green-500 flex items-center">
+              <FaCheckCircle className="mr-2" /> Verified
+            </p>
+          )}
+        </div>
+
         <button
           type="submit"
           className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition duration-200"

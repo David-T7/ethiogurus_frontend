@@ -1,46 +1,45 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+
+// Fetch contracts function
+const fetchContracts = async ({ queryKey }) => {
+  const [, { token }] = queryKey;
+  const response = await axios.get('http://127.0.0.1:8000/api/freelancer-contracts/', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  // Filter out contracts with status 'draft'
+  return response.data.filter(
+    (contract) => contract.status && contract.status.trim().toLowerCase() !== 'draft'
+  );
+};
 
 // The ContractsList component
 const ContractsList = () => {
-  const [contracts, setContracts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const token = localStorage.getItem('access'); // Retrieve token from localStorage
 
-  useEffect(() => {
-    const fetchContracts = async () => {
-      try {
-        const token = localStorage.getItem('access'); // Get the access token from localStorage
-        const response = await axios.get('http://127.0.0.1:8000/api/freelancer-contracts/', {
-          headers: {
-            Authorization: `Bearer ${token}`, // Include the token in the headers
-          },
-        });
-  
-        // Filter out contracts with status 'draft' before setting them in state
-        const filteredContracts = response.data.filter(
-          (contract) => contract.status && contract.status.trim().toLowerCase() !== 'draft'
-        );
-  
-        setContracts(filteredContracts); // Only set non-draft contracts
-      } catch (error) {
-        console.error('Failed to fetch contracts:', error);
-        setError(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-  
-    fetchContracts();
-  }, []);
+  const {
+    data: contracts = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ['contracts', { token }],
+    queryFn: fetchContracts,
+  });
 
-  if (loading) {
+  if (isLoading) {
     return <div className="text-center py-8">Loading contracts...</div>;
   }
 
-  if (error) {
-    return <div className="text-center py-8">Failed to load contracts. Please try again later.</div>;
+  if (isError) {
+    return (
+      <div className="text-center py-8">
+        Failed to load contracts. Please try again later.
+      </div>
+    );
   }
 
   if (contracts.length === 0) {
@@ -48,7 +47,7 @@ const ContractsList = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-8 mt-8">
+    <div className="max-w-xl mx-auto p-8 mt-8">
       <h1 className="text-3xl font-thin text-brand-dark-blue mb-6">Contracts</h1>
       {contracts.map((contract) => (
         <div key={contract.id} className="border border-gray-200 rounded-lg p-4 mb-4 bg-gray-50 shadow-sm">

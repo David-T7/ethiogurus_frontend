@@ -1,9 +1,40 @@
 // src/components/EditCounterOffer.js
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
+
+
+const fetchCounterOffer = async ({ queryKey }) => {
+  const [, id, token] = queryKey;
+  
+  const counterOfferResponse = await axios.get(
+    `http://127.0.0.1:8000/api/counter-offer/${id}/`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  let milestoneResponse = null; // Default to null
+
+  if (counterOfferResponse.data.milestone_based) {
+    const response = await axios.get(
+      `http://127.0.0.1:8000/api/counter-offer/${id}/milestones/`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    milestoneResponse = response.data; // Assign milestone data if available
+  }
+
+  return { counterOffer: counterOfferResponse.data, milestoneResponse };
+};
+
 
 const EditCounterOfferPage = () => {
   const { id } = useParams(); // Counter Offer ID from URL
@@ -27,53 +58,33 @@ const EditCounterOfferPage = () => {
 
   const token = localStorage.getItem("access"); // Ensure token is stored correctly
 
+  // Fetch counter offer details
+ const { data: fetchedCounterOffer, isLoading: loadingCounterOffer } = useQuery({
+  queryKey: ["counterOffer", id, token],
+  queryFn: fetchCounterOffer,
+});
+
+
   useEffect(() => {
     const fetchCounterOffer = async () => {
-      try {
-        // Fetch Counter Offer Details
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/counter-offer/${id}/`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setCounterOffer(response.data);
+        console.log("fetched counter offer is",fetchedCounterOffer)
+        setCounterOffer(fetchedCounterOffer.counterOffer);
         setOffer({
-          proposed_amount: response.data.proposed_amount || "",
-          milestone_based: response.data.milestone_based || false,
-          title: response.data.title || "",
-          startDate: response.data.start_date || "",
-          endDate: response.data.end_date || "",
+          proposed_amount: fetchedCounterOffer.counterOffer?.proposed_amount || "",
+          milestone_based: fetchedCounterOffer.counterOffer?.milestone_based || false,
+          title: fetchedCounterOffer.counterOffer?.title || "",
+          startDate: fetchedCounterOffer.counterOffer?.start_date || "",
+          endDate: fetchedCounterOffer.counterOffer?.end_date || "",
         });
-
-        // If milestone-based, fetch milestones
-        if (response.data.milestone_based) {
-          const milestonesResponse = await axios.get(
-            `http://127.0.0.1:8000/api/counter-offer/${id}/milestones/`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-          setMilestones(milestonesResponse.data);
-        } else {
-          setMilestones([]);
-        }
-      } catch (err) {
-        console.error("Error fetching counter offer:", err);
-        setError(
-          err.response?.data?.detail || "Failed to load counter offer details."
-        );
-      } finally {
-        setLoading(false);
-      }
     };
-
+    if(fetchedCounterOffer?.milestoneResponse){
+      setMilestones(fetchedCounterOffer.milestoneResponse)
+    }
+    setLoading(false)
     fetchCounterOffer();
-  }, [id]);
+  }, [fetchedCounterOffer]);
+
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

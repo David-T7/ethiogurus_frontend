@@ -5,6 +5,40 @@ import { SkillTestContext } from "../SkillTestContext"; // Adjust the path if ne
 import beepSound from "../../audio/beepbeepbeep-53921.mp3";
 import PauseModal from "./PauseModal";
 import { CameraContext } from './CameraContext';
+import { useQuery } from "@tanstack/react-query";
+
+
+const fetchQuestions = async ({ queryKey }) => {
+  const [_, { id, token }] = queryKey;
+  const response = await axios.get(`http://127.0.0.1:8001/api/tests/${id}/questions/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+const fetchFreelancerId = async ({ queryKey }) => {
+  const [_, { token }] = queryKey;
+  const response = await axios.get("http://127.0.0.1:8000/api/user/freelancer/manage/", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const { id, profile_picture } = response.data;
+
+  // Handle profile picture
+  if (profile_picture) {
+    const imageResponse = await fetch(profile_picture);
+    const imageBlob = await imageResponse.blob();
+    const imageFile = new File([imageBlob], "profile_picture.jpg", { type: imageBlob.type });
+
+    const formData = new FormData();
+    formData.append("freelancer_id", id);
+    formData.append("profile_picture", imageFile);
+    await axios.post("http://127.0.0.1:8003/api/fetch-and-store-profile-picture/", formData, {
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" },
+    });
+  }
+  return id;
+};
+
 
 const TestPage = () => {
   const { skillTests, loading, error } = useContext(SkillTestContext);
@@ -29,63 +63,40 @@ const TestPage = () => {
 
   const { startCamera, stopCamera,errorMessage , setErrorMessage, isTerminated, setFreelancerID_, videoRef , showModal ,isPaused, setIsPaused , setShowModal ,updateVideoSource , cameraStream } = useContext(CameraContext);
 
+   // Fetch Questions
+   const { data: fetchedQuestions, isLoading: questionsLoading, error: questionsError } = useQuery({
+    queryKey: ["fetchQuestions", { id, token }],
+    queryFn: fetchQuestions,
+  });
+
+  // Fetch Freelancer ID
+  const { data: fetchedFreelancerId, isLoading: freelancerLoading, error: freelancerError } = useQuery({
+    queryKey: ["fetchFreelancerId", { token }],
+    queryFn: fetchFreelancerId,
+    onSuccess: (id) => {
+      setFreelancerId(id);
+      setFreelancerID_(id);
+    },
+  });
+
   useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const response = await axios.get(
-          `http://127.0.0.1:8001/api/tests/${id}/questions/`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setQuestions(response.data);
-      } catch (error) {
-        console.error("Error fetching questions:", error);
-        setErrorMessage("Error fetching test questions. Please try again.");
+    if(fetchedFreelancerId){
+      setFreelancerId(fetchedFreelancerId);
+      setFreelancerID_(fetchedFreelancerId);
+    }
+}, [fetchedFreelancerId]);
+
+
+  // Handle fetched questions
+  useEffect(() => {
+      if(fetchQuestions){
+      setQuestions(fetchedQuestions);
       }
-    };
+  }, [fetchedQuestions]);
 
-    fetchQuestions();
-  }, [id]);
 
   useEffect(() => {
-    const fetchFreelancerId = async () => {
-      try {
-        const response = await axios.get(
-          "http://127.0.0.1:8000/api/user/freelancer/manage/",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        const { id, profile_picture } = response.data;
-        setFreelancerId(id);
-        setFreelancerID_(id)
-
-        if (profile_picture) {
-          const imageResponse = await fetch(profile_picture);
-          const imageBlob = await imageResponse.blob();
-          const imageFile = new File([imageBlob], 'profile_picture.jpg', { type: imageBlob.type });
-          // setProfilePictureFile(imageFile);
-          
-          // Upload profile picture to the server
-          const formData = new FormData();
-          formData.append('freelancer_id', id);
-          formData.append('profile_picture', imageFile);
-          await axios.post("http://127.0.0.1:8003/api/fetch-and-store-profile-picture/", formData, {
-            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching freelancer data:", error);
-        setErrorMessage("Error loading freelancer information.");
-      }
-    };
-
-    fetchFreelancerId();
-  }, [token]);
-
-  useEffect(() => {
-    if (questions.length > 0) {
+    if (questions?.length > 0) {
       const currentQuestion = questions[currentQuestionIndex];
       setQuestionTimeRemaining(currentQuestion.duration_in_seconds);
       setIsTestReady(true);
@@ -120,10 +131,12 @@ const TestPage = () => {
   }, [questionTimeRemaining, isTestReady, isPaused]);
 
   useEffect(() => {
+    if (questions?.length > 0) {
     const question = questions[currentQuestionIndex];
     if (question && question.duration_in_seconds) {
       setQuestionTimeRemaining(question.duration_in_seconds);
     }
+  }
   }, [currentQuestionIndex, questions]);
 
   useEffect(() => {
@@ -586,6 +599,14 @@ const TestPage = () => {
     const secs = seconds % 60;
     return `${minutes}:${secs < 10 ? "0" : ""}${secs}`;
   };
+
+  if (questionsLoading || freelancerLoading) {
+    return <div className="text-center">Loading...</div>;
+  }
+
+  if (questionsError || freelancerError) {
+    return <div className="text-center text-red-500">Error: {questionsError?.message || freelancerError?.message}</div>;
+  }
 
 
   return (

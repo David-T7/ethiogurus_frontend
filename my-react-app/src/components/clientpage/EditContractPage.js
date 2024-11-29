@@ -2,6 +2,32 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { FaSave, FaTimes, FaTrash , FaPlus } from "react-icons/fa";
 import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
+
+const fetchContract = async ({ queryKey }) => {
+  const [, contractId, token] = queryKey;
+  const response = await axios.get(`http://127.0.0.1:8000/api/contracts/${contractId}/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+const fetchDisputes = async ({ queryKey }) => {
+  const [, contractId, token] = queryKey;
+  const response = await axios.get(`http://127.0.0.1:8000/api/contracts/${contractId}/disputes/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+const fetchMilestones = async ({ queryKey }) => {
+  const [, contractId, token] = queryKey;
+  const response = await axios.get(`http://127.0.0.1:8000/api/contracts/${contractId}/milestones/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
 
 const EditContractPage = () => {
   const { id: contractId } = useParams();
@@ -25,70 +51,45 @@ const EditContractPage = () => {
   });
   const token = localStorage.getItem("access");
 
-  // Fetch contract data when the component mounts
-  useEffect(() => {
-    const fetchContract = async () => {
-      try {
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/contracts/${contractId}/`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setContract(response.data);
-        setUpdtedContract(response.data)
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching contract:", err);
-        setError("Error fetching contract details. Please try again.");
-        setLoading(false);
-      }
-    };
+ // Fetch contract details
+ const { data: fetchedcontract, isLoading: loadingContract } = useQuery({
+  queryKey: ["contract", contractId, token],
+  queryFn: fetchContract,
+});
 
-    fetchContract();
-  }, [contractId, contractStatus]);
+// Fetch disputes
+const { data: fetcheddisputes, isLoading: loadingDisputes } = useQuery({
+  queryKey: ["disputes", contractId, token],
+  queryFn: fetchDisputes,
+});
 
-  useEffect(() => {
-    const fetchDisputes = async () => {
-      try {
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/contracts/${contractId}/disputes/`,
+// Fetch milestones
+const { data: fetchedmilestones, isLoading: loadingMilestones } = useQuery({
+  queryKey: ["milestones", contractId, token],
+  queryFn: fetchMilestones,
+});
 
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setDisputes(response.data);
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching contract disputes:", err);
-        // setError("Error fetching contract disputes . Please try again.");
-        setLoading(false);
-      }
-    };
+// Populate contract and milestones into local state
+useEffect(() => {
+  if (fetchedcontract) {
+    setContract(fetchedcontract);
+    setUpdtedContract(fetchedcontract)
+  }
+}, [fetchedcontract]);
 
-    fetchDisputes();
-  }, [contractId]);
+useEffect(() => {
+  if (fetchedmilestones) {
+    setMilestones(fetchedmilestones);
+    setUpdtedMilestones(fetchedmilestones)
+  }
+}, [fetchedmilestones]);
 
-  // Fetch milestones associated with the contract
-  useEffect(() => {
-    const fetchMilestones = async () => {
-      try {
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/contracts/${contract?.contract_update ? contract.contract_update:contractId}/milestones/`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setMilestones(response.data);
-        setUpdtedMilestones(response.data)
-      } catch (err) {
-        console.error("Error fetching milestones:", err);
-      }
-    };
-
-    fetchMilestones();
-  }, [contract, token]);
+useEffect(() => {
+  if (fetcheddisputes) {
+    setDisputes(fetcheddisputes);
+  }
+  setLoading(false)
+}, [fetchDisputes]);
 
   const handleUpdateContract = async () => {
     try {

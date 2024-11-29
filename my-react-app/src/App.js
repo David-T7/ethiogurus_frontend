@@ -9,10 +9,14 @@ import { SkillTestProvider } from './components/SkillTestContext';
 import { CameraProvider } from './components/freealncerpage/CameraContext';
 import { InterviewerUserProvider } from './components/interviewerUserContext';
 import { DisputeMangerUserProvider } from './components/DisputeManagerContext';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+const queryClient = new QueryClient();
+
 const App = () => {
   return (
     <div className="App">
       {/* Wrap the Routes component with AuthProvider */}
+      <QueryClientProvider client={queryClient}>
       <Router>
       <CameraProvider>
       <SkillTestProvider>
@@ -32,6 +36,7 @@ const App = () => {
       </SkillTestProvider>
       </CameraProvider>
       </Router>
+      </QueryClientProvider>
     </div>
   );
 };

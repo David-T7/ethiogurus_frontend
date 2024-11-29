@@ -106,7 +106,8 @@ import AssessmentLayout from './components/assesment/assesmentLayout';
 import AssessmentsPage from './components/assesment/AssessmentsPage';
 import DepthSkillTestPage from './components/assesment/DepthSkillPage';
 import SoftSkillTestPage from './components/assesment/SoftSkillTestPage';
-
+import CheckVerification from './components/freealncerpage/VerificationCheck';
+import FreelancerMessages from './components/freealncerpage/freelancerMessages';
 const RoutesConfig = () => {
   return (
       <Routes>
@@ -182,7 +183,7 @@ const RoutesConfig = () => {
         <Route path="/counter-offer/:id" element={<FreelancerProfileLayout><CounterOfferDetails /></FreelancerProfileLayout>} />        
         <Route path="/edit-counter-offer/:id" element={<FreelancerProfileLayout><EditCounterOffer /></FreelancerProfileLayout>} />        
         <Route path="/counter-response/:id" element={<FreelancerProfileLayout><DisputeResponseCounter /></FreelancerProfileLayout>} />                
-        <Route path="/messages" element={<FreelancerInbox/>} />
+        <Route path="/messages" element={<FreelancerProfileLayout><FreelancerMessages/></FreelancerProfileLayout>} />
         <Route path="/messages/:id" element={<FreelancerProfileLayout><ContactUser/></FreelancerProfileLayout>} />
         <Route path="/submit-counter-offer/:id" element={<FreelancerProfileLayout><SubmitCounterOffer /> </FreelancerProfileLayout>} />
         <Route path="/setting" element={<FreelancerProfileLayout><FreelancerSettingsPage /> </FreelancerProfileLayout>} />        
@@ -196,6 +197,7 @@ const RoutesConfig = () => {
         <Route path="/dispute-details/:id" element={<FreelancerProfileLayout><DisputeDetails/></FreelancerProfileLayout>} />        
         <Route path="/skills" element={<FreelancerProfileLayout><SkillsPage/> </FreelancerProfileLayout>} />        
         <Route path="/new-test" element={<FreelancerProfileLayout><StartNewTestPage/> </FreelancerProfileLayout>} />                
+        <Route path="/check-verification/:id/:type" element={<FreelancerProfileLayout><CheckVerification/> </FreelancerProfileLayout>} />                
         <Route path='/test-terminated' element={<FreelancerProfileLayout><TestTerminatedPage/> </FreelancerProfileLayout>} />                
         <Route path='/select-appointment' element={<FreelancerProfileLayout><SelectAppointmentDate/> </FreelancerProfileLayout>} />                
         <Route path='/appointment-details' element={<FreelancerProfileLayout><AppointmentDetailsPage/> </FreelancerProfileLayout>} />                

@@ -1,138 +1,89 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
+const fetchContractDetails = async ({ queryKey }) => {
+  const [, { id, token }] = queryKey;
+  const response = await axios.get(`http://127.0.0.1:8000/api/freelancer-contracts/${id}/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+const fetchMilestones = async ({ queryKey }) => {
+  const [, { contractId, token }] = queryKey;
+  const response = await axios.get(
+    `http://127.0.0.1:8000/api/contracts/${contractId}/milestones/`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  return response.data;
+};
+
+const fetchDisputes = async ({ queryKey }) => {
+  const [, { contractId, token }] = queryKey;
+  const response = await axios.get(
+    `http://127.0.0.1:8000/api/contracts/${contractId}/disputes/`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  return response.data;
+};
+
+const fetchCounterOffers = async ({ queryKey }) => {
+  const [, { contractId, token }] = queryKey;
+  const response = await axios.get(
+    `http://127.0.0.1:8000/api/contracts/${contractId}/counter-offers/`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  return response.data;
+};
+
+const fetchFreelancerDetails = async ({ queryKey }) => {
+  const [, { token }] = queryKey;
+  const response = await axios.get(`http://127.0.0.1:8000/api/user/freelancer/manage/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
 const ContractDetails = () => {
-  const { id } = useParams(); // Extract the contract ID from the URL
+  const { id } = useParams();
   const navigate = useNavigate();
-  const [contract, setContract] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const token = localStorage.getItem("access"); // Get the access token from localStorage
-  const [counterOffers, setCounterOffers] = useState([]);
-  const [milestones , setMIlestones]= useState([])
-  const [disputes, setDisputes] = useState([]);
-  const [freelancer , setFreelancer] = useState(null)
+  const token = localStorage.getItem("access");
+  const [error , setError] = useState("")
+  const { data: contract, isLoading: contractLoading } = useQuery({
+    queryKey: ["contractDetails", { id, token }],
+    queryFn: fetchContractDetails,
+  });
 
+  const { data: milestones = [], isLoading: milestonesLoading } = useQuery({
+    queryKey: ["contractMilestones", { contractId: contract?.id, token }],
+    queryFn: fetchMilestones,
+    enabled: !!contract?.milestone_based,
+  });
 
-  useEffect(() => {
-    // Fetch contract details using axios
-    const fetchContract = async () => {
-      try {
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/freelancer-contracts/${id}/`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`, // Attach token
-            },
-          }
-        );
+  const { data: disputes = [], isLoading: disputesLoading } = useQuery({
+    queryKey: ["contractDisputes", { contractId: contract?.id, token }],
+    queryFn: fetchDisputes,
+    enabled: !!contract?.id,
+  });
 
-        setContract(response.data); // Set the fetched contract data
-      } catch (err) {
-        setError(err.response ? err.response.data.detail : "An error occurred");
-      } finally {
-        setLoading(false); // Stop loading
-      }
-    };
+  const { data: counterOffers = [] } = useQuery({
+    queryKey: ["counterOffers", { contractId: contract?.contract_update || id, token }],
+    queryFn: fetchCounterOffers,
+    enabled: !!contract,
+  });
 
-    fetchContract();
-  }, [id]);
-
-
-  useEffect(() => {
-    // Fetch contract details using axios
-    const fetchContractMilestones = async () => {
-      try {
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/contracts/${contract?.contract_update ? contract.contract_update : contract.id}/milestones/`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`, // Attach token
-            },
-          }
-        );
-
-        setMIlestones(response.data); // Set the fetched contract data
-      } catch (err) {
-        setError(err.response ? err.response.data.detail : "An error occurred");
-      } finally {
-        setLoading(false); // Stop loading
-      }
-    };
-    if(contract?.milestone_based){
-    fetchContractMilestones();
-    }
-  }, [contract]);
-
-
-  useEffect(() => {
-    const fetchDisputes = async () => {
-      try {
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/contracts/${contract.id}/disputes/`,
-
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setDisputes(response.data);
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching contract disputes:", err);
-        // setError("Error fetching contract disputes . Please try again.");
-        setLoading(false);
-      }
-    };
-
-    fetchDisputes();
-  }, [contract]);
-
-  useEffect(() => {
-    const fetchFreelancer = async () => {
-      try {
-        const token = localStorage.getItem("access");
-        const response = await axios.get(
-          "http://127.0.0.1:8000/api/user/freelancer/manage/",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setFreelancer(response.data)
-      }
-      catch(error){
-        console.log("failed to fetch freelancer data")
-      }
-    }
-    fetchFreelancer()
-
-  } , [])
-
-
-  useEffect(() => {
-    const fetchCounterOffers = async () => {
-      try {
-        const token = localStorage.getItem("access"); // Get access token
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/contracts/${contract.contract_update ? contract.contract_update :id}/counter-offers/`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setCounterOffers(response.data); // Set counter offers related to the contract
-      } catch (error) {
-        console.error("Failed to fetch counter offers:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCounterOffers();
-  }, [contract]);
+  const { data: freelancer } = useQuery({
+    queryKey: ["freelancerDetails", { token }],
+    queryFn: fetchFreelancerDetails,
+  });
 
   const handleAcceptContract = async () => {
     // Handle contract acceptance (POST request using axios)
@@ -219,7 +170,7 @@ const ContractDetails = () => {
     navigate(`/dispute-response/${disputeId}`);
   };
 
-  if (loading) {
+  if (contractLoading || milestonesLoading || disputesLoading) {
     return <div className="text-center py-8">Loading contract details...</div>;
   }
 

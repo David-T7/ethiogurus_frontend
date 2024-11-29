@@ -145,14 +145,14 @@ const DrcLayout = ({ children }) => {
               className="absolute right-0 mt-16 w-48 bg-white border border-gray-300 rounded-lg shadow-lg"
             >
               <ul className="p-2">
-                <li>
+                {/* <li>
                   <Link
                     to="/drc-settings"
                     className="flex items-center gap-2 p-2 text-gray-700 hover:bg-gray-100 rounded"
                   >
                     <FaUserCog /> Settings
                   </Link>
-                </li>
+                </li> */}
                 <li>
                   <Link
                     to="/drc-update-profile"

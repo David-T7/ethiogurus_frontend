@@ -1,53 +1,71 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import ClientLayout from './ClientLayoutPage';
 import axios from 'axios';
+
+const fetchProject = async ({ queryKey }) => {
+  const [, id, token] = queryKey;
+  const response = await axios.get(`http://127.0.0.1:8000/api/projects/${id}/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+const updateProject = async ({ id, updatedProject, token }) => {
+  const response = await axios.patch(`http://127.0.0.1:8000/api/projects/${id}/`, updatedProject, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
 
 const EditProjectPage = () => {
   const { id } = useParams(); // Get project ID from URL
   const navigate = useNavigate();
-  const [project , setProject] = useState()
+  const token = localStorage.getItem('access');
   const [updatedProject, setUpdatedProject] = useState({ title: '', description: '' });
 
-  useEffect(() => {
-    const loadproject =  async () => { 
-    const token = localStorage.getItem('access');
-      const projectResponse = await axios.get(`http://127.0.0.1:8000/api/projects/${id}/`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setProject(projectResponse.data);
-    }
-    loadproject()
-  }, []);
+  // Fetch the project data
+  const { data: project, isLoading, isError } = useQuery({
+    queryKey: ['project', id, token],
+    queryFn: fetchProject,
+  });
 
+  // Populate the `updatedProject` state when `project` data is fetched
   useEffect(() => {
     if (project) {
       setUpdatedProject({ title: project.title || '', description: project.description || '' });
     }
   }, [project]);
 
+  // Mutation for updating the project
+  const mutation = useMutation({
+    mutationFn: (data) => updateProject(data),
+    onSuccess: () => {
+      navigate(`/projects/${id}`);
+    },
+    onError: (error) => {
+      console.error('Failed to update project:', error);
+    },
+  });
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setUpdatedProject((prevState) => ({ ...prevState, [name]: value }));
   };
 
-  const handleUpdateProject = async (e) => {
+  const handleUpdateProject = (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('access');
-    const data = {
-      title: updatedProject.title,
-      description: updatedProject.description,
-    };
-
-    try {
-      await axios.patch(`http://127.0.0.1:8000/api/projects/${id}/`, data, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      navigate(`/projects/${id}`);
-    } catch (err) {
-      console.error('Failed to update project:', err);
-    }
+    mutation.mutate({ id, updatedProject, token });
   };
+
+  if (isLoading) {
+    return <div>Loading project details...</div>;
+  }
+
+  if (isError) {
+    return <div>Failed to load project. Please try again.</div>;
+  }
 
   return (
     <ClientLayout>
@@ -84,8 +102,9 @@ const EditProjectPage = () => {
             <button
               type="submit"
               className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md"
+              disabled={mutation.isLoading}
             >
-              Update Project
+              {mutation.isLoading ? 'Updating...' : 'Update Project'}
             </button>
           </div>
         </form>

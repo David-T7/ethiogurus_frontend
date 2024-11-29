@@ -1,35 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { FaCheckCircle, FaClock, FaTimesCircle, FaExclamationCircle } from 'react-icons/fa';
+import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 
+const fetchContracts = async () => {
+  const token = localStorage.getItem('access');
+  const response = await axios.get('http://127.0.0.1:8000/api/contracts/', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
 const ContractsPage = () => {
-  const [contracts, setContracts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    // Fetch contracts from API
-    const fetchContracts = async () => {
-      try {
-        const token = localStorage.getItem('access');
-        const response = await axios.get('http://127.0.0.1:8000/api/contracts/', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setContracts(response.data);
-      } catch (err) {
-        setError('Failed to fetch contracts. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchContracts();
-  }, []);
-
-  if (loading) return <div className="text-center py-8">Loading...</div>;
-  if (error) return <div className="text-center py-8 text-red-500">{error}</div>;
-  if (contracts.length === 0) return <div className="text-center py-8">No contracts available.</div>;
+  const { data: contracts = [], isLoading, isError, error } = useQuery({
+    queryKey: ['contracts'],
+    queryFn: fetchContracts,
+  });
 
   const getStatusStyle = (status) => {
     switch (status) {
@@ -38,7 +25,7 @@ const ContractsPage = () => {
       case 'completed':
         return 'bg-blue-500 text-white';
       case 'accepted':
-          return 'bg-green-500 text-white';
+        return 'bg-green-500 text-white';
       case 'pending':
         return 'bg-yellow-500 text-black';
       case 'inDispute':
@@ -53,21 +40,22 @@ const ContractsPage = () => {
   const getStatusIcon = (status) => {
     switch (status) {
       case 'active':
-        return <FaCheckCircle />;
       case 'accepted':
-          return <FaCheckCircle />;
       case 'completed':
         return <FaCheckCircle />;
       case 'pending':
-        return <FaClock />
-      case 'InDispute':
+        return <FaClock />;
+      case 'inDispute':
         return <FaExclamationCircle />;
       case 'draft':
-        return <FaTimesCircle />;
       default:
         return <FaTimesCircle />;
     }
   };
+
+  if (isLoading) return <div className="text-center py-8">Loading...</div>;
+  if (isError) return <div className="text-center py-8 text-red-500">{error.message}</div>;
+  if (contracts.length === 0) return <div className="text-center py-8">No contracts available.</div>;
 
   return (
     <div className="max-w-4xl mx-auto p-8 mt-8">

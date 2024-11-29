@@ -1,95 +1,79 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
+
+const fetchDRCForwarded = async ({ queryKey }) => {
+  const [_, token] = queryKey;
+  const response = await axios.get('http://127.0.0.1:8000/api/dispute-manager-disputes/', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  const sortedDisputes = response.data.latest_disputes.sort(
+    (a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at)
+  );
+
+  return sortedDisputes;
+};
+
+const fetchDisputeDetails = async ({ queryKey }) => {
+  const [_, { disputeId, token }] = queryKey;
+  const response = await axios.get(`http://127.0.0.1:8000/api/disputes/${disputeId}/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  const userTypeResponse = await axios.post(
+    `http://127.0.0.1:8000/api/user/user-type/`,
+    { user_id: response.data.created_by },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+
+  response.data.creator = userTypeResponse.data.user_type;
+  return response.data;
+};
 
 const DrcForwardedDisputes = () => {
-  const [drcForwarded, setDrcForwarded] = useState([]);
-  const [disputeDetails, setDisputeDetails] = useState({});
-  const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const token = localStorage.getItem("access");
+  const token = localStorage.getItem('access');
   const navigate = useNavigate();
-
   const disputesPerPage = 3;
 
-  useEffect(() => {
-    const fetchDRCForwarded = async () => {
-      try {
-        const response = await axios.get('http://127.0.0.1:8000/api/dispute-manager-disputes/', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+  const [currentPage, setCurrentPage] = useState(1);
 
-        // Sort disputes by `created_at` in descending order
-        const sortedDisputes = response.data.latest_disputes
-          .sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at))
-        setDrcForwarded(sortedDisputes);
+  const { data: drcForwarded = [], isError, error } = useQuery({
+    queryKey: ['drcForwardedDisputes', token],
+    queryFn: fetchDRCForwarded,
+  });
 
-        // Fetch full details for each dispute
-        for (const drcForwardedItem of sortedDisputes) {
-          fetchDisputeDetails(drcForwardedItem.dispute);
-        }
-      } catch (err) {
-        setError(err.response ? err.response.data.detail : 'Failed to fetch disputes');
-      }
-    };
-
-    const fetchDisputeDetails = async (disputeId) => {
-      try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/disputes/${disputeId}/`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        response.data.creator = await getUserType(response?.data.created_by);
-        setDisputeDetails((prevDetails) => ({ ...prevDetails, [disputeId]: response.data }));
-      } catch (error) {
-        console.error(`Error fetching details for dispute ID ${disputeId}:`, error);
-      }
-    };
-
-    fetchDRCForwarded();
-  }, [token]);
-
-  const getUserType = async (id) => {
-    try {
-      const response = await axios.post(
-        `http://127.0.0.1:8000/api/user/user-type/`,
-        { user_id: id },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+  const { data: disputeDetails = {}, isFetching: isFetchingDetails } = useQuery({
+    queryKey: ['disputeDetails', { disputeId: drcForwarded.map((item) => item.dispute), token }],
+    queryFn: async () => {
+      const details = {};
+      await Promise.all(
+        drcForwarded.map(async (item) => {
+          details[item.dispute] = await fetchDisputeDetails({ queryKey: ['', { disputeId: item.dispute, token }] });
+        })
       );
-      return response.data.user_type;
-    } catch (error) {
-      console.error(`Error fetching user type for user id ${id}:`, error);
-    }
-  };
+      return details;
+    },
+    enabled: drcForwarded.length > 0, // Run only if disputes are fetched
+  });
 
   const handleDisputeDetails = (drcForwardedItem) => {
     navigate(`/dispute-events/${drcForwardedItem.dispute}`, {
-      state: { drcForwardedItem: drcForwardedItem },
+      state: { drcForwardedItem },
     });
   };
 
-  const handleNextPage = () => {
-    setCurrentPage((prevPage) => prevPage + 1);
-  };
+  const handleNextPage = () => setCurrentPage((prevPage) => prevPage + 1);
+  const handlePrevPage = () => setCurrentPage((prevPage) => prevPage - 1);
 
-  const handlePrevPage = () => {
-    setCurrentPage((prevPage) => prevPage - 1);
-  };
-
-  // Calculate the start and end indexes for the current page
+  // Pagination logic
   const startIndex = (currentPage - 1) * disputesPerPage;
   const endIndex = startIndex + disputesPerPage;
-
-  // Get the disputes for the current page
   const currentDisputes = drcForwarded.slice(startIndex, endIndex);
-
-  // Calculate total pages
   const totalPages = Math.ceil(drcForwarded.length / disputesPerPage);
 
-  if (error) {
-    return <div className="text-center py-8 text-red-500">{error}</div>;
-  }
+  if (isError) return <div className="text-center py-8 text-red-500">{error.message}</div>;
 
   return (
     <div className="max-w-xl mx-auto p-8 mt-8">
@@ -106,8 +90,12 @@ const DrcForwardedDisputes = () => {
                   <h3 className="text-xl font-normal text-gray-800">
                     {dispute ? dispute.title : 'Loading...'}
                   </h3>
-                  <span className={`text-xs font-semibold rounded-full px-4 py-1 ${getDRCForwardedStatusStyle(drcForwardedItem?.solved)}`}>
-                    {drcForwardedItem.solved ? "solved" : 'not solved'}
+                  <span
+                    className={`text-xs font-semibold rounded-full px-4 py-1 ${getDRCForwardedStatusStyle(
+                      drcForwardedItem.solved
+                    )}`}
+                  >
+                    {drcForwardedItem.solved ? 'Solved' : 'Not Solved'}
                   </span>
                 </div>
                 <p className="text-gray-600">Created By: {dispute?.creator}</p>

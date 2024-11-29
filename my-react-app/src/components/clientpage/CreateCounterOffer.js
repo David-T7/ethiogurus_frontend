@@ -1,123 +1,94 @@
-// src/components/SubmitCounterOffer.js
-
-import React, { useState, useEffect } from "react";
+import React, { useState , useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaPlus, FaTrash } from "react-icons/fa";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
+const fetchClientData = async ({ queryKey }) => {
+  const [, token] = queryKey;
+  const response = await axios.get("http://127.0.0.1:8000/api/user/client/manage/", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+const fetchCounterOffer = async ({ queryKey }) => {
+  const [, counterOfferID, token] = queryKey;
+  const response = await axios.get(`http://127.0.0.1:8000/api/counter-offer/${counterOfferID}/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  console.log("counter offfer response data is ",response.data)
+  return response.data;
+};
+
+const fetchMilestones = async ({ queryKey }) => {
+  const [, counterOfferID, token] = queryKey;
+  const response = await axios.get(`http://127.0.0.1:8000/api/counter-offer/${counterOfferID}/milestones/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data.map((milestone) => ({
+    id: milestone.id,
+    title: milestone.title || "",
+    amount: milestone.amount || "",
+    due_date: milestone.due_date ? milestone.due_date.split("T")[0] : "",
+  }));
+};
+
 const CreateCounterOffer = () => {
-  const { id: counterOfferID } = useParams(); // Contract ID from URL
+  const { id: counterOfferID } = useParams();
   const navigate = useNavigate();
-  const [counterOffer, setCounterOffer] = useState(null);
+  const token = localStorage.getItem("access");
+
   const [offer, setOffer] = useState({
     title: "",
     proposed_amount: "",
     start_date: "",
     end_date: "",
     milestone_based: false,
-    milestones: [], // All milestones are managed here
+    milestones: [],
   });
   const [rejectMilestoneOption, setRejectMilestoneOption] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [client, setClient] = useState(null);
-  const token = localStorage.getItem("access");
 
+  const { data: client, isLoading: clientLoading } = useQuery({
+    queryKey: ["client", token],
+    queryFn: fetchClientData,
+  });
+
+  const { data: counterOffer, isLoading: counterOfferLoading } = useQuery({
+    queryKey: ["counterOffer", counterOfferID, token],
+    queryFn: fetchCounterOffer,
+  });
+  
   useEffect(() => {
-    const fetchClient = async () => {
-      try {
-        const response = await axios.get(
-          "http://127.0.0.1:8000/api/user/client/manage/",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setClient(response.data);
-      } catch (err) {
-        console.error("Error fetching client data:", err);
-        setError("Failed to load client details.");
-      }
-    };
-    fetchClient();
-  }, [token]);
+    if (counterOffer) {
+      console.log("Counter Offer Data:", counterOffer);
+      setOffer((prevOffer) => ({
+        ...prevOffer,
+        title: counterOffer.title || "",
+        proposed_amount: counterOffer.proposed_amount || "",
+        start_date: counterOffer.start_date ? counterOffer.start_date.split("T")[0] : "",
+        end_date: counterOffer.end_date ? counterOffer.end_date.split("T")[0] : "",
+        milestone_based: counterOffer.milestone_based || false,
+      }));
+    }
+  }, [counterOffer]);
+  console.log("counter offer is ",offer)
 
-  useEffect(() => {
-    const fetchCounterOffer = async () => {
-      try {
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/counter-offer/${counterOfferID}/`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setCounterOffer(response.data);
-
-        setOffer((prevOffer) => ({
-          ...prevOffer,
-          title: response.data.title || "",
-          proposed_amount: response.data.proposed_amount || "",
-          start_date: response.data.start_date
-            ? response.data.start_date.split("T")[0]
-            : "",
-          end_date: response.data.end_date
-            ? response.data.end_date.split("T")[0]
-            : "",
-          milestone_based: response.data.milestone_based || false,
-        }));
-      } catch (err) {
-        console.error("Error fetching counter offer:", err);
-        setError("Failed to load counter offer details.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCounterOffer();
-  }, [counterOfferID]);
-
-
-  useEffect(() => {
-    const fetchMileStone = async () => {
-      try {
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/counter-offer/${counterOfferID}/milestones/`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setOffer((prevOffer) => ({
-          ...prevOffer, milestones: response.data
-          ? response.data.map((milestone) => ({
-              id: milestone.id, // Existing milestone ID
-              title: milestone.title || "",
-              amount: milestone.amount || "",
-              due_date: milestone.due_date
-                ? milestone.due_date.split("T")[0]
-                : "",
-            }))
-          : [],}))
-      } catch (error) {
-        console.log("error fetching milestones", error);
-      }
-    };
-    fetchMileStone();
-  }, [counterOfferID]);
-
-
-
+  const { data: milestones, isLoading: milestonesLoading } = useQuery({
+    queryKey: ["milestones", counterOfferID, token],
+    queryFn: fetchMilestones,
+    enabled: offer.milestone_based,
+    onSuccess: (data) => {
+      setOffer((prevOffer) => ({ ...prevOffer, milestones: data }));
+    },
+  });
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setOffer((prevOffer) => ({
       ...prevOffer,
       [name]: type === "checkbox" ? checked : value,
-      // If milestone_based is unchecked, clear milestones
       ...(name === "milestone_based" && !checked ? { milestones: [] } : {}),
     }));
   };
@@ -126,10 +97,7 @@ const CreateCounterOffer = () => {
     const { name, value } = e.target;
     setOffer((prevOffer) => {
       const updatedMilestones = [...prevOffer.milestones];
-      updatedMilestones[index] = {
-        ...updatedMilestones[index],
-        [name]: value,
-      };
+      updatedMilestones[index] = { ...updatedMilestones[index], [name]: value };
       return { ...prevOffer, milestones: updatedMilestones };
     });
   };
@@ -137,6 +105,7 @@ const CreateCounterOffer = () => {
   const handleAddMilestone = () => {
     setOffer((prevOffer) => ({
       ...prevOffer,
+      milestone_based:true,
       milestones: [
         ...prevOffer.milestones,
         { id: Date.now(), title: "", amount: "", due_date: "" },
@@ -147,11 +116,19 @@ const CreateCounterOffer = () => {
   const handleRemoveMilestone = (milestoneId) => {
     setOffer((prevOffer) => ({
       ...prevOffer,
-      milestones: prevOffer.milestones.filter(
-        (milestone) => milestone.id !== milestoneId
-      ),
+      milestones: prevOffer.milestones.filter((milestone) => milestone.id !== milestoneId),
+    }));
+    handleMilestoneBasedCheck()
+  };
+  
+  const handleMilestoneBasedCheck = () => {
+    if (milestones.length == 0){
+    setOffer((prevOffer) => ({
+      ...prevOffer,
+      milestone_based:false
     }));
   };
+  }
 
   const handleCheckboxChange = () => {
     setRejectMilestoneOption(!rejectMilestoneOption);
@@ -160,7 +137,6 @@ const CreateCounterOffer = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate inputs
     if (!offer.title || !offer.proposed_amount || !offer.start_date || !offer.end_date) {
       setError("Please fill out all required fields.");
       return;
@@ -171,10 +147,8 @@ const CreateCounterOffer = () => {
       return;
     }
 
-    // If milestone_based and not rejecting, ensure all milestones have required fields
     if (offer.milestone_based && !rejectMilestoneOption) {
-      for (let i = 0; i < offer.milestones.length; i++) {
-        const milestone = offer.milestones[i];
+      for (const milestone of offer.milestones) {
         if (!milestone.title || !milestone.amount || !milestone.due_date) {
           setError("Please fill out all fields for each milestone.");
           return;
@@ -182,7 +156,6 @@ const CreateCounterOffer = () => {
       }
     }
 
-    // Prepare the payload for the counter offer
     const counterOfferPayload = {
       title: offer.title,
       contract: counterOffer.contract,
@@ -195,7 +168,6 @@ const CreateCounterOffer = () => {
     };
 
     try {
-      // Submit the counter offer
       const response = await axios.post(
         "http://127.0.0.1:8000/api/counter-offer/",
         counterOfferPayload,
@@ -207,16 +179,13 @@ const CreateCounterOffer = () => {
         }
       );
 
-      console.log("Counter offer submitted:", response.data);
-
-      // If milestone-based and not rejecting, submit milestones
       if (offer.milestone_based && !rejectMilestoneOption) {
         await Promise.all(
           offer.milestones.map((milestone) =>
             axios.post(
               "http://127.0.0.1:8000/api/counter-offer-milestones/",
               {
-                counter_offer: response.data.id, // Link to the newly created counter offer
+                counter_offer: response.data.id,
                 title: milestone.title,
                 amount: milestone.amount,
                 due_date: milestone.due_date,
@@ -239,16 +208,8 @@ const CreateCounterOffer = () => {
     }
   };
 
-  if (loading) {
-    return <div className="text-center py-8">Loading counter offer details...</div>;
-  }
-
-  if (error) {
-    return <div className="text-center py-8 text-red-500">{error}</div>;
-  }
-
-  if (!counterOffer) {
-    return <div className="text-center py-8">No counter offer data available.</div>;
+  if (clientLoading || counterOfferLoading || milestonesLoading) {
+    return <div className="text-center py-8">Loading...</div>;
   }
 
   return (
@@ -257,13 +218,12 @@ const CreateCounterOffer = () => {
         Submit Counter Offer
       </h1>
       <form onSubmit={handleSubmit}>
-        {/* Offer Title */}
         <div className="mb-4">
           <label
             htmlFor="title"
             className="block text-lg font-normal text-brand-blue mb-2"
           >
-            Title
+           {offer?.title}
           </label>
           <input
             type="text"
@@ -276,8 +236,6 @@ const CreateCounterOffer = () => {
             required
           />
         </div>
-
-        {/* Proposed Fee */}
         <div className="mb-4">
           <label
             htmlFor="proposed_amount"
@@ -294,12 +252,8 @@ const CreateCounterOffer = () => {
             className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
             placeholder="Enter proposed fee in Birr"
             required
-            min="0"
-            step="0.01"
           />
         </div>
-
-        {/* Start Date */}
         <div className="mb-4">
           <label
             htmlFor="start_date"
@@ -317,8 +271,6 @@ const CreateCounterOffer = () => {
             required
           />
         </div>
-
-        {/* End Date */}
         <div className="mb-6">
           <label
             htmlFor="end_date"
@@ -336,11 +288,8 @@ const CreateCounterOffer = () => {
             required
           />
         </div>
-
-        {/* Reject Milestone-Based Option */}
-        {offer.milestone_based && (
           <>
-            <div className="mb-6 flex items-center">
+            {offer.milestone_based && <div className="mb-6 flex items-center">
               <input
                 type="checkbox"
                 id="rejectMilestones"
@@ -354,7 +303,7 @@ const CreateCounterOffer = () => {
               >
                 Reject Milestone-Based Option
               </label>
-            </div>
+            </div>}
             {!rejectMilestoneOption && (
               <div className="mb-6">
                 <h3 className="text-lg font-normal text-brand-blue mb-4">
@@ -366,17 +315,13 @@ const CreateCounterOffer = () => {
                       key={milestone.id}
                       className="mb-4 border-t border-gray-300 pt-4 relative"
                     >
-                      {/* Remove Milestone Button */}
                       <button
                         type="button"
                         onClick={() => handleRemoveMilestone(milestone.id)}
                         className="absolute top-0 right-0 text-red-500 hover:text-red-700"
-                        title="Remove Milestone"
                       >
                         <FaTrash />
                       </button>
-
-                      {/* Milestone Title */}
                       <label
                         htmlFor={`milestoneTitle-${milestone.id}`}
                         className="block text-md font-normal text-brand-blue mb-1"
@@ -393,8 +338,6 @@ const CreateCounterOffer = () => {
                         placeholder="Enter milestone title"
                         required
                       />
-
-                      {/* Milestone Amount */}
                       <label
                         htmlFor={`milestoneAmount-${milestone.id}`}
                         className="block text-md font-normal text-brand-blue mt-4 mb-1"
@@ -410,11 +353,7 @@ const CreateCounterOffer = () => {
                         className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
                         placeholder="Enter milestone amount"
                         required
-                        min="0"
-                        step="0.01"
                       />
-
-                      {/* Milestone Due Date */}
                       <label
                         htmlFor={`milestoneDueDate-${milestone.id}`}
                         className="block text-md font-normal text-brand-blue mt-4 mb-1"
@@ -433,12 +372,8 @@ const CreateCounterOffer = () => {
                     </div>
                   ))
                 ) : (
-                  <p className="text-gray-600 mb-2">
-                    No milestones added yet.
-                  </p>
+                  <p className="text-gray-600 mb-2">No milestones added yet.</p>
                 )}
-
-                {/* Add Milestone Button */}
                 <button
                   type="button"
                   onClick={handleAddMilestone}
@@ -449,14 +384,8 @@ const CreateCounterOffer = () => {
               </div>
             )}
           </>
-        )}
-
-        {/* Error Message */}
-        {error && (
-          <div className="mb-4 text-red-500 text-center">{error}</div>
-        )}
-
-        {/* Submit Button */}
+        
+        {error && <div className="mb-4 text-red-500 text-center">{error}</div>}
         <button
           type="submit"
           className="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700"
@@ -466,22 +395,6 @@ const CreateCounterOffer = () => {
       </form>
     </div>
   );
-};
-
-// Helper function to get offer status styling (if needed elsewhere)
-const getOfferStatusStyle = (status) => {
-  switch (status.toLowerCase()) {
-    case "accepted":
-      return "bg-green-500 text-white";
-    case "pending":
-      return "bg-yellow-500 text-black";
-    case "rejected":
-      return "bg-red-500 text-white";
-    case "canceled":
-      return "bg-gray-500 text-white";
-    default:
-      return "bg-gray-300 text-black";
-  }
 };
 
 export default CreateCounterOffer;

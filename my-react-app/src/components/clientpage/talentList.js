@@ -1,65 +1,38 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaEnvelope, FaStar } from "react-icons/fa";
-import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 import { AuthContext } from "../AuthContext"; // Update this path according to your project structure
+import axios from "axios";
 
-// Component
-// ... (imports remain the same)
+const fetchTalents = async ({ queryKey }) => {
+  const [, params] = queryKey;
+  const response = await axios.get("http://127.0.0.1:8000/api/freelancers/search/", { params });
+  return response.data.freelancers;
+};
 
 const TalentListPage = () => {
   const navigate = useNavigate();
-  const [talents, setTalents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const location = useLocation();
   const { isAuthenticated } = useContext(AuthContext);
-  const [authenticated, setAuthenticated] = useState(false);
   const blurlimit = 3;
 
-  // Authentication check
-  useEffect(() => {
-    const checkAuthentication = async () => {
-      try {
-        const result = isAuthenticated();
-        setAuthenticated(result);
-      } catch (error) {
-        setAuthenticated(false);
-      }
-    };
-    checkAuthentication();
-  }, []);
+  // Fetch talents using useQuery
+  const { data: talents = [], isLoading, isError } = useQuery({
+    queryKey: [
+      "talents",
+      {
+        tech_stack: JSON.stringify(JSON.parse(localStorage.getItem("selectedSkills") || "[]")),
+        working_preference: localStorage.getItem("timeCommitment"),
+        project_duration: localStorage.getItem("projectDuration"),
+        project_budget: localStorage.getItem("projectBudget"),
+        project_description: localStorage.getItem("projectDescription"),
+      },
+    ],
+    queryFn: fetchTalents,
+  });
 
-  // Fetching talents
-  useEffect(() => {
-    const fetchTalents = async () => {
-      try {
-        const selectedSkills = JSON.parse(
-          localStorage.getItem("selectedSkills")
-        );
-        const params = {
-          tech_stack: JSON.stringify(selectedSkills),
-          working_preference: localStorage.getItem("timeCommitment"),
-          project_duration: localStorage.getItem("projectDuration"),
-          project_budget: localStorage.getItem("projectBudget"),
-          project_description: localStorage.getItem("projectDescription"),
-        };
-
-        const response = await axios.get(
-          "http://127.0.0.1:8000/api/freelancers/search/",
-          { params }
-        );
-        console.log("talent response list", response.data);
-        setTalents(response.data.freelancers);
-      } catch (err) {
-        setError("Failed to fetch talent data.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTalents();
-  }, []);
+  const authenticated = isAuthenticated();
 
   const handleRedirectToSignup = (id) => {
     if (!authenticated) {
@@ -79,9 +52,8 @@ const TalentListPage = () => {
     navigate(`/contact-freelancer/${id}`);
   };
 
-  if (loading) return <div className="text-center py-8">Loading...</div>;
-  if (error)
-    return <div className="text-center py-8 text-red-500">{error}</div>;
+  if (isLoading) return <div className="text-center py-8">Loading...</div>;
+  if (isError) return <div className="text-center py-8 text-red-500">Failed to fetch talent data.</div>;
 
   return (
     <div className="container mx-auto py-12 px-6">
@@ -95,14 +67,12 @@ const TalentListPage = () => {
               onClick={handleRedirectToSignup}
             >
               Sign up
-            </span>
-            <span> to see the full list.</span>
+            </span>{" "}
+            <span>to see the full list.</span>
           </h2>
         )}
         {talents.length <= 0 && (
-          <h2 className="text-center">
-            No freelancer found based on your requirement
-          </h2>
+          <h2 className="text-center">No freelancer found based on your requirement</h2>
         )}
         {talents.length > 0 && authenticated && (
           <h2 className="text-center mb-6">
@@ -116,17 +86,14 @@ const TalentListPage = () => {
               key={talent.id}
               onClick={(e) => handleCardClick(e, talent.id)}
               className={`relative bg-white p-6 rounded-lg shadow-lg transition-transform transform hover:scale-105 hover:shadow-xl cursor-pointer ${
-                !authenticated
-                  ? index >= blurlimit
-                    ? "opacity-50 grayscale-[20%] blur-sm pointer-events-none"
-                    : ""
+                !authenticated && index >= blurlimit
+                  ? "opacity-50 grayscale-[20%] blur-sm pointer-events-none"
                   : ""
               }`}
               style={{
                 transition: "filter 0.3s ease, opacity 0.3s ease",
               }}
             >
-              {/* Centered Profile Picture and Title */}
               <div className="flex flex-col items-center mb-4">
                 <img
                   src={`http://127.0.0.1:8000/${talent.profile_picture}`}
@@ -138,20 +105,22 @@ const TalentListPage = () => {
                     !authenticated && index >= blurlimit ? "select-none" : ""
                   }`}
                   style={{
-                    maxWidth: "200px", // Limit the max width
-                    textAlign: "center", // Center the text
+                    maxWidth: "200px",
+                    textAlign: "center",
                   }}
                 >
                   {talent.professional_title}
                 </h3>
                 <div className="text-left w-full max-w-xs ml-40 md:ml-24 lg:ml-8">
-                  {" "}
-                  {/* Set fixed width for consistent alignment */}
                   <div className="flex justify-between mb-1">
-                    <span className="font-normal text-brand-blue"><strong>Name:</strong> {talent.full_name}</span>
-                    </div>
+                    <span className="font-normal text-brand-blue">
+                      <strong>Name:</strong> {talent.full_name}
+                    </span>
+                  </div>
                   <div className="flex justify-between mb-2">
-                    <span className="font-normal text-brand-blue"> <strong>Skills:</strong> {talent.skills
+                    <span className="font-normal text-brand-blue">
+                      <strong>Skills:</strong>{" "}
+                      {talent.skills
                         ? Array.from(
                             new Set(
                               JSON.parse(talent.skills).map(
@@ -160,19 +129,26 @@ const TalentListPage = () => {
                             )
                           ).join(", ")
                         : "No skills available"}
-                        </span>
+                    </span>
                   </div>
                   <div className="flex justify-between mb-2">
-                    <span className="font-normal text-brand-blue"><strong>Experience:</strong> {talent.experience} years</span>
+                    <span className="font-normal text-brand-blue">
+                      <strong>Experience:</strong> {talent.experience} years
+                    </span>
                   </div>
                   {talent.hourly_rate && (
                     <div className="flex justify-between mb-2">
-                      <span className="font-normal text-brand-blue"><strong>Hourly Rate:</strong> {talent.hourly_rate}</span>
+                      <span className="font-normal text-brand-blue">
+                        <strong>Hourly Rate:</strong> {talent.hourly_rate}
+                      </span>
                     </div>
                   )}
                   {talent.languages_spoken.length > 0 && (
                     <div className="flex justify-between mb-2">
-                      <span className="font-normal text-brand-blue"><strong>Languages Spoken:</strong> {talent.languages_spoken.join(", ")}</span>
+                      <span className="font-normal text-brand-blue">
+                        <strong>Languages Spoken:</strong>{" "}
+                        {talent.languages_spoken.join(", ")}
+                      </span>
                     </div>
                   )}
                   <div
@@ -187,7 +163,7 @@ const TalentListPage = () => {
                   </div>
                 </div>
 
-                {authenticated ? (
+                {authenticated && (
                   <button
                     onClick={(e) => handleContactClick(e, talent.id)}
                     className="absolute pt-1 left-0 bottom-1 w-full bg-brand-blue text-white py-2 px-4 hover:bg-brand-dark-blue transition flex items-center justify-center gap-2"
@@ -195,8 +171,6 @@ const TalentListPage = () => {
                     <FaEnvelope />
                     <span>Contact Freelancer</span>
                   </button>
-                ) : (
-                  <></>
                 )}
               </div>
             </div>

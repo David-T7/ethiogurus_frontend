@@ -26,8 +26,6 @@ const [ supportingDocuments,setSupportingDocuments] = useState([])
   useEffect(() => {
     const fetchResponseDetails = async () => {
       try {
-
-       
         const response = await axios.get(`http://127.0.0.1:8000/api/dispute-response/${responseId}/`, {
           headers: { Authorization: `Bearer ${token}` },
         });

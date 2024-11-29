@@ -1,43 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios'; // Import axios for API calls
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { FaSpinner, FaEdit, FaTrashAlt, FaPlus } from 'react-icons/fa';
 import ClientLayout from './ClientLayoutPage';
 import { useNavigate, Link } from 'react-router-dom';
+import axios from 'axios';
+
+const fetchProjects = async () => {
+  const token = localStorage.getItem('access');
+  const response = await axios.get('http://127.0.0.1:8000/api/user/projects/', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  // Extract and map project data for display
+  return response.data.map((project) => ({
+    id: project.id,
+    title: project.title,
+    description: project.description,
+    status: project.status,
+    createdAt: new Date(project.created_at).toLocaleDateString(),
+  }));
+};
 
 const ProjectsPage = () => {
-  const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      setLoading(true);
-      try {
-        const token = localStorage.getItem('access');
-        const response = await axios.get('http://127.0.0.1:8000/api/user/projects/', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        // Extract relevant fields from the response and set the projects state
-        const fetchedProjects = response.data.map((project) => (
-
-          {
-          id: project.id, // Assuming each project has a unique identifier
-          title: project.title,
-          description: project.description,
-          status: project.status , // Convert status if necessary
-          createdAt: new Date(project.created_at).toLocaleDateString(), // Format date for display
-        }));
-        setProjects(fetchedProjects);
-      } catch (err) {
-        console.error('Error fetching projects:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProjects();
-  }, []);
+  const { data: projects = [], isLoading } = useQuery({
+    queryKey: ['projects'],
+    queryFn: fetchProjects,
+  });
 
   const handleCreateProject = () => {
     navigate('/create-project');
@@ -65,12 +55,14 @@ const ProjectsPage = () => {
           </Link>
         </div>
 
-        {loading ? (
+        {isLoading ? (
           <div className="flex justify-center">
             <FaSpinner className="animate-spin text-3xl text-brand-blue" />
           </div>
         ) : projects.length === 0 ? (
-          <p className="text-gray-500 text-center">You have no projects. Click "New Project" to get started.</p>
+          <p className="text-gray-500 text-center">
+            You have no projects. Click "Create Project" to get started.
+          </p>
         ) : (
           <div className="grid grid-cols-1 gap-8 cursor-pointer">
             {projects.map((project) => (
@@ -97,7 +89,7 @@ const ProjectsPage = () => {
                   >
                     {project.status}
                   </span>
-                  <span className="text-sm">Created On :{project.createdAt}</span>
+                  <span className="text-sm">Created On: {project.createdAt}</span>
                 </div>
               </div>
             ))}

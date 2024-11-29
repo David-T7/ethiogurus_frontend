@@ -1,70 +1,49 @@
-import React, { useState, useEffect } from 'react';
-import { FaFileAlt, FaUser, FaEnvelope, FaAward , FaPencilAlt, FaLock,FaList , FaEye, FaEyeSlash, FaChalkboardTeacher, FaCode, FaBullhorn, FaPaintBrush, FaWallet, FaCogs } from 'react-icons/fa';  // Import relevant icons
-import axios from 'axios';  // Ensure axios is installed
+import React, { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { FaFileAlt, FaUser, FaCode , FaBullhorn, FaEnvelope, FaAward, FaPencilAlt, FaLock, FaList, FaEye, FaEyeSlash } from "react-icons/fa";
+import axios from "axios";
 
 const ApplyAsFreelancer = () => {
   const [formData, setFormData] = useState({
-    full_name: '',
-    email: '',
-    field: '',  // Selected field
+    full_name: "",
+    email: "",
+    field: "", // Selected field
     services: [],
-    password: '',
-    confirmPassword: '',
+    password: "",
+    confirmPassword: "",
     resume_file: null,
   });
-  const [fields, setFields] = useState([]);
-  const [availableServices, setAvailableServices] = useState([]);
-  const [dropdownOpen, setDropdownOpen] = useState(false); // To handle dropdown visibility
-  const [loading, setLoading] = useState(true); // To handle loading state
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState("");
 
-  // Fetch fields and services from API
-  useEffect(() => {
-    const fetchFields = async () => {
-      try {
-        const fieldResponse = await axios.get('http://127.0.0.1:8000/api/fields/');
-        setFields(fieldResponse.data);  // Assuming response contains a list of fields
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching fields:', error);
-        setLoading(false);
-      }
-    };
+  // Fetch fields
+  const fetchFields = async () => {
+    const response = await axios.get("http://127.0.0.1:8000/api/fields/");
+    return response.data;
+  };
+  const { data: fields = [], isLoading: fieldsLoading, error: fieldsError } = useQuery({
+    queryKey: ["fields"],
+    queryFn: fetchFields,
+  });
 
-    fetchFields();
-  }, []);
+  // Fetch services for a selected field
+  const fetchServices = async ({ queryKey }) => {
+    const [, fieldId] = queryKey;
+    const response = await axios.get(`http://127.0.0.1:8000/api/field-services/?field_id=${fieldId}`);
+    return response.data;
+  };
+  const { data: availableServices = [], refetch: refetchServices } = useQuery({
+    queryKey: ["services", formData.field],
+    queryFn: fetchServices,
+    enabled: !!formData.field, // Fetch only when a field is selected
+  });
 
-  // Fetch services based on the selected field
-useEffect(() => {
-  if (formData.field) {
-    const fetchServices = async () => {
-      try {
-        const serviceResponse = await axios.get(`http://127.0.0.1:8000/api/field-services/?field_id=${formData.field}`);
-        console.log("Service response:", serviceResponse.data);
-        
-        // Check for a successful response and if services are available
-        if (serviceResponse.status === 200 && serviceResponse.data.length > 0) {
-          setAvailableServices(serviceResponse.data);
-        } else {
-          setAvailableServices([]);  // No services found for this field
-        }
-      } catch (error) {
-        console.error('Error fetching services:', error);
-        setAvailableServices([]);  // Clear services on error
-      }
-    };
-
-    fetchServices();
-  } else {
-    setAvailableServices([]);  // Clear services if no field is selected
-  }
-}, [formData.field]);
-
+  // Form data change handlers
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'services') {
-      const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+    if (name === "services") {
+      const selectedOptions = Array.from(e.target.selectedOptions, (option) => option.value);
       setFormData({ ...formData, [name]: selectedOptions });
     } else {
       setFormData({ ...formData, [name]: value });
@@ -75,103 +54,90 @@ useEffect(() => {
     setFormData({ ...formData, resume_file: e.target.files[0] });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Submit form
+  const mutation = useMutation({
+    mutationFn: async (data) => {
+      const formData = new FormData();
+      formData.append("full_name", data.full_name);
+      formData.append("email", data.email);
+      formData.append("password", data.password);
+      if (data.resume_file) {
+        formData.append("resume_file", data.resume_file);
+      }
+      data.services.forEach((service) => {
+        formData.append("applied_positions", service);
+      });
 
-    // Check if passwords match
+      return axios.post("http://127.0.0.1:8000/api/resumes/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    },
+    onSuccess: () => {
+      setSuccessMessage("Application successful! Watch out for emails regarding your results.");
+      setFormData({
+        full_name: "",
+        email: "",
+        field: "",
+        services: [],
+        password: "",
+        confirmPassword: "",
+        resume_file: null,
+      });
+    },
+    onError: (error) => {
+      if (error.response?.data?.email) {
+        alert("Email already in use!");
+      } else {
+        console.error("Error submitting application:", error);
+      }
+    },
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords do not match!");
       return;
     }
-
-    // Check if password length is at least 5 characters
     if (formData.password.length < 5) {
-    alert("Password must be at least 5 characters long!");
-    return;
+      alert("Password must be at least 5 characters long!");
+      return;
     }
-
-    const data = new FormData();
-    data.append('full_name', formData.full_name);
-    data.append('email', formData.email);
-    data.append('password', formData.password);
-    if (formData.resume_file) {
-      data.append('resume_file', formData.resume_file);
-    }
-
-    formData.services.forEach(service => {
-      data.append('applied_positions', service);
-    });
-
-    console.log("fromd data before sending ")
-    try {
-      await axios.post('http://127.0.0.1:8000/api/resumes/', data, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
-      setSuccessMessage("Application successful! Watch out for emails regarding your results.");
-      // navigate('/home'); // Redirect after successful submission
-    } catch (error) {
-      if (error.response && error.response.data) {
-        const backendErrors = error.response.data;
-
-        // Check for email already used error and display a specific message
-        if (backendErrors.email) {
-         if (error.response && error.response.data) {
-        const backendErrors = error.response.data;
-
-        // Check for email already used error and display a specific message
-        if (backendErrors.email) {
-          alert("Email already in use!")
-        }
-      console.error('Error submitting application:', error);
-    }}}}
+    mutation.mutate(formData);
   };
 
-  if (loading) return <p>Loading...</p>;
+  if (fieldsLoading) return <p>Loading...</p>;
+  if (fieldsError) return <p>Error loading fields: {fieldsError.message}</p>;
 
-  // Icons for the fields
+  // Icons for fields
   const getFieldIcon = (fieldName) => {
     switch (fieldName) {
-      case 'Project Manager':
-        return <FaChalkboardTeacher className="text-brand-blue mr-2" />;
-      case 'Developer':
+      case "Project Manager":
+        return <FaPencilAlt className="text-brand-blue mr-2" />;
+      case "Developer":
         return <FaCode className="text-brand-blue mr-2" />;
-      case 'Marketing Expert':
+      case "Marketing Expert":
         return <FaBullhorn className="text-brand-blue mr-2" />;
-      case 'Designer':
-        return <FaPaintBrush className="text-brand-blue mr-2" />;
-      case 'Finance Expert':
-        return <FaWallet className="text-brand-blue mr-2" />;
-      case 'Product Manager':
-        return <FaCogs className="text-brand-blue mr-2" />;
       default:
-        return <FaCode className="text-brand-blue mr-2" />;
+        return <FaAward className="text-brand-blue mr-2" />;
     }
   };
 
   return (
     <div className="container mx-auto py-12 px-6">
-
-      {/* Introduction Section */}
       <section className="text-center mb-5">
-        <h2 className="text-3xl font-normal text-brand-blue mb-4">
-          Apply as a Freelancer
-        </h2>
+        <h2 className="text-3xl font-normal text-brand-blue mb-4">Apply as a Freelancer</h2>
         <p className="text-lg text-brand-gray-dark">
-          Join our network of top freelancers by filling out the application form below. 
-          We are looking for talented professionals who are passionate about their work and ready to take on exciting projects.
+          Join our network of top freelancers by filling out the application form below.
         </p>
       </section>
 
-
-      {/* Application Form */}
       <section className="bg-gray-100 p-8 rounded-lg max-w-md mx-auto">
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
             <label htmlFor="full_name" className="text-lg font-normal text-brand-blue">
-            <FaUser className="inline mr-2" />
-            Full Name
+              <FaUser className="inline mr-2" />
+              Full Name
             </label>
             <input
               id="full_name"
@@ -183,10 +149,11 @@ useEffect(() => {
               className="w-full border border-gray-300 p-2 rounded-lg"
             />
           </div>
+
           <div className="flex flex-col gap-2">
             <label htmlFor="email" className="text-lg font-normal text-brand-blue">
-            <FaEnvelope className="inline mr-2" />
-            Email
+              <FaEnvelope className="inline mr-2" />
+              Email
             </label>
             <input
               id="email"
@@ -198,45 +165,36 @@ useEffect(() => {
               className="w-full border border-gray-300 p-2 rounded-lg"
             />
           </div>
-          <div className="flex flex-col gap-2 relative">
+
+          <div className="flex flex-col gap-2">
             <label htmlFor="field" className="text-lg font-normal text-brand-blue">
-            <FaAward  className="inline mr-2"/>
-            Field of Expertise
+              <FaAward className="inline mr-2" />
+              Field of Expertise
             </label>
-            <div
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="cursor-pointer w-full border border-gray-300 p-2 rounded-lg flex justify-between items-center"
+            <select
+              id="field"
+              name="field"
+              value={formData.field}
+              onChange={(e) => {
+                handleChange(e);
+                refetchServices();
+              }}
+              className="w-full border border-gray-300 p-2 rounded-lg"
             >
-              <span>{formData.field ? fields.find(f => f.id === formData.field).name : 'Select a Field'}</span>
-              {getFieldIcon(formData.field ? fields.find(f => f.id === formData.field).name : '')}
-            </div>
-            {dropdownOpen && (
-              <div className="absolute w-full mt-20 bg-white border border-gray-300 rounded-lg shadow-lg z-10">
-                {fields.map((field) => (
-                  <div
-                    key={field.id}
-                    onClick={() => {
-                      setFormData({ ...formData, field: field.id });
-                      setDropdownOpen(false);
-                    }}
-                    className="flex items-center p-2 cursor-pointer hover:bg-gray-200"
-                  >
-                    {getFieldIcon(field.name)}
-                    <div className="ml-2">
-                      <span className="font-semibold">{field.name}</span>
-                      <p className="text-sm text-gray-500">{field.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+              <option value="">Select a Field</option>
+              {fields.map((field) => (
+                <option key={field.id} value={field.id}>
+                  {field.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           {formData.field && (
             <div className="flex flex-col gap-2">
               <label htmlFor="services" className="text-lg font-normal text-brand-blue">
-              <FaList  className="inline mr-2" />
-              Services Offered
+                <FaList className="inline mr-2" />
+                Services Offered
               </label>
               <select
                 id="services"
@@ -246,20 +204,16 @@ useEffect(() => {
                 onChange={handleChange}
                 className="w-full border border-gray-300 p-2 rounded-lg"
               >
-                {availableServices.length === 0 ? (
-                  <option disabled>No services available</option>
-                ) : (
-                  availableServices.map(service => (
-                    <option key={service.id} value={service.id}>
-                      {service.name}
-                    </option>
-                  ))
-                )}
+                {availableServices.map((service) => (
+                  <option key={service.id} value={service.id}>
+                    {service.name}
+                  </option>
+                ))}
               </select>
             </div>
           )}
 
-<div className="flex flex-col gap-2 relative">
+          <div className="flex flex-col gap-2 relative">
             <label htmlFor="password" className="text-lg font-normal text-brand-blue">
               <FaLock className="inline mr-2" />
               Password
@@ -271,36 +225,21 @@ useEffect(() => {
               placeholder="Your Password"
               value={formData.password}
               onChange={handleChange}
-              className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
+              className="w-full border border-gray-300 p-2 rounded-lg"
             />
             <button
               type="button"
               onClick={() => setPasswordVisible(!passwordVisible)}
               className="absolute right-3 top-10 text-gray-600 hover:text-gray-800"
             >
-              {!passwordVisible ? <FaEyeSlash /> : <FaEye />}
+              {passwordVisible ? <FaEyeSlash /> : <FaEye />}
             </button>
-          </div>
-          <div className="flex flex-col gap-2 relative">
-            <label htmlFor="confirmPassword" className="text-lg font-normal text-brand-blue">
-              <FaLock className="inline mr-2" />
-              Confirm Password
-            </label>
-            <input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              placeholder="Confirm Your Password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-            />
           </div>
 
           <div className="flex flex-col gap-2">
             <label htmlFor="resume_file" className="text-lg font-normal text-brand-blue">
-            <FaFileAlt className="inline mr-2" />
-            Upload Resume
+              <FaFileAlt className="inline mr-2" />
+              Upload Resume
             </label>
             <input
               id="resume_file"
@@ -314,12 +253,11 @@ useEffect(() => {
           <button
             type="submit"
             className="bg-brand-blue text-white p-3 rounded-lg hover:bg-brand-dark-blue transition-colors duration-300"
-            >
+          >
             Submit Application
           </button>
 
-          {successMessage && <p className="text-green-600 text-center mb-4">{successMessage}</p>}
-
+          {successMessage && <p className="text-green-600 text-center">{successMessage}</p>}
         </form>
       </section>
     </div>

@@ -1,42 +1,69 @@
-import React, { useState , useEffect} from 'react';
-import { useParams , useLocation , useNavigate } from 'react-router-dom';
-import ClientLayout from './ClientLayoutPage';
-import { FaPlus, FaTrash } from 'react-icons/fa';
-import axios from 'axios';
+import React, { useState } from "react";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
+import ClientLayout from "./ClientLayoutPage";
+import { FaPlus, FaTrash } from "react-icons/fa";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+
+const fetchProject = async ({ queryKey }) => {
+  const { projectId, token } = queryKey[1];
+  const response = await axios.get(`http://127.0.0.1:8000/api/projects/${projectId}/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
 const CreateContractPage = () => {
   const location = useLocation();
-  const navigate = useNavigate()
-  const { id:projectId } = useParams(); // Get project ID from URL
+  const navigate = useNavigate();
+  const { id: projectId } = useParams();
   const { freelancerID } = location.state || null;
-  const [project , setProject ] = useState(null)
-  const [isMilestoneBased, setIsMilestoneBased] = useState(false);
-  const [projectFee, setProjectFee] = useState('');
-  const [milestones, setMilestones] = useState([{ title: '', amount: '', deadline: '' }]);
-  const [contractTerms, setContractTerms] = useState('');
   const token = localStorage.getItem("access");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  useEffect(() => {
-    const fetchProject = async () => {
-      try {
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/projects/${projectId}/`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setProject(response.data);
-      } catch (err) {
-        setError(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const queryClient = useQueryClient();
 
-    fetchProject();
-  }, []);
+  const [isMilestoneBased, setIsMilestoneBased] = useState(false);
+  const [projectFee, setProjectFee] = useState("");
+  const [milestones, setMilestones] = useState([{ title: "", amount: "", deadline: "" }]);
+  const [contractTerms, setContractTerms] = useState("");
+
+  const { data: project, isLoading: loadingProject, error } = useQuery({
+    queryKey: ["project", { projectId, token }],
+    queryFn: fetchProject,
+  });
+
+  const createContractMutation = useMutation({
+    mutationFn: async (contractData) => {
+      const response = await axios.post(`http://127.0.0.1:8000/api/contracts/`, contractData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data;
+    },
+    onSuccess: (contract) => {
+      queryClient.invalidateQueries(["project", { projectId, token }]);
+
+      if (isMilestoneBased && milestones.length > 0) {
+        milestones.forEach((milestone) => {
+          axios.post(
+            `http://127.0.0.1:8000/api/milestones/`,
+            {
+              contract: contract.id,
+              title: milestone.title,
+              amount: milestone.amount,
+              due_date: milestone.deadline,
+            },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        });
+      }
+
+      alert("Contract and milestones created successfully");
+      navigate(`/contracts/${contract.id}`);
+    },
+    onError: (error) => {
+      console.error("Error creating contract:", error);
+      alert("Error creating contract or milestones");
+    },
+  });
 
   const handleMilestoneChange = (index, e) => {
     const { name, value } = e.target;
@@ -46,76 +73,32 @@ const CreateContractPage = () => {
   };
 
   const addMilestone = () => {
-    setMilestones([...milestones, { title: '', amount: '', deadline: '' }]);
+    setMilestones([...milestones, { title: "", amount: "", deadline: "" }]);
   };
 
   const removeMilestone = (index) => {
     setMilestones(milestones.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("freelnacer id is ",freelancerID)
-    console.log("project title is ",project.title)
     const contractData = {
       project: projectId,
       freelancer: freelancerID,
-      title:project?.title,
+      title: project?.title,
       terms: contractTerms,
-      start_date: new Date().toISOString(), // Set start date as current date or any selected value
-      end_date: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(), // Dummy end date (e.g., 1 month later)
+      start_date: new Date().toISOString(),
+      end_date: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(),
       amount_agreed: projectFee,
       payment_status: "not_started",
       milestone_based: isMilestoneBased,
     };
-  
-    try {
-      const response = await axios.post(
-        `http://127.0.0.1:8000/api/contracts/`,
-        contractData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-  
-      const createdContract = response.data;
-      console.log('Contract created:', createdContract);
-  
-      // If milestone-based, create milestones
-      if (isMilestoneBased && milestones.length > 0) {
-        await Promise.all(
-          milestones.map((milestone) =>
-            axios.post(
-              `http://127.0.0.1:8000/api/milestones/`,
-              {
-                contract: createdContract.id,
-                title: milestone.title,
-                amount: milestone.amount,
-                due_date: milestone.deadline,
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              }
-            )
-          )
-        );
-        console.log('Milestones created successfully');
-      }
-  
-      // Redirect or give feedback after successful creation
-      alert('Contract and milestones created successfully');
-      // Optionally navigate to another page
-      navigate(`/contracts/${createdContract.id}`);
-  
-    } catch (error) {
-      console.error('Error creating contract or milestones:', error);
-      alert('Error creating contract or milestones');
-    }
+
+    createContractMutation.mutate(contractData);
   };
+
+  if (loadingProject) return <div className="text-center py-8">Loading...</div>;
+  if (error) return <div className="text-center py-8">Error loading project</div>;
 
   return (
     <ClientLayout>
@@ -147,7 +130,9 @@ const CreateContractPage = () => {
                 id="milestone-checkbox"
                 className="mr-2"
               />
-              <label htmlFor="milestone-checkbox" className="text-gray-800">Milestone Based Contract</label>
+              <label htmlFor="milestone-checkbox" className="text-gray-800">
+                Milestone Based Contract
+              </label>
             </div>
           </div>
 
@@ -155,9 +140,14 @@ const CreateContractPage = () => {
             <div className="p-6 mb-6">
               <h2 className="text-xl font-normal text-gray-800 mb-4">Milestones</h2>
               {milestones.map((milestone, index) => (
-                <div key={index} className="flex flex-col mb-4 border border-gray-200 p-4 rounded-lg">
+                <div
+                  key={index}
+                  className="flex flex-col mb-4 border border-gray-200 p-4 rounded-lg"
+                >
                   <div className="flex items-center justify-between mb-2">
-                    <label htmlFor={`title-${index}`} className="text-gray-800">Title</label>
+                    <label htmlFor={`title-${index}`} className="text-gray-800">
+                      Title
+                    </label>
                     <button
                       type="button"
                       onClick={() => removeMilestone(index)}
@@ -176,7 +166,9 @@ const CreateContractPage = () => {
                     required
                   />
                   <div className="flex flex-col mt-4">
-                    <label htmlFor={`deadline-${index}`} className="text-gray-800 mb-2">Deadline</label>
+                    <label htmlFor={`deadline-${index}`} className="text-gray-800 mb-2">
+                      Deadline
+                    </label>
                     <input
                       type="date"
                       name="deadline"
@@ -188,7 +180,9 @@ const CreateContractPage = () => {
                     />
                   </div>
                   <div className="flex flex-col mt-4">
-                    <label htmlFor={`amount-${index}`} className="text-gray-800 mb-2">Amount</label>
+                    <label htmlFor={`amount-${index}`} className="text-gray-800 mb-2">
+                      Amount
+                    </label>
                     <input
                       type="number"
                       name="amount"
@@ -225,7 +219,7 @@ const CreateContractPage = () => {
           <div className="text-center">
             <button
               type="submit"
-             className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition"
+              className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition"
             >
               Create Contract
             </button>

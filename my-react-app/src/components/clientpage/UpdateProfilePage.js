@@ -1,53 +1,61 @@
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import axios from 'axios';
-import { useState , useEffect } from 'react';
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+
+const fetchProfile = async ({ queryKey }) => {
+  const [, token] = queryKey;
+  const response = await axios.get("http://127.0.0.1:8000/api/user/client/manage/", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};
+
+const updateProfile = async ({ updatedProfile, token }) => {
+  const formData = new FormData();
+  for (const key in updatedProfile) {
+    formData.append(key, updatedProfile[key]);
+  }
+  await axios.patch("http://127.0.0.1:8000/api/user/client/manage/", formData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};
+
 const UpdateProfile = () => {
-  
-  const [profile, setProfile] = useState(null);
+  const token = localStorage.getItem("access");
+  const queryClient = useQueryClient(); // Initialize the query client
+
   const [updatedProfile, setUpdatedProfile] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
-  // const [passwordVisibility, setPasswordVisibility] = useState({
-  //   oldPasswordVisible: false,
-  //   newPasswordVisible: false,
-  //   confirmPasswordVisible: false,
-  // });
+  // Fetch profile data using useQuery
+  const {
+    data: profile,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["profile", token],
+    queryFn: fetchProfile,
+  });
 
-  // const togglePasswordVisibility = (field) => {
-  //   setPasswordVisibility((prevState) => ({
-  //     ...prevState,
-  //     [field]: !prevState[field],
-  //   }));
-  // };
-
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = localStorage.getItem('access');
-        const response = await axios.get('http://127.0.0.1:8000/api/user/client/manage/', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setProfile(response.data);
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to load profile data.');
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, []);
+  // Update profile mutation
+  const mutation = useMutation({
+    mutationFn: (data) => updateProfile(data),
+    onSuccess: () => {
+      alert("Profile updated successfully!");
+      // Invalidate and refetch the profile query
+      queryClient.invalidateQueries(["profile"]);
+    },
+    onError: () => {
+      alert("Failed to update profile.");
+    },
+  });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setProfile((prevProfile) => ({
-      ...prevProfile,
-      [name]: value,
-    }));
     setUpdatedProfile((prevProfile) => ({
       ...prevProfile,
       [name]: value,
@@ -56,63 +64,24 @@ const UpdateProfile = () => {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    setProfile((prevProfile) => ({
-      ...prevProfile,
-      profile_picture: file,
-    }));
     setUpdatedProfile((prevProfile) => ({
       ...prevProfile,
       profile_picture: file,
     }));
   };
 
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    try {
-      const formData = new FormData();
-
-      for (const key in updatedProfile) {
-          formData.append(key, updatedProfile[key]);
-        }
-
-      const token = localStorage.getItem('access');
-
-      await axios.patch('http://127.0.0.1:8000/api/user/client/manage/', formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      // Fetch the updated profile data from the server
-      const response = await axios.get('http://127.0.0.1:8000/api/user/client/manage/', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      // Update the profile state with the new data
-      setProfile(response.data);
-      setUpdatedProfile(response.data); // Optionally clear updatedProfile state
-
-      alert('Profile updated successfully!');
-    } catch (err) {
-      setError('Failed to update profile.');
-    }
+    mutation.mutate({ updatedProfile, token });
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  if (isLoading) return <div>Loading...</div>;
+  if (isError) return <div>{error.message || "Failed to load profile data."}</div>;
 
-  if (error) {
-    return <div>{error}</div>;
-  }
   return (
     <div className="max-w-lg mx-auto p-6 mt-8">
       <h2 className="text-3xl font-thin text-brand-dark-blue mb-6 text-center">Update Profile</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
-        
         {/* Email Address */}
         <div className="mb-4">
           <label htmlFor="email" className="block text-lg font-normal text-brand-blue mb-2">
@@ -122,14 +91,14 @@ const UpdateProfile = () => {
             type="email"
             id="email"
             name="email"
-            value={profile.email}
+            defaultValue={profile?.email}
             onChange={handleInputChange}
             className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
           />
         </div>
 
-          {/* Contact Person */}
-          <div className="mb-4">
+        {/* Contact Person */}
+        <div className="mb-4">
           <label htmlFor="contactPerson" className="block text-lg font-normal text-brand-blue mb-2">
             Contact Person
           </label>
@@ -137,68 +106,11 @@ const UpdateProfile = () => {
             type="text"
             id="contactPerson"
             name="contact_person"
-            value={profile.contact_person}
+            defaultValue={profile?.contact_person}
             onChange={handleInputChange}
             className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
           />
         </div>
-
-        {/* Old Password
-        <div className="mb-4 relative">
-          <label htmlFor="oldPassword" className="block text-lg font-normal text-brand-blue mb-2">
-            Old Password
-          </label>
-          <input
-            type={passwordVisibility.oldPasswordVisible ? "text" : "password"}
-            id="oldPassword"
-            name="oldPassword"
-            value={profile.oldPassword}
-            onChange={handleInputChange}
-            className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-          />
-          <span
-            className="absolute right-3 top-10 text-gray-600 hover:text-gray-800 cursor-pointer"
-            onClick={() => togglePasswordVisibility('oldPasswordVisible')}
-          >
-            {passwordVisibility.oldPasswordVisible ? <FaEye /> : <FaEyeSlash />}
-          </span>
-        </div>
-
-      
-        <div className="mb-4 relative">
-          <label htmlFor="newPassword" className="block text-lg font-normal text-brand-blue mb-2">
-            New Password
-          </label>
-          <input
-            type={passwordVisibility.newPasswordVisible ? "text" : "password"}
-            id="newPassword"
-            name="newPassword"
-            value={profile.newPassword}
-            onChange={handleInputChange}
-            className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-          />
-          <span
-            className="absolute right-3 top-10 text-gray-600 hover:text-gray-800 cursor-pointer"
-            onClick={() => togglePasswordVisibility('newPasswordVisible')}
-          >
-            {passwordVisibility.newPasswordVisible ? <FaEye /> : <FaEyeSlash />}
-          </span>
-        </div>
-
-        
-        <div className="mb-4 relative">
-          <label htmlFor="confirmPassword" className="block text-lg font-normal text-brand-blue mb-2">
-            Confirm New Password
-          </label>
-          <input
-            type={passwordVisibility.confirmPasswordVisible ? "text" : "password"}
-            id="confirmPassword"
-            name="confirmPassword"
-            value={profile.confirmPassword}
-            onChange={handleInputChange}
-            className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-          />
-        </div> */}
 
         {/* Company Name */}
         <div className="mb-4">
@@ -209,7 +121,7 @@ const UpdateProfile = () => {
             type="text"
             id="companyName"
             name="company_name"
-            value={profile.company_name}
+            defaultValue={profile?.company_name}
             onChange={handleInputChange}
             className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
           />
@@ -224,14 +136,12 @@ const UpdateProfile = () => {
             type="text"
             id="address"
             name="address"
-            value={profile.address}
+            defaultValue={profile?.address}
             onChange={handleInputChange}
             className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
           />
         </div>
 
-      
-        
         {/* Profile Picture */}
         <div className="mb-4">
           <label htmlFor="profile_picture" className="block text-lg font-normal text-brand-blue mb-2">
@@ -252,8 +162,9 @@ const UpdateProfile = () => {
           <button
             type="submit"
             className="bg-brand-blue text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200"
+            disabled={mutation.isLoading}
           >
-            Update Profile
+            {mutation.isLoading ? "Updating..." : "Update Profile"}
           </button>
         </div>
       </form>
