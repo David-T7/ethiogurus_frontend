@@ -9,6 +9,8 @@ const fetchContract = async ({ queryKey }) => {
   const response = await axios.get(`http://127.0.0.1:8000/api/contracts/${contractId}/`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+  console.log("contracts data is ",response.data)
+
   return response.data;
 };
 
@@ -42,6 +44,10 @@ const EditContractPage = () => {
   const [contractStatus, setContractStatus] = useState(null);
   const [addMilestone, setAddMiletsone] = useState(false);
   const [disputes, setDisputes] = useState([]);
+  const [isMilestoneBased, setIsMilestoneBased] = useState(false);
+  const [hourly, setHourly] = useState(false);
+  const [oneTimeFee, setOneTimeFee] = useState(false);
+  const [projectDuration, setprojectDuration] = useState("");
   const [newMilestone, setNewMilestone] = useState({
     title: "",
     amount: "",
@@ -74,6 +80,10 @@ useEffect(() => {
   if (fetchedcontract) {
     setContract(fetchedcontract);
     setUpdtedContract(fetchedcontract)
+    setHourly(fetchedcontract.hourly)
+    setIsMilestoneBased(fetchedcontract.milestone_based)
+    setOneTimeFee(!fetchedcontract.hourly)
+    setprojectDuration(fetchedcontract.duration)
   }
 }, [fetchedcontract]);
 
@@ -98,7 +108,9 @@ useEffect(() => {
         {
           amount_agreed: updatedContract.amount_agreed,
           terms: updatedContract.terms,
-          milestone_based: updatedContract.milestone_based,
+          milestone_based: isMilestoneBased ,
+          duration:projectDuration,
+          hourly:hourly
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -113,6 +125,8 @@ useEffect(() => {
   const handleCreateNewUpdateContract = async () => {
     try {
       updatedContract.status = "pending"
+      updatedContract.hourly = hourly
+      updatedContract.milestone_based = isMilestoneBased
       const response = await axios.post(
         `http://127.0.0.1:8000/api/contracts/`,
         updatedContract
@@ -180,7 +194,7 @@ useEffect(() => {
 
   const checkForContractUpdate = async () => {
     if((contract.status === "active" || contract.status === "accepted") && !contract.contract_update){
-        if(updatedContract.amount_agreed !== contract.amount_agreed || updatedContract.terms !== contract.terms ){
+        if(updatedContract.amount_agreed !== contract.amount_agreed || updatedContract.hourly !== contract.hourly || updatedContract.milestone_based !== contract.milestone_based || updatedContract.projectDuration !== contract.milestone_based  ){
           await handleCreateNewUpdateContract()
         }
       }
@@ -384,7 +398,7 @@ useEffect(() => {
         )}
       </div>
       <div className="mb-6">
-        <h2 className="text-xl font-normal text-gray-800 mb-4">Project Fee</h2>
+        <h2 className="text-xl font-normal text-gray-800 mb-4">{oneTimeFee ? "Project Fee": hourly ? "Hourly Fee" : "Project Fee"}</h2>
         <input
           type="number"
           value={updatedContract?.amount_agreed}
@@ -396,20 +410,83 @@ useEffect(() => {
       </div>
 
       <div className="mb-6">
-        <h2 className="text-xl font-normal text-gray-800 mb-4">
-          Contract Terms
-        </h2>
-        <textarea
-          value={updatedContract?.terms}
-          onChange={(e) =>  
-            handleContractChange("terms", e.target.value)
-          }
-          className="w-full border border-gray-300 p-4 rounded-lg focus:outline-none focus:border-blue-500"
-          rows="4"
-        />
-      </div>
+            <h2 className="text-xl font-normal text-gray-800 mb-4">Contract Type</h2>
+            {!hourly && <div className="flex items-center">
+              <input
+                type="checkbox"
+                checked={oneTimeFee}
+                onChange={() => {setOneTimeFee(!oneTimeFee)  ; setHourly(false)}}
+                id="onetime-fee-checkbox"
+                className="mr-2"
+              />
+              <label htmlFor="onetime-fee-checkbo" className="text-gray-800">
+                One time Fee
+              </label>
+            </div> }
+            {!oneTimeFee && <div className="flex items-center">
+              <input
+                type="checkbox"
+                checked={hourly}
+                onChange={() => { setHourly(!hourly) ; setOneTimeFee(false) ; setIsMilestoneBased(false) }}
+                id="hourly-checkbox"
+                className="mr-2"
+              />
+              <label htmlFor="hourly-checkbox" className="text-gray-800">
+                Hourly
+              </label>
+            </div>}
+          </div>
 
-      <div className="mb-6">
+          {hourly && (
+  <div className="flex flex-col items-start mt-4">
+    <label htmlFor="project-duration" className="text-gray-800 text-xl mb-2">
+      Project Duration
+    </label>
+    <select
+      id="project-duration"
+      name="duration"
+      value={projectDuration}
+      required={hourly}
+      className="border border-gray-300 w-[50%] p-2 rounded-lg focus:outline-none focus:border-blue-500"
+      onChange={(e) => setprojectDuration(e.target.value)}
+    >
+      <option value="1week">1 Week</option>
+      <option value="2weeks">2 Weeks</option>
+      <option value="1month">1 Month</option>
+      <option value="2months">2 Months</option>
+      <option value="3months">3 Months</option>
+      <option value="6months">6 Months</option>
+      <option value="1year">1 Year</option>
+      <option value="custom">Custom Duration</option>
+    </select>
+    {projectDuration === "custom" && (
+      <input
+        type="text"
+        placeholder="Enter custom duration"
+        onChange={(e) => setprojectDuration(e)}
+        className="mt-2 border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
+      />
+    )}
+  </div>
+)}
+
+
+          {oneTimeFee && <div className="mb-6">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                checked={isMilestoneBased}
+                onChange={() => setIsMilestoneBased(!isMilestoneBased)}
+                id="milestone-checkbox"
+                className="mr-2"
+              />
+              <label htmlFor="milestone-checkbox" className="text-gray-800">
+                Milestone Based Contract
+              </label>
+            </div>
+          </div> }
+
+      {isMilestoneBased && !hourly && <div className="mb-6">
         <h2 className="text-xl font-normal text-gray-800 mb-4">Milestones</h2>
         {updatedMilestones.map((milestone, index) => (
           <div
@@ -523,6 +600,7 @@ useEffect(() => {
                   <FaPlus className="mr-2" /> Add Milestone
                 </button>
       </div>
+      }
 
       {addMilestone && <div className="mb-6">
         <h2 className="text-xl font-normal text-gray-800 mb-4">

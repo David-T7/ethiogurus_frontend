@@ -90,7 +90,7 @@ const ProjectDetailPage = () => {
               <h2 className="text-xl font-normal text-brand-blue mb-4">Freelancers</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {freelancers?.length > 0 ? (
-                  freelancers.map((freelancer) => (
+                  freelancers?.map((freelancer) => (
                     <div
                       key={freelancer.id}
                       className="flex items-center p-4 bg-brand-gray-light text-brand-gray-dark rounded-lg shadow-md transition-transform transform hover:scale-105"
@@ -121,7 +121,7 @@ const ProjectDetailPage = () => {
                 )}
               </div>
 
-              {freelancers.length === 0 ? (
+              {freelancers?.length === 0 ? (
                 <div className="mt-8">
                   <Link
                     to="/hire-talent/requirements"

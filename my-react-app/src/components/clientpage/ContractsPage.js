@@ -21,9 +21,9 @@ const ContractsPage = () => {
   const getStatusStyle = (status) => {
     switch (status) {
       case 'active':
-        return 'bg-green-500 text-white';
-      case 'completed':
         return 'bg-blue-500 text-white';
+      case 'completed':
+        return 'bg-green-500 text-white';
       case 'accepted':
         return 'bg-green-500 text-white';
       case 'pending':
@@ -71,7 +71,7 @@ const ContractsPage = () => {
                   {contract.status}
                 </span>
               </div>
-              <p className="text-gray-600 mb-4">Fee: ${contract.amount_agreed}</p>
+              <p className="text-gray-600 mb-4">Fee: {contract.amount_agreed} Birr</p>
               <div className="flex justify-between items-center mt-4">
                 <Link
                   to={`/contracts/${contract.id}`}

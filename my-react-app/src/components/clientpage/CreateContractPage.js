@@ -20,11 +20,13 @@ const CreateContractPage = () => {
   const { freelancerID } = location.state || null;
   const token = localStorage.getItem("access");
   const queryClient = useQueryClient();
-
   const [isMilestoneBased, setIsMilestoneBased] = useState(false);
+  const [hourly, setHourly] = useState(false);
+  const [oneTimeFee, setOneTimeFee] = useState(false);
   const [projectFee, setProjectFee] = useState("");
+  const [projectDuration, setprojectDuration] = useState("");
   const [milestones, setMilestones] = useState([{ title: "", amount: "", deadline: "" }]);
-  const [contractTerms, setContractTerms] = useState("");
+  // const [contractTerms, setContractTerms] = useState("");
 
   const { data: project, isLoading: loadingProject, error } = useQuery({
     queryKey: ["project", { projectId, token }],
@@ -86,13 +88,16 @@ const CreateContractPage = () => {
       project: projectId,
       freelancer: freelancerID,
       title: project?.title,
-      terms: contractTerms,
       start_date: new Date().toISOString(),
       end_date: new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString(),
       amount_agreed: projectFee,
       payment_status: "not_started",
       milestone_based: isMilestoneBased,
+      hourly:hourly
     };
+    if(hourly){
+      contractData.duration = projectDuration
+    }
 
     createContractMutation.mutate(contractData);
   };
@@ -102,14 +107,14 @@ const CreateContractPage = () => {
 
   return (
     <ClientLayout>
-      <div className="max-w-2xl mx-auto p-8 mt-8">
+      <div className="max-w-xl mx-auto p-8 mt-8">
         <h1 className="text-3xl font-thin text-brand-dark-blue mb-6 text-center">
           Create Contract for {project?.title}
         </h1>
 
         <form onSubmit={handleSubmit}>
           <div className="p-6">
-            <h2 className="text-xl font-normal text-gray-800 mb-4">Project Fee</h2>
+            <h2 className="text-xl font-normal text-gray-800 mb-4">{hourly ? "Hourly Fee" : "Project Fee"}</h2>
             <input
               type="number"
               value={projectFee}
@@ -120,7 +125,71 @@ const CreateContractPage = () => {
             />
           </div>
 
-          <div className="p-6 mb-3">
+         
+
+           <div className="p-6 mb-3">
+            <h2 className="text-xl font-normal text-gray-800 mb-4">Contract Type</h2>
+            {!hourly && <div className="flex items-center">
+              <input
+                type="checkbox"
+                checked={oneTimeFee}
+                onChange={() => {setOneTimeFee(!oneTimeFee) ; setHourly(false)}}
+                id="onetime-fee-checkbox"
+                className="mr-2"
+              />
+              <label htmlFor="onetime-fee-checkbo" className="text-gray-800">
+                One time Fee
+              </label>
+            </div> }
+            {!oneTimeFee && <div className="flex items-center">
+              <input
+                type="checkbox"
+                checked={hourly}
+                onChange={() => {setHourly(!hourly); setOneTimeFee(false) ; setIsMilestoneBased(false)}}
+                id="hourly-checkbox"
+                className="mr-2"
+              />
+              <label htmlFor="hourly-checkbox" className="text-gray-800">
+                Hourly
+              </label>
+            </div>}
+
+            {hourly && (
+  <div className="flex flex-col items-start mt-4">
+    <label htmlFor="project-duration" className="text-gray-800 text-xl mb-2">
+      Project Duration
+    </label>
+    <select
+      id="project-duration"
+      name="duration"
+      required={hourly}
+      className="border border-gray-300 w-[50%] p-2 rounded-lg focus:outline-none focus:border-blue-500"
+      onChange={(e) => setprojectDuration(e.target.value)}
+    >
+      <option value="1week">1 Week</option>
+      <option value="2weeks">2 Weeks</option>
+      <option value="1month">1 Month</option>
+      <option value="2months">2 Months</option>
+      <option value="3months">3 Months</option>
+      <option value="6months">6 Months</option>
+      <option value="1year">1 Year</option>
+      <option value="custom">Custom Duration</option>
+    </select>
+    {projectDuration === "custom" && (
+      <input
+        type="text"
+        placeholder="Enter custom duration"
+        onChange={(e) => setprojectDuration(e)}
+        className="mt-2 border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
+      />
+    )}
+  </div>
+)}
+
+          </div>
+
+
+          {oneTimeFee && <div className="p-6 mb-3">
             <h2 className="text-xl font-normal text-gray-800 mb-4">Contract Type</h2>
             <div className="flex items-center">
               <input
@@ -134,7 +203,7 @@ const CreateContractPage = () => {
                 Milestone Based Contract
               </label>
             </div>
-          </div>
+          </div> }
 
           {isMilestoneBased && (
             <div className="p-6 mb-6">
@@ -205,7 +274,7 @@ const CreateContractPage = () => {
             </div>
           )}
 
-          <div className="p-6 mb-3">
+          {/* <div className="p-6 mb-3">
             <h2 className="text-xl font-normal text-gray-800 mb-4">Contract Terms</h2>
             <textarea
               value={contractTerms}
@@ -214,12 +283,12 @@ const CreateContractPage = () => {
               className="w-full border border-gray-300 p-4 rounded-lg focus:outline-none focus:border-blue-500"
               rows="4"
             />
-          </div>
+          </div> */}
 
           <div className="text-center">
             <button
               type="submit"
-              className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition"
+              className="bg-blue-600 w-[50%] text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition"
             >
               Create Contract
             </button>

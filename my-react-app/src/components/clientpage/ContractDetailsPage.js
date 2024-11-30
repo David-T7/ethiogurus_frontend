@@ -86,12 +86,19 @@ const ContractDetailsPage = () => {
   });
 
   const updateContractMutation = useMutation({
-    mutationFn: (status) =>
+    mutationFn: (status) => {
       axios.patch(
         `http://127.0.0.1:8000/api/contracts/${contractId}/`,
-        { status },
+        { status:status},
         { headers: { Authorization: `Bearer ${token}` } }
-      ),
+      )
+      if (contract.contract_update){
+        axios.delete(
+          `http://127.0.0.1:8000/api/contracts/${contract.contract_update}/`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(["contractDetails", contractId]);
       alert("Contract updated successfully!");
@@ -156,9 +163,15 @@ const ContractDetailsPage = () => {
       </div>
 
       <div className="mb-6">
-        <h2 className="text-xl font-normal text-gray-800 mb-4">Contract Terms</h2>
-        <p className="text-gray-600">{contract.terms}</p>
+        <h2 className="text-xl font-normal text-gray-800 mb-4">Contract Type</h2>
+        <p className="text-gray-600">{contract.hourly ? "Hourly":"One Time Fee"}</p>
       </div>
+
+      {contract.hourly && <div className="mb-6">
+        <h2 className="text-xl font-normal text-gray-800 mb-4">Project Duration</h2>
+        <p className="text-gray-600">{contract.duration}</p>
+      </div>}
+      
 
       {contract.milestone_based && milestones.length > 0 && (
         <div className="mb-6">

@@ -71,6 +71,8 @@ const ContractsList = () => {
 // Helper function to get contract status styling
 const getContractStatusStyle = (status) => {
   switch (status) {
+    case 'active':
+      return 'bg-blue-500 text-white';
     case 'accepted':
       return 'bg-green-500 text-white';
     case 'pending':

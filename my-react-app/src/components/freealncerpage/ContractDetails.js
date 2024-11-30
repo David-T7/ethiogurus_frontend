@@ -191,15 +191,24 @@ const ContractDetails = () => {
           {contract.title}
         </h1>
       </div>
-      <p className="mb-2">
+      {!contract.hourly &&<p className="mb-2">
         Deadline: {new Date(contract.end_date).toLocaleDateString()}
-      </p>
-      <p className="mb-2">Project Fee: {contract.amount_agreed}</p>
-      <h1 className="text-3xl font-thin text-brand-dark-blue mb-4">
-        Contract Terms
+      </p>}
+      <h1 className="text-2xl font-thin text-brand-dark-blue mb-4">
+      {contract.hourly ? "Hourly Fee":"Project Fee"}
       </h1>
-      <p className="text-gray-700 mb-4">{contract.terms}</p>
-      <h3 className="text-3xl font-thin text-brand-dark-blue mb-2">
+      <p className="mb-2">{contract.amount_agreed} Birr</p>
+      <h1 className="text-2xl font-thin text-brand-dark-blue mb-4">
+        Contract Type
+      </h1>
+      <p className="text-gray-700 mb-4">{contract.hourly ? "Hourly":"One Time Fee"}</p>
+
+      {contract.hourly && <><h1 className="text-2xl font-thin text-brand-dark-blue mb-4">
+        Project Duration
+      </h1>
+      <p className="text-gray-700 mb-4">{contract.duration}</p>
+      </>}
+      <h3 className="text-2xl font-thin text-brand-dark-blue mb-2">
         Milestones
       </h3>
       <div className="border-t border-gray-200 pt-4">
