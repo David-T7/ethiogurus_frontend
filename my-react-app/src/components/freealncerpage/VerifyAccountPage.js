@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
-
+import { decryptToken } from '../../utils/decryptToken';
 const VerifyAccountPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -50,7 +50,9 @@ const VerifyAccountPage = () => {
       setSubmissionError('');
       setSubmissionSuccess('');
       
-      const token = localStorage.getItem('access');
+      const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+      const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+      const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
       await axios.post(`http://127.0.0.1:8005/api/${verificationType === "government_id" ? 'verify-id' : 'verify-passport'}/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',

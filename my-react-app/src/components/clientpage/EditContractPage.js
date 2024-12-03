@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { FaSave, FaTimes, FaTrash , FaPlus } from "react-icons/fa";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
+import { decryptToken } from "../../utils/decryptToken";
 
 const fetchContract = async ({ queryKey }) => {
   const [, contractId, token] = queryKey;
@@ -55,7 +56,9 @@ const EditContractPage = () => {
     is_completed: false,
     status: "pending",
   });
-  const token = localStorage.getItem("access");
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
 
  // Fetch contract details
  const { data: fetchedcontract, isLoading: loadingContract } = useQuery({

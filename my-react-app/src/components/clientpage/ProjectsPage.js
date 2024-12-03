@@ -4,9 +4,12 @@ import { FaSpinner, FaEdit, FaTrashAlt, FaPlus } from 'react-icons/fa';
 import ClientLayout from './ClientLayoutPage';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import { decryptToken } from "../../utils/decryptToken";
 
 const fetchProjects = async () => {
-  const token = localStorage.getItem('access');
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const response = await axios.get('http://127.0.0.1:8000/api/user/projects/', {
     headers: { Authorization: `Bearer ${token}` },
   });

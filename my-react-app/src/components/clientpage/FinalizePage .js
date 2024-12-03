@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { FaEnvelope, FaBuilding, FaUser, FaPhone , FaLock , FaEye , FaEyeSlash } from 'react-icons/fa';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-
 const FinalizePage = () => {
   const [formData, setFormData] = useState({
     companyName: '',

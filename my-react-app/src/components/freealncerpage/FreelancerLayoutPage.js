@@ -8,10 +8,12 @@ import {
   FaSignOutAlt,
   FaLock,
 } from "react-icons/fa";
-import { AuthContext } from '../AuthContext'; // Update this path according to your project structure
+import { AuthContext } from "../AuthContext"; // Update this path according to your project structure
 import { UserContext } from "../UserContext";
-import defaultProfilePic from "../../images/default-profile-picture.png"
-import logo from "../../images/EG_MIX_Logo.png"
+import CryptoJS from "crypto-js"; // Import CryptoJS for token decryption
+import defaultProfilePic from "../../images/default-profile-picture.png";
+import logo from "../../images/EG_MIX_Logo.png";
+
 const FreelancerProfileLayout = ({ children }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false); // Dropdown menu for profile
@@ -19,8 +21,24 @@ const FreelancerProfileLayout = ({ children }) => {
   const menuRef = useRef(null); // Ref for the dropdown menu
   const { logout } = useContext(AuthContext);
   const navigate = useNavigate();
-    const { profilePicture, unreadMessages, unreadNotifications:unreadNotification } = useContext(UserContext);
+  const { profilePicture, unreadMessages, unreadNotifications: unreadNotification } =
+    useContext(UserContext);
 
+  // Utility function to decrypt tokens
+  const decryptToken = (encryptedToken) => {
+    try {
+      const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure this is set in .env
+      const bytes = CryptoJS.AES.decrypt(encryptedToken, secretKey);
+      return bytes.toString(CryptoJS.enc.Utf8);
+    } catch (error) {
+      console.error("Error decrypting token:", error);
+      return null;
+    }
+  };
+
+  // Example: Use decrypted token if needed
+  const token = decryptToken(localStorage.getItem("access"));
+  console.log("Decrypted Token:", token); // Debugging, remove in production
 
   // Disable body scrolling when menu is open
   useEffect(() => {
@@ -61,7 +79,7 @@ const FreelancerProfileLayout = ({ children }) => {
     const activeClasses =
       'text-brand-green font-semibold before:content-[""] before:absolute before:block before:w-full before:h-[2px] before:bg-brand-green before:bottom-0 before:left-0';
     const hoverClasses =
-      'hover:text-brand-green hover:before:content-[""] hover:before:block hover:before:w-full hover:before:h-[2px] hover:before:bg-brand-green hover:before:bottom-0 hover:before:left-0';
+      'hover:text-brand-green hover:before:content-[""] hover:before:block hover:before:w-full hover:h-[2px] hover:before:bg-brand-green hover:before:bottom-0 hover:before:left-0';
 
     return location.pathname === path
       ? `${baseClasses} ${activeClasses}`
@@ -71,17 +89,15 @@ const FreelancerProfileLayout = ({ children }) => {
   const handleLogout = async () => {
     try {
       await logout();
-      // Optionally redirect to login page after logout
-      navigate("/login")
+      navigate("/login");
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     }
   };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
       <header className="relative flex flex-col md:flex-row items-center p-6 bg-gradient-to-r from-brand-blue to-brand-dark-blue text-white">
-        {/* Mobile Menu Button */}
         {!isMenuOpen && (
           <button
             className="absolute top-6 right-6 md:hidden flex items-center text-2xl z-20"
@@ -90,74 +106,48 @@ const FreelancerProfileLayout = ({ children }) => {
             <FaBars />
           </button>
         )}
-     {/* Top-left branding */}
-     <div className="absolute left-6 top-6 flex items-center">
-       <Link to="/home">
-      <img src={logo} alt="EthioGurus Logo" className="w-20 h-12" />
-      </Link> {/* Adjust size as needed */}
-      <Link to="/home" className="font-normal text-2xl">
-        EthioGurus
-      </Link>
-    </div>
-
-        {/* Top-right navigation */}
+        <div className="absolute left-6 top-6 flex items-center">
+          <Link to="/home">
+            <img src={logo} alt="EthioGurus Logo" className="w-20 h-12" />
+          </Link>
+          <Link to="/home" className="font-normal text-2xl">
+            EthioGurus
+          </Link>
+        </div>
         <nav className="hidden md:flex space-x-8 absolute right-6 top-6 mr-20">
-          <Link
-            to="/myprojects"
-            className={getLinkClasses("/myprojects")}
-            onClick={() => setIsMenuOpen(false)}
-          >
+          <Link to="/myprojects" className={getLinkClasses("/myprojects")}>
             Projects
           </Link>
-          <Link
-            to="/mycontracts"
-            className={getLinkClasses("/mycontracts")}
-            onClick={() => setIsMenuOpen(false)}
-          >
+          <Link to="/mycontracts" className={getLinkClasses("/mycontracts")}>
             Contracts
           </Link>
-
-          <Link
-            to="/messages"
-            className={getLinkClasses("/messages")}
-            onClick={() => setIsMenuOpen(false)}
-          >
-            inbox
+          <Link to="/messages" className={getLinkClasses("/messages")}>
+            Inbox
             {unreadMessages > 0 && (
               <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
                 {unreadMessages}
               </span>
             )}
           </Link>
-          <Link
-            to="/notifications"
-            className={getLinkClasses("/notifications")}
-            onClick={() => setIsMenuOpen(false)}
-          >
-            Notification
+          <Link to="/notifications" className={getLinkClasses("/notifications")}>
+            Notifications
             {unreadNotification > 0 && (
               <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
                 {unreadNotification}
               </span>
             )}
           </Link>
-          <Link
-                    to="/skills"
-                    className={getLinkClasses("/skills")}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Skills
-                  </Link>
+          <Link to="/skills" className={getLinkClasses("/skills")}>
+            Skills
+          </Link>
         </nav>
-
-        {/* Profile Picture and Dropdown Menu */}
         <div className="relative flex ml-auto">
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="flex items-center gap-2 md:mr-0 mr-10 text-white hover:text-gray-200"
           >
             <img
-              src={profilePicture || defaultProfilePic} // Dynamic user profile picture
+              src={profilePicture || defaultProfilePic}
               alt="Profile"
               className="w-12 h-12 rounded-full border-2 border-white shadow-lg"
             />
@@ -204,8 +194,6 @@ const FreelancerProfileLayout = ({ children }) => {
             </div>
           )}
         </div>
-
-        {/* Mobile Menu Navigation */}
         {isMenuOpen && (
           <div
             className={`fixed inset-0 bg-black bg-opacity-70 transition-opacity duration-300 ease-in-out z-10`}
@@ -221,12 +209,12 @@ const FreelancerProfileLayout = ({ children }) => {
                 <FaTimes />
               </button>
               <div className="flex flex-col items-center space-y-4">
-              <Link to="/home">
-      <img src={logo} alt="EthioGurus Logo" className="w-20 h-12" />
-      </Link> {/* Adjust size as needed */}
-      <Link to="/home" className="font-normal text-2xl">
-        EthioGurus
-      </Link>
+                <Link to="/home">
+                  <img src={logo} alt="EthioGurus Logo" className="w-20 h-12" />
+                </Link>
+                <Link to="/home" className="font-normal text-2xl">
+                  EthioGurus
+                </Link>
                 <nav className="flex flex-col space-y-4">
                   <Link
                     to="/myprojects"
@@ -242,7 +230,6 @@ const FreelancerProfileLayout = ({ children }) => {
                   >
                     Contracts
                   </Link>
-
                   <Link
                     to="/messages"
                     className={getLinkClasses("/messages")}
@@ -260,12 +247,7 @@ const FreelancerProfileLayout = ({ children }) => {
                     className={getLinkClasses("/notifications")}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Notification
-                    {unreadNotification > 0 && (
-              <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
-                {unreadNotification}
-              </span>
-            )}
+                    Notifications
                   </Link>
                   <Link
                     to="/skills"

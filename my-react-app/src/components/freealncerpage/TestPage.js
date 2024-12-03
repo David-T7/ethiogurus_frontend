@@ -6,7 +6,7 @@ import beepSound from "../../audio/beepbeepbeep-53921.mp3";
 import PauseModal from "./PauseModal";
 import { CameraContext } from './CameraContext';
 import { useQuery } from "@tanstack/react-query";
-
+import { decryptToken } from "../../utils/decryptToken";
 
 const fetchQuestions = async ({ queryKey }) => {
   const [_, { id, token }] = queryKey;
@@ -58,8 +58,9 @@ const TestPage = () => {
   const {testDetails} = location.state || null 
   const navigate = useNavigate();
   const { id } = useParams();
-  const token = localStorage.getItem("access");
-
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
 
   const { startCamera, stopCamera,errorMessage , setErrorMessage, isTerminated, setFreelancerID_, videoRef , showModal ,isPaused, setIsPaused , setShowModal ,updateVideoSource , cameraStream } = useContext(CameraContext);
 

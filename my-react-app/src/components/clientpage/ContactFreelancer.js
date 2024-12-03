@@ -5,7 +5,7 @@ import ClientLayout from "./ClientLayoutPage";
 import ProjectSelectionPage from "./ProjectSelectionPage";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-
+import { decryptToken } from "../../utils/decryptToken";
 const fetchFreelancerData = async (freelancerId) => {
   const response = await axios.get(`http://127.0.0.1:8000/api/user/freelancer/${freelancerId}/`);
   return response.data;
@@ -46,7 +46,9 @@ const checkActiveContract = async ({ queryKey }) => {
 const ContactFreelancer = () => {
   const { id: freelancerId } = useParams();
   const queryClient = useQueryClient();
-  const token = localStorage.getItem("access");
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const messageEndRef = useRef(null);
 
   const [newMessage, setNewMessage] = useState("");

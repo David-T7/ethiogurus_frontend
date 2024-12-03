@@ -2,7 +2,6 @@ import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-
 // Fetch test results data
 const fetchTestResults = async ({ queryKey }) => {
   const [_, { questions, selectedAnswers, correctAnswers }] = queryKey;

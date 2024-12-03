@@ -4,7 +4,7 @@ import { FaPaperclip,FaDownload } from "react-icons/fa";
 
 import profilePic from "../../images/default-profile-picture.png";
 import axios from "axios";
-
+import { decryptToken } from "../../utils/decryptToken";
 const ContactClient = () => {
   const { id: client_id } = useParams(); // Get freelancer ID from URL
   const [messages, setMessages] = useState([]);
@@ -16,7 +16,9 @@ const ContactClient = () => {
   const [freelancerData, setFreelancerData] = useState(null);
   const [clientData, setClientData] = useState(null);
   const [chatID, setChatID] = useState(null);
-  const token = localStorage.getItem("access");
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [projects, setProjects] = useState(null);

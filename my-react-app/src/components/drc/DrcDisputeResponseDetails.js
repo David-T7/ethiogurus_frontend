@@ -2,7 +2,7 @@ import React from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-
+import { decryptToken } from "../../utils/decryptToken";
 const fetchDisputeResponseDetails = async ({ queryKey }) => {
   const [_, { responseId, token }] = queryKey;
   const response = await axios.get(`http://127.0.0.1:8000/api/dispute-response/${responseId}/`, {
@@ -13,7 +13,9 @@ const fetchDisputeResponseDetails = async ({ queryKey }) => {
 
 const DrcDisputeResponseDetails = () => {
   const { id: responseId } = useParams();
-  const token = localStorage.getItem("access");
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const location = useLocation();
   const { drcForwardedItem } = location.state || null;
 

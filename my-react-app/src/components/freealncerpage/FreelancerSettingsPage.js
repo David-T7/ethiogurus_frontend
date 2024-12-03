@@ -3,10 +3,17 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { FaCheckCircle } from "react-icons/fa";
+import { decryptToken } from "../../utils/decryptToken";
+
+// Utility to get and decrypt the token
+const getDecryptedToken = () => {
+  const encryptedToken = localStorage.getItem("access");
+  const secretKey = process.env.REACT_APP_SECRET_KEY;
+  return decryptToken(encryptedToken, secretKey);
+};
 
 // Fetch freelancer settings
-const fetchSettings = async () => {
-  const token = localStorage.getItem("access");
+const fetchSettings = async (token) => {
   const response = await axios.get("http://127.0.0.1:8000/api/user/freelancer/manage/", {
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -14,8 +21,7 @@ const fetchSettings = async () => {
 };
 
 // Update freelancer settings
-const updateSettings = async (settings) => {
-  const token = localStorage.getItem("access");
+const updateSettings = async ({ settings, token }) => {
   const updateData = {
     account_status: settings.status,
     selected_payment_method: settings.paymentMethods.map((method) => ({
@@ -36,25 +42,29 @@ const FreelancerSettingsPage = () => {
   });
   const [verificationStatus, setVerificationStatus] = useState(false);
 
+  const token = getDecryptedToken(); // Decrypt the token once and reuse it
+
   // Fetch settings using React Query
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["freelancerSettings"],
-    queryFn: fetchSettings,
+    queryKey: ["freelancerSettings", token], // Include token in queryKey
+    queryFn: () => fetchSettings(token), // Pass token explicitly
+    enabled: !!token, // Only run query if token is available
+    retry: false, // Avoid infinite retry loop if token is invalid
   });
 
   useEffect(() => {
-    if(data){
+    if (data) {
       setSettings({
         status: data.account_status || "",
         paymentMethods: data.selected_payment_method || [],
       });
       setVerificationStatus(data.verified);
     }
-  },[data])
+  }, [data]);
 
   // Mutation for saving settings
   const mutation = useMutation({
-    mutationFn: updateSettings,
+    mutationFn: (data) => updateSettings(data), // Pass both settings and token
     onSuccess: () => {
       alert("Settings saved successfully!");
     },
@@ -98,7 +108,7 @@ const FreelancerSettingsPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    mutation.mutate(settings);
+    mutation.mutate({ settings, token }); // Pass both settings and token
   };
 
   const handleVerifyAccount = () => {

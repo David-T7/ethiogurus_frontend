@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import axios from "axios";
-
+import { decryptToken } from "../../utils/decryptToken";
 const CodingTestResultPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { currentTest } = location.state || { currentTest: null };
   const { id: submission_id } = useParams();
-  const token = localStorage.getItem("access");
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
 
   // State to store fetched data
   const [totalResult, setTotalResult] = useState(null);

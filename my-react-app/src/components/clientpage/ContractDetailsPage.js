@@ -3,19 +3,25 @@ import { useParams, useNavigate } from "react-router-dom";
 import { FaEdit, FaDollarSign, FaExclamationTriangle } from "react-icons/fa";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import { decryptToken } from "../../utils/decryptToken";
 
-const fetchContractDetails = async ({ queryKey }) => {
-  const [_, contractId] = queryKey;
-  const token = localStorage.getItem("access");
+// Utility to get and decrypt the token
+const getDecryptedToken = () => {
+  const encryptedToken = localStorage.getItem("access");
+  const secretKey = process.env.REACT_APP_SECRET_KEY;
+  return decryptToken(encryptedToken, secretKey);
+};
+
+// Fetch contract details
+const fetchContractDetails = async (contractId, token) => {
   const response = await axios.get(`http://127.0.0.1:8000/api/contracts/${contractId}/`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;
 };
 
-const fetchMilestones = async ({ queryKey }) => {
-  const [_, contractId] = queryKey;
-  const token = localStorage.getItem("access");
+// Fetch milestones
+const fetchMilestones = async (contractId, token) => {
   const response = await axios.get(
     `http://127.0.0.1:8000/api/contracts/${contractId}/milestones/`,
     { headers: { Authorization: `Bearer ${token}` } }
@@ -23,9 +29,8 @@ const fetchMilestones = async ({ queryKey }) => {
   return response.data;
 };
 
-const fetchCounterOffers = async ({ queryKey }) => {
-  const [_, contractId] = queryKey;
-  const token = localStorage.getItem("access");
+// Fetch counter offers
+const fetchCounterOffers = async (contractId, token) => {
   const response = await axios.get(
     `http://127.0.0.1:8000/api/contracts/${contractId}/counter-offers/`,
     { headers: { Authorization: `Bearer ${token}` } }
@@ -33,9 +38,8 @@ const fetchCounterOffers = async ({ queryKey }) => {
   return response.data;
 };
 
-const fetchDisputes = async ({ queryKey }) => {
-  const [_, contractId] = queryKey;
-  const token = localStorage.getItem("access");
+// Fetch disputes
+const fetchDisputes = async (contractId, token) => {
   const response = await axios.get(
     `http://127.0.0.1:8000/api/contracts/${contractId}/disputes/`,
     { headers: { Authorization: `Bearer ${token}` } }
@@ -43,8 +47,8 @@ const fetchDisputes = async ({ queryKey }) => {
   return response.data;
 };
 
-const fetchClientData = async () => {
-  const token = localStorage.getItem("access");
+// Fetch client data
+const fetchClientData = async (token) => {
   const response = await axios.get("http://127.0.0.1:8000/api/user/client/manage/", {
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -55,34 +59,41 @@ const ContractDetailsPage = () => {
   const { id: contractId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const token = localStorage.getItem("access");
+  const token = getDecryptedToken(); // Decrypt the token once
 
+  // Fetch contract details
   const { data: contract, isLoading: loadingContract } = useQuery({
     queryKey: ["contractDetails", contractId],
-    queryFn: fetchContractDetails,
+    queryFn: () => fetchContractDetails(contractId, token),
+    enabled: !!token,
   });
 
+  // Fetch milestones
   const { data: milestones = [], isLoading: loadingMilestones } = useQuery({
     queryKey: ["milestones", contract?.contract_update || contractId],
-    queryFn: fetchMilestones,
-    enabled: !!contract,
+    queryFn: () => fetchMilestones(contract?.contract_update || contractId, token),
+    enabled: !!contract && !!token,
   });
 
+  // Fetch counter offers
   const { data: counterOffers = [] } = useQuery({
     queryKey: ["counterOffers", contract?.contract_update || contractId],
-    queryFn: fetchCounterOffers,
-    enabled: !!contract,
+    queryFn: () => fetchCounterOffers(contract?.contract_update || contractId, token),
+    enabled: !!contract && !!token,
   });
 
+  // Fetch disputes
   const { data: disputes = [] } = useQuery({
     queryKey: ["disputes", contract?.id],
-    queryFn: fetchDisputes,
-    enabled: !!contract,
+    queryFn: () => fetchDisputes(contract?.id, token),
+    enabled: !!contract && !!token,
   });
 
+  // Fetch client data
   const { data: client } = useQuery({
     queryKey: ["client"],
-    queryFn: fetchClientData,
+    queryFn: () => fetchClientData(token),
+    enabled: !!token,
   });
 
   const updateContractMutation = useMutation({

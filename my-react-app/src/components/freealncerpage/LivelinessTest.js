@@ -4,7 +4,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import successSound from "../../audio/success.mp3";
 import failureSound from "../../audio/failure.mp3";
 import sentSound from "../../audio/sent.mp3";
-
+import { decryptToken } from '../../utils/decryptToken';
 const LivelinessTest = () => {
   const [cameraAccessible, setCameraAccessible] = useState(null);
   const [stage, setStage] = useState(1);
@@ -29,6 +29,10 @@ const LivelinessTest = () => {
     { id: 3, instruction: 'Rotate Right', next: 'Please rotate your face to the right.', endpoint: '/api/verify/head-rotation-right/' },
     { id: 4, instruction: 'Rotate Left', next: 'Please rotate your face to the left.', endpoint: '/api/verify/head-rotation-left/' },
   ];
+
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
 
   useEffect(() => {
     const startCamera = async () => {
@@ -70,7 +74,6 @@ const LivelinessTest = () => {
 
   const verifyFreelancer = async () => {
     try {
-      const token = localStorage.getItem("access");
       const response = await axios.patch(
         "http://127.0.0.1:8000/api/user/freelancer/manage/",
         {
@@ -119,7 +122,6 @@ const LivelinessTest = () => {
         sentSound.play();
 
         try {
-          const token = localStorage.getItem('access');
           const response = await axios.post(
             `http://127.0.0.1:8005${currentStage.endpoint}`,
             formData,

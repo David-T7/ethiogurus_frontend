@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-
+import { decryptToken } from "../../utils/decryptToken";
 const fetchProfile = async ({ queryKey }) => {
   const [, token] = queryKey;
   const response = await axios.get("http://127.0.0.1:8000/api/user/client/manage/", {
@@ -25,7 +25,9 @@ const updateProfile = async ({ updatedProfile, token }) => {
 };
 
 const UpdateProfile = () => {
-  const token = localStorage.getItem("access");
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const queryClient = useQueryClient(); // Initialize the query client
 
   const [updatedProfile, setUpdatedProfile] = useState({});

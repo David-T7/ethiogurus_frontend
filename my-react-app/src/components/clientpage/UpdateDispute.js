@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { FaUpload } from "react-icons/fa";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-
+import { decryptToken } from "../../utils/decryptToken";
 const fetchDispute = async ({ queryKey }) => {
   const [, disputeId, token] = queryKey;
   const response = await axios.get(`http://127.0.0.1:8000/api/disputes/${disputeId}/`, {
@@ -15,8 +15,9 @@ const fetchDispute = async ({ queryKey }) => {
 const UpdateDispute = () => {
   const { id: disputeId } = useParams(); // Get dispute ID from URL
   const navigate = useNavigate();
-  const token = localStorage.getItem("access");
-
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const [title, setTitle] = useState("");
   const [disputeDetails, setDisputeDetails] = useState("");
   const [files, setFiles] = useState([]);

@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-
+import { decryptToken } from "../../utils/decryptToken";
 const fetchVerificationStatus = async ({ queryKey }) => {
   const [, token] = queryKey;
   const response = await axios.get("http://127.0.0.1:8000/api/user/freelancer/manage/", {
@@ -16,8 +16,9 @@ const fetchVerificationStatus = async ({ queryKey }) => {
 const CheckVerification = () => {
   const navigate = useNavigate();
   const { id, type } = useParams();
-  const token = localStorage.getItem("access");
-
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   // UseQuery for fetching verification status
   const { data: verificationStatus, isLoading, isError } = useQuery({
     queryKey: ["verificationStatus", token],

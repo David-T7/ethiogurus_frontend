@@ -1,7 +1,7 @@
 import React, { createContext } from "react";
 import { useQuery, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import axios from "axios";
-
+import { decryptToken } from "../utils/decryptToken";
 const SkillTestContext = createContext();
 const queryClient = new QueryClient();
 
@@ -16,7 +16,9 @@ const fetchSkillTest = async ({ queryKey }) => {
     throw new Error("Invalid test type");
   }
 
-  const token = localStorage.getItem("access"); // Get the access token from localStorage
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const response = await axios.get(url, {
     headers: {
       Authorization: `Bearer ${token}`, // Include the token in the headers

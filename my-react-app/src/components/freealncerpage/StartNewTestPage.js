@@ -3,24 +3,27 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import SkillDetailsModal from "./SkillDetailsModal";
+import { decryptToken } from "../../utils/decryptToken";
 
-const fetchTests = async () => {
-  const token = localStorage.getItem("access");
+// Utility to get and decrypt the token
+const getDecryptedToken = () => {
+  const encryptedToken = localStorage.getItem("access");
+  const secretKey = process.env.REACT_APP_SECRET_KEY;
+  return decryptToken(encryptedToken, secretKey);
+};
 
+// Fetch tests
+const fetchTests = async (token) => {
   // Fetch coding tests
   const codingResponse = await axios.get(
     "http://127.0.0.1:8002/api/practical-tests/grouped/",
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    }
+    { headers: { Authorization: `Bearer ${token}` } }
   );
 
   // Fetch theoretical tests
   const theoreticalResponse = await axios.get(
     "http://127.0.0.1:8001/api/theoretical-tests/grouped/",
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    }
+    { headers: { Authorization: `Bearer ${token}` } }
   );
 
   const codingTestsData = codingResponse.data || {};
@@ -43,9 +46,9 @@ const fetchTests = async () => {
   return combinedData;
 };
 
+// Fetch skill details
 const fetchSkillDetail = async ({ queryKey }) => {
-  const [, technology] = queryKey;
-  const token = localStorage.getItem("access");
+  const [, technology, token] = queryKey;
 
   const theoreticalResponse = await axios.get(
     `http://127.0.0.1:8001/api/theoretical-tests/${technology}/`,
@@ -70,18 +73,23 @@ const StartNewTestPage = () => {
   const [selectedSkill, setSelectedSkill] = useState(null);
   const navigate = useNavigate();
 
+  const token = getDecryptedToken(); // Decrypt token once and reuse it
+
+  // Fetch tests using React Query
   const { data: categories, isLoading, isError, error } = useQuery({
-    queryKey: ["tests"],
-    queryFn: fetchTests,
+    queryKey: ["tests", token],
+    queryFn: () => fetchTests(token), // Pass token explicitly
     staleTime: 1000 * 60 * 5, // Cache data for 5 minutes
+    enabled: !!token, // Ensure token exists before making the request
   });
 
+  // Fetch skill details using React Query
   const {
     data: skillDetails,
     refetch: fetchSkillDetails,
     isFetching: isFetchingSkillDetails,
   } = useQuery({
-    queryKey: ["skillDetails", selectedTechnology],
+    queryKey: ["skillDetails", selectedTechnology, token], // Include token in queryKey
     queryFn: fetchSkillDetail,
     enabled: false, // Only fetch when triggered
   });

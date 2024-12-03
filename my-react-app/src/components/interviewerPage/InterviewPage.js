@@ -1,209 +1,156 @@
 import React, { useEffect, useState } from "react";
+import { useParams, Link , useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { useParams, Link } from "react-router-dom";
+import { decryptToken } from "../../utils/decryptToken";
+const fetchInterviewDetails = async ({ queryKey }) => {
+  const [, { id, token }] = queryKey;
+  const interviewResponse = await axios.get(
+    `http://127.0.0.1:8000/api/interviews/${id}/`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  const interview = interviewResponse.data;
+
+  const freelancerResponse = await axios.get(
+    `http://127.0.0.1:8000/api/user/freelancer/${interview.freelancer}/`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+
+  const appointmentResponse = await axios.get(
+    `http://127.0.0.1:8000/api/appointments/${interview.appointment}/`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+
+  return {
+    interview,
+    freelancer: freelancerResponse.data,
+    appointment: appointmentResponse.data,
+  };
+};
+
+const submitInterviewResult = async ({
+  id,
+  token,
+  interviewPayload,
+  assessmentPayload,
+  appointmentId,
+}) => {
+  // Update interview
+  const interviewResponse = await axios.patch(
+    `http://127.0.0.1:8000/api/interviews/${id}/`,
+    interviewPayload,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  // Update assessment status
+  await axios.patch(
+    `http://127.0.0.1:8000/api/full-assessment/${appointmentId}/update/`,
+    assessmentPayload,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  // Mark the appointment as done
+  await axios.patch(
+    `http://127.0.0.1:8000/api/appointments/${appointmentId}/done/`,
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return interviewResponse.data;
+};
 
 const InterviewPage = () => {
   const { id } = useParams(); // Get interview ID from URL
-  const [interview, setInterview] = useState(null);
-  const [freelancer, setFreelancer] = useState(null);
-  const [appointment, setAppointment] = useState(null);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true); // Loading state
-  const token = localStorage.getItem("access");
-
-  // Modal state
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
+  const queryClient = useQueryClient();
+  const navigate = useNavigate()
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [feedback, setFeedback] = useState("");
-  const [passed, setPassed] = useState(true);
-  const [onHold, setOnHold] = useState(false);
+  const [passed, setPassed] = useState(false);
   const [onHoldDuration, setOnHoldDuration] = useState(""); // Duration state
-  const [submitting, setSubmitting] = useState(false);
-  const [submissionError, setSubmissionError] = useState(null);
+
+  // Fetch interview details
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["interviewDetails", { id, token }],
+    queryFn: fetchInterviewDetails,
+  });
 
   useEffect(() => {
-    const fetchInterviewDetails = async () => {
-      try {
-        // Fetch interview data
-        const interviewResponse = await axios.get(
-          `http://127.0.0.1:8000/api/interviews/${id}/`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+    if (data && data.interview) {
+      setPassed(data.interview.passed || false);
+      setFeedback(data.interview.feedback || "");
+    }
+  }, [data]);
 
-        const interviewData = interviewResponse.data;
-        setInterview(interviewData);
-        setPassed(interviewData.passed);
-        setFeedback(interviewData.feedback);
-
-        // Fetch freelancer data
-        const freelancerResponse = await axios.get(
-          `http://127.0.0.1:8000/api/user/freelancer/${interviewData.freelancer}/`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setFreelancer(freelancerResponse.data);
-
-        // Fetch appointment data
-        const appointmentResponse = await axios.get(
-          `http://127.0.0.1:8000/api/appointments/${interviewData.appointment}/`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setAppointment(appointmentResponse.data);
-
-        setLoading(false); // Data fetched successfully
-      } catch (err) {
-        setError(
-          err.response
-            ? err.response.data.detail
-            : "Failed to fetch interview details"
-        );
-        setLoading(false);
-      }
-    };
-
-    fetchInterviewDetails();
-  }, [id, token]);
+  const mutation = useMutation({
+    mutationFn: submitInterviewResult,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["interviewDetails", { id, token }]);
+      setIsModalOpen(false);
+    },
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitting(true);
-    setSubmissionError(null);
-  
-    try {
-      // Prepare the initial payload for the interview update
-      const interviewPayload = {
-        feedback: feedback,
-        passed: passed,
-        done: true,
-      };
-  
-      // Update interview data
-      const response = await axios.patch(
-        `http://127.0.0.1:8000/api/interviews/${id}/`,
-        interviewPayload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-  
-      // If the interview was passed and it's not a soft skills assessment, verify skills
-      if (response.data.passed) {
-        if (appointment.interview_type !== "soft_skills_assessment") {
-          const verificationPayload = {
-            freelancer_id: freelancer.id,
-            category: appointment.category,
-            skills_passed: appointment.skills_passed,
-          };
-          await axios.post(
-            `http://127.0.0.1:8000/api/user/verify-skills/`,
-            verificationPayload,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
-        }
-  
-        // Prepare dynamic status update for assessment based on interview type
-        const fieldToUpdate = `${appointment.interview_type}_status`;
-        const assessmentUpdatePayload = {
-          [fieldToUpdate]: "passed",
-        };
-  
-        // If the interview type is "soft_skills_assessment", set the next step to pending
-        if (appointment.interview_type === "soft_skills_assessment") {
-          assessmentUpdatePayload.depth_skill_assessment_status = "pending";
-        }
-  
-        await axios.patch(
-          `http://127.0.0.1:8000/api/full-assessment/${appointment.freelancer}/update/`,
-          assessmentUpdatePayload,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-      } else {
-        // If the assessment is on hold or failed
-        const fieldToUpdate = `${appointment.interview_type}_status`;
-        const assessmentUpdatePayload = onHold
-          ? {
-              on_hold: true,
-              [fieldToUpdate]: "on_hold",
-              on_hold_duration: onHoldDuration,
-            }
-          : {
-              [fieldToUpdate]: "failed",
-            };
-  
-        await axios.patch(
-          `http://127.0.0.1:8000/api/full-assessment/${appointment.freelancer}/update/`,
-          assessmentUpdatePayload,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-      }
-  
-      // Mark the appointment as done
-      await axios.patch(
-        `http://127.0.0.1:8000/api/appointments/${appointment.id}/done/`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-  
-      // Update local state with the new interview data
-      setInterview(response.data);
-      setPassed(response.data.passed);
-      setFeedback(response.data.feedback);
-      setIsModalOpen(false);
-      setSubmitting(false);
-    } catch (err) {
-      setSubmissionError(
-        err.response ? err.response.data.detail : "Failed to submit interview results"
-      );
-      setSubmitting(false);
-    }
-  };
-  
+    const interviewPayload = {
+      feedback,
+      passed,
+      done: true,
+    };
 
-  if (loading) {
+    const fieldToUpdate = `${data.appointment.interview_type}_status`;
+    const assessmentPayload = passed
+      ? { [fieldToUpdate]: "passed" }
+      : {
+          [fieldToUpdate]: "on_hold",
+          on_hold: true,
+          on_hold_duration: onHoldDuration,
+        };
+
+    mutation.mutate({
+      id,
+      token,
+      interviewPayload,
+      assessmentPayload,
+      appointmentId: data.appointment.freelancer,
+    });
+    navigate("/interviews")
+  };
+
+  if (isLoading) {
     return <div className="text-center py-8">Loading interview details...</div>;
   }
 
   if (error) {
-    return <div className="text-center py-8 text-red-500">{error}</div>;
-  }
-
-  if (!interview || !freelancer || !appointment) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        Interview details are unavailable.
+      <div className="text-center py-8 text-red-500">
+        {error.response ? error.response.data.detail : "Failed to fetch data"}
       </div>
     );
   }
+
+  const { interview, freelancer, appointment } = data;
 
   return (
     <div className="max-w-2xl mx-auto p-8 mt-8">
@@ -215,33 +162,32 @@ const InterviewPage = () => {
       {/* Category */}
       <div className="flex items-center mb-2">
         <h1 className="text-xl font-thin text-brand-dark-blue">
-          <span className="font-normal">Category:</span> {appointment.category ?appointment.category : appointment.interview_type }
+          <span className="font-normal">Category:</span>{" "}
+          <span className="text-black">{appointment.category || appointment.interview_type}</span>
         </h1>
       </div>
 
       {/* Freelancer */}
       <div className="flex items-center mb-2">
         <h1 className="text-xl font-thin text-brand-dark-blue">
-          <span className="font-normal">Freelancer:</span> {freelancer.full_name}
+          <span className="font-normal">Freelancer:</span> <span className="text-black">{freelancer.full_name}</span>
         </h1>
       </div>
 
-      {appointment.interview_type !== "soft_skills_assessment" && (
-        <>
-          <div className="flex items-center mb-2">
-            <h1 className="text-xl font-thin text-brand-dark-blue">
-              <span className="font-normal">Skills Passed:</span>
-              {appointment.skills_passed}
-            </h1>
-          </div>
-        </>
+      {appointment.interview_type !== "soft_skills_assessment" && appointment.skills_passed.lenght > 0 && (
+        <div className="flex items-center mb-2">
+          <h1 className="text-xl font-thin text-brand-dark-blue">
+            <span className="font-normal">Skills Passed:</span>{" "}
+            <span className="text-black">{appointment.skills_passed}</span>
+          </h1>
+        </div>
       )}
 
       {/* Appointment Date */}
       <div className="flex items-center mb-2">
         <h1 className="text-xl font-thin text-brand-dark-blue">
           <span className="font-normal">Selected Date:</span>{" "}
-          {new Date(appointment.appointment_date).toLocaleString()}
+          <span className="text-black">{new Date(appointment.appointment_date).toLocaleString()}</span>
         </h1>
       </div>
 
@@ -249,11 +195,12 @@ const InterviewPage = () => {
       {interview.done && (
         <>
           <div className="flex items-center mb-2">
-            <h1 className="text-xl font-normal text-brand-dark-blue">Feedback</h1>
+            <h1 className="text-xl font-normal text-brand-dark-blue">
+              Feedback
+            </h1>
           </div>
-
           <div className="flex items-center mb-2">
-            <h1 className="text-xl font-thin text-brand-dark-blue">
+            <h1 className="text-xl font-thin text-black">
               {interview.feedback || "No feedback provided."}
             </h1>
           </div>
@@ -262,21 +209,12 @@ const InterviewPage = () => {
 
       {/* Action Buttons */}
       <div className="flex items-center mb-2 mt-4">
-        {!interview.done ? (
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mr-2"
-          >
-            Submit Result
-          </button>
-        ) : (
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mr-2"
-          >
-            Update Result
-          </button>
-        )}
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          {interview.done ? "Update Result" : "Submit Result"}
+        </button>
       </div>
 
       {/* Modal */}
@@ -287,7 +225,6 @@ const InterviewPage = () => {
               {interview.done ? "Update Interview Result" : "Submit Interview Result"}
             </h2>
             <form onSubmit={handleSubmit}>
-              {/* Feedback Field */}
               <div className="mb-4">
                 <label className="block text-gray-700 mb-2" htmlFor="feedback">
                   Feedback
@@ -301,8 +238,6 @@ const InterviewPage = () => {
                   rows="4"
                 ></textarea>
               </div>
-
-              {/* Passed Field */}
               <div className="mb-4">
                 <label className="flex items-center">
                   <input
@@ -314,11 +249,12 @@ const InterviewPage = () => {
                   Passed
                 </label>
               </div>
-
-              {/* On Hold Duration (if failed) */}
               {!passed && (
                 <div className="mb-4">
-                  <label className="block text-gray-700 mb-2" htmlFor="onHoldDuration">
+                  <label
+                    className="block text-gray-700 mb-2"
+                    htmlFor="onHoldDuration"
+                  >
                     Duration on Hold (in days)
                   </label>
                   <input
@@ -332,22 +268,14 @@ const InterviewPage = () => {
                   />
                 </div>
               )}
-
-              {/* Error Message */}
-              {submissionError && (
-                <div className="text-red-500 text-sm mb-4">{submissionError}</div>
-              )}
-
-              {/* Submit Button */}
               <button
                 type="submit"
                 className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
-                disabled={submitting}
+                disabled={mutation.isLoading}
               >
-                {submitting ? "Submitting..." : "Submit"}
+                {mutation.isLoading ? "Submitting..." : "Submit"}
               </button>
             </form>
-
             <button
               onClick={() => setIsModalOpen(false)}
               className="mt-4 text-gray-500 hover:text-gray-700"

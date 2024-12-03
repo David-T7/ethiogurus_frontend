@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-
+import { decryptToken } from '../../utils/decryptToken';
 const fetchDRCForwarded = async (token) => {
   const response = await axios.get('http://127.0.0.1:8000/api/dispute-manager-disputes/', {
     headers: { Authorization: `Bearer ${token}` },
@@ -34,7 +34,9 @@ const fetchUserType = async (userId, token) => {
 };
 
 const DisputeManagerDashboard = () => {
-  const token = localStorage.getItem('access');
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const navigate = useNavigate();
 
   const { data: drcForwarded = [], isError, error } = useQuery({
@@ -70,7 +72,7 @@ const DisputeManagerDashboard = () => {
   return (
     <div className="max-w-xl mx-auto p-8 mt-8">
       <section className="mb-12">
-        <h2 className="text-lg font-normal text-brand-dark-blue mb-6">Latest Disputes Assigned</h2>
+        <h2 className="text-lg font-normal text-center text-brand-dark-blue mb-6">Latest Disputes Assigned</h2>
         {drcForwarded.length === 0 ? (
           <p className="text-gray-500 text-center">No disputes assigned.</p>
         ) : (

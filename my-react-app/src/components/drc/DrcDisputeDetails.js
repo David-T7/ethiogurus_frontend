@@ -2,7 +2,7 @@ import React from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-
+import { decryptToken } from "../../utils/decryptToken";
 const fetchDisputeDetails = async ({ queryKey }) => {
   const [_, { disputeId, token }] = queryKey;
   const response = await axios.get(`http://127.0.0.1:8000/api/disputes/${disputeId}/`, {
@@ -13,7 +13,9 @@ const fetchDisputeDetails = async ({ queryKey }) => {
 
 const DrcDisputeDetails = () => {
   const { id: disputeId } = useParams();
-  const token = localStorage.getItem("access");
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const location = useLocation();
   const { drcForwardedItem } = location.state || {}; // Assuming you have contract info passed down
   const navigate = useNavigate();
@@ -68,14 +70,14 @@ const DrcDisputeDetails = () => {
       </div>
 
       {/* Submit Button */}
-      <div className="flex justify-center">
+      {dispute.status !== 'resolved' && <div className="flex justify-center">
         <button
           onClick={() => handleResolveDispute(dispute.id)}
           className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md"
         >
           Resolve
         </button>
-      </div>
+      </div>}
     </div>
   );
 };

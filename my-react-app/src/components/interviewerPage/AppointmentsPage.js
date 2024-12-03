@@ -1,41 +1,38 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import { decryptToken } from "../../utils/decryptToken";
+const fetchAppointments = async ({ queryKey }) => {
+  const [_, { token }] = queryKey;
+  const response = await axios.get("http://127.0.0.1:8000/api/appointments/", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};
 
 const AppointmentsPage = () => {
-  const [appointments, setAppointments] = useState([]);
-  const [error, setError] = useState(null);
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [durationFilter, setDurationFilter] = useState("");
-  const token = localStorage.getItem("access");
-  const [visibleCount, setVisibleCount] = useState(5); // Initially show 5 interviews
+  const [visibleCount, setVisibleCount] = useState(5); // Initially show 5 appointments
 
-  useEffect(() => {
-    const fetchAppointments = async () => {
-      try {
-        const response = await axios.get(
-          "http://127.0.0.1:8000/api/appointments/",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setAppointments(response.data);
-      } catch (err) {
-        setError(
-          err.response
-            ? err.response.data.detail
-            : "Failed to fetch appointments"
-        );
-      }
-    };
+  // Fetch appointments using TanStack Query v5+
+  const {
+    data: appointments = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["appointments", { token }],
+    queryFn: fetchAppointments,
+  });
 
-    fetchAppointments();
-  }, []);
-
-  // Function to handle filtering appointments
+  // Function to filter appointments
   const handleFilter = () => {
     const today = new Date();
 
@@ -53,18 +50,10 @@ const AppointmentsPage = () => {
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1); // Start of this month
     const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0); // End of this month
 
-    const nextMonthStart = new Date(
-      today.getFullYear(),
-      today.getMonth() + 1,
-      1
-    ); // Start of next month
+    const nextMonthStart = new Date(today.getFullYear(), today.getMonth() + 1, 1); // Start of next month
     const nextMonthEnd = new Date(today.getFullYear(), today.getMonth() + 2, 0); // End of next month
 
-    const lastMonthStart = new Date(
-      today.getFullYear(),
-      today.getMonth() - 1,
-      1
-    ); // Start of last month
+    const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1); // Start of last month
     const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0); // End of last month
 
     const matchesSearch = (appointment) =>
@@ -94,7 +83,8 @@ const AppointmentsPage = () => {
           );
         case "last_month":
           return (
-            appointmentDate >= lastMonthStart && appointmentDate <= lastMonthEnd
+            appointmentDate >= lastMonthStart &&
+            appointmentDate <= lastMonthEnd
           );
         default:
           return true; // No duration filter applied
@@ -109,19 +99,26 @@ const AppointmentsPage = () => {
     );
   };
 
-  // Function to handle "See More" and "See Less" functionality
-  const handleSeeMore = () => {
-    setVisibleCount((prevCount) => prevCount + 5); // Increase visible count by 5
-  };
-
-  const handleSeeLess = () => {
-    setVisibleCount(5); // Reset to show only the first 5
-  };
-
   const filteredAppointments = handleFilter();
 
+  // Function to handle "See More" and "See Less"
+  const handleSeeMore = () => setVisibleCount((prevCount) => prevCount + 5);
+  const handleSeeLess = () => setVisibleCount(5);
+
+  if (isLoading) {
+    return <div className="text-center py-8">Loading appointments...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8 text-red-500">
+        Failed to load appointments.
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-2xl mx-auto p-8 mt-8">
+    <div className="max-w-xl mx-auto p-8 mt-8">
       {/* Filter and Search Section */}
       <section className="mb-6">
         <input
@@ -166,7 +163,7 @@ const AppointmentsPage = () => {
             >
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-xl font-normal text-gray-800">
-                  {appointment.category?appointment.category : appointment.interview_type}
+                  {appointment.category || appointment.interview_type}
                 </h3>
                 <span
                   className={`text-xs font-semibold rounded-full px-4 py-1 text-white ${
@@ -176,10 +173,11 @@ const AppointmentsPage = () => {
                   {appointment.done ? "Done" : "Pending"}
                 </span>
               </div>
-              {appointment.interview_type !== "soft_skills_assessment" && <p className="text-gray-600">
-                Skills Passed: {appointment.skills_passed}
-              </p>
-                }
+              {appointment.interview_type !== "soft_skills_assessment" && appointment.skills_passed.length > 0 && (
+                <p className="text-gray-600">
+                  Skills Passed: {appointment.skills_passed}
+                </p>
+              )}
               <p className="text-gray-600">
                 Appointment Date:{" "}
                 {new Date(appointment.appointment_date).toLocaleString()}

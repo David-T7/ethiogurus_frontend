@@ -1,13 +1,15 @@
 import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-
+import { decryptToken } from "../../utils/decryptToken";
 const ClientSettingsPage = () => {
   const queryClient = useQueryClient();
 
   // Fetch client settings
   const fetchSettings = async () => {
-    const token = localStorage.getItem("access");
+    const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+    const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+    const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
     const response = await axios.get("http://127.0.0.1:8000/api/user/client/manage/", {
       headers: { Authorization: `Bearer ${token}` },
     });

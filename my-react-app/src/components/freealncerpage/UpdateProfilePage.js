@@ -3,10 +3,17 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { FaCheckCircle } from "react-icons/fa";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { decryptToken } from "../../utils/decryptToken";
+
+// Reusable function to get and decrypt the token
+const getDecryptedToken = () => {
+  const encryptedToken = localStorage.getItem("access"); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  return decryptToken(encryptedToken, secretKey); // Decrypt the token
+};
 
 // Function to fetch the profile data
-const fetchProfile = async () => {
-  const token = localStorage.getItem("access");
+const fetchProfile = async (token) => {
   const response = await axios.get("http://127.0.0.1:8000/api/user/freelancer/manage/", {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -16,7 +23,7 @@ const fetchProfile = async () => {
 };
 
 // Function to update the profile data
-const updateProfile = async (updatedProfile) => {
+const updateProfile = async ({ updatedProfile, token }) => {
   const formData = new FormData();
   for (const key in updatedProfile) {
     if (key === "certifications" || key === "portfolio") {
@@ -25,7 +32,6 @@ const updateProfile = async (updatedProfile) => {
       formData.append(key, updatedProfile[key]);
     }
   }
-  const token = localStorage.getItem("access");
   await axios.patch("http://127.0.0.1:8000/api/user/freelancer/manage/", formData, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -38,15 +44,19 @@ const UpdateProfilePage = () => {
   const [updatedProfile, setUpdatedProfile] = useState({});
   const [verificationStatus, setVerificationStatus] = useState(null);
 
+  const token = getDecryptedToken(); // Decrypt the token once and reuse it
+
   // Use React Query to fetch the profile data
   const { data: profile, isLoading, isError, error } = useQuery({
-    queryKey: ["profile"],
-    queryFn: fetchProfile,
+    queryKey: ["profile", token], // Include token in the queryKey to refetch if it changes
+    queryFn: () => fetchProfile(token),
+    enabled: !!token, // Only run if token is available
+    retry: false, // Avoid infinite retry loop if token is invalid
   });
 
   // Use React Query to handle profile updates
   const mutation = useMutation({
-    mutationFn: updateProfile,
+    mutationFn: (data) => updateProfile(data),
     onSuccess: () => {
       alert("Profile updated successfully!");
     },
@@ -121,15 +131,15 @@ const UpdateProfilePage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    mutation.mutate(updatedProfile);
+    mutation.mutate({ updatedProfile, token }); // Pass both the updated profile and token
   };
 
   const handleVerifyAccount = () => {
     navigate("/verify-account", { state: { freelancerData: profile } });
   };
 
-  if (isLoading) return <div>Loading...</div>;
-  if (isError) return <div>Error: {error.message}</div>;
+  if (isLoading) return <div className="text-center">Loading...</div>;
+  if (isError) return <div className="text-center">Error: {error.message}</div>;
 
   return (
     <div className="max-w-2xl mx-auto p-8 mt-8">

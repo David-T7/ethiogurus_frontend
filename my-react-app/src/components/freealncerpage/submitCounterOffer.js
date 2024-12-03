@@ -1,14 +1,45 @@
 // src/components/SubmitCounterOffer.js
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
+
+
+const fetchFreelancer = async ({ queryKey }) => {
+  const [, { token }] = queryKey;
+  const response = await axios.get("http://127.0.0.1:8000/api/user/freelancer/manage/", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+const fetchContract = async ({ queryKey }) => {
+  const [, { contractId, token }] = queryKey;
+  const response = await axios.get(
+    `http://127.0.0.1:8000/api/freelancer-contracts/${contractId}/`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  return response.data;
+};
+
+const fetchMilestones = async ({ queryKey }) => {
+  const [, { contractId, token }] = queryKey;
+  const response = await axios.get(
+    `http://127.0.0.1:8000/api/contracts/${contractId}/milestones/`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  return response.data;
+};
+
 
 const SubmitCounterOffer = () => {
   const { id: contractId } = useParams(); // Contract ID from URL
   const navigate = useNavigate();
-  const [contract, setContract] = useState(null);
   const [offer, setOffer] = useState({
     title: "",
     proposed_amount: "",
@@ -20,94 +51,49 @@ const SubmitCounterOffer = () => {
   const [rejectMilestoneOption, setRejectMilestoneOption] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [freelancer, setFreelancer] = useState(null);
   const token = localStorage.getItem("access");
 
-  useEffect(() => {
-    const fetchFreelancer = async () => {
-      try {
-        const response = await axios.get(
-          "http://127.0.0.1:8000/api/user/freelancer/manage/",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setFreelancer(response.data);
-      } catch (err) {
-        console.error("Error fetching freelancer data:", err);
-        setError("Failed to load freelancer details.");
-      }
-    };
-    fetchFreelancer();
-  }, [token]);
+ // Fetch freelancer details
+ const { data: freelancer } = useQuery({
+  queryKey: ["freelancer", { token }],
+  queryFn: fetchFreelancer,
+  staleTime: 300000, // Cache for 5 minutes
+});
 
-  useEffect(() => {
-    const fetchContract = async () => {
-      try {
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/freelancer-contracts/${contractId}/`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setContract(response.data);
+// Fetch contract details
+const { data: contract } = useQuery({
+  queryKey: ["contract", { contractId, token }],
+  queryFn: fetchContract,
+  onSuccess: (data) => {
+    setOffer((prevOffer) => ({
+      ...prevOffer,
+      title: data.title || "",
+      proposed_amount: data.amount_agreed || "",
+      start_date: data.start_date ? data.start_date.split("T")[0] : "",
+      end_date: data.end_date ? data.end_date.split("T")[0] : "",
+      milestone_based: data.milestone_based || false,
+    }));
+  },
+  staleTime: 300000,
+});
 
-        setOffer((prevOffer) => ({
-          ...prevOffer,
-          title: response.data.title || "",
-          proposed_amount: response.data.amount_agreed || "",
-          start_date: response.data.start_date
-            ? response.data.start_date.split("T")[0]
-            : "",
-          end_date: response.data.end_date
-            ? response.data.end_date.split("T")[0]
-            : "",
-          milestone_based: response.data.milestone_based || false,
-        }));
-      } catch (err) {
-        console.error("Error fetching contract:", err);
-        setError("Failed to load contract details.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchContract();
-  }, [contractId]);
-
-
-  useEffect(() => {
-    const fetchMileStone = async () => {
-      try {
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/contracts/${contract.contract_update ? contract.contract_update :contractId}/milestones/`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setOffer((prevOffer) => ({
-          ...prevOffer, milestones: response.data
-          ? response.data.map((milestone) => ({
-              id: milestone.id, // Existing milestone ID
-              title: milestone.title || "",
-              amount: milestone.amount || "",
-              due_date: milestone.due_date
-                ? milestone.due_date.split("T")[0]
-                : "",
-            }))
-          : [],}))
-      } catch (error) {
-        console.log("error fetching milestones", error);
-      }
-    };
-    fetchMileStone();
-  }, [contract]);
+// Fetch milestones for the contract
+const { data: milestones } = useQuery({
+  queryKey: ["milestones", { contractId: contract?.contract_update || contractId, token }],
+  queryFn: fetchMilestones,
+  enabled: !!contract, // Only fetch milestones if contract data is available
+  onSuccess: (data) => {
+    setOffer((prevOffer) => ({
+      ...prevOffer,
+      milestones: data.map((milestone) => ({
+        id: milestone.id,
+        title: milestone.title || "",
+        amount: milestone.amount || "",
+        due_date: milestone.due_date ? milestone.due_date.split("T")[0] : "",
+      })),
+    }));
+  },
+});
 
 
 

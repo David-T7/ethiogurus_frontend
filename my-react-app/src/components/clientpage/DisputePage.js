@@ -4,7 +4,7 @@ import ClientLayout from "./ClientLayoutPage";
 import { FaUpload } from "react-icons/fa";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import axios from "axios";
-
+import { decryptToken } from "../../utils/decryptToken";
 const fetchContract = async ({ queryKey }) => {
   const [, contractId, token] = queryKey;
   const response = await axios.get(`http://127.0.0.1:8000/api/contracts/${contractId}/`, {
@@ -25,7 +25,9 @@ const DisputePage = () => {
   const { id: contractId } = useParams(); // Get contract ID from URL
   const navigate = useNavigate();
   const location = useLocation();
-  const token = localStorage.getItem("access");
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const { milestoneId } = location.state || null;
 
   const [title, setTitle] = useState("");

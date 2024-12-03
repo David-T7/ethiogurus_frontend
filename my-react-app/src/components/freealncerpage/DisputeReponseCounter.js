@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams , useLocation } from 'react-router-dom';
 import { FaUpload, FaTrash } from 'react-icons/fa';
 import axios from 'axios';
-
+import { decryptToken } from '../../utils/decryptToken';
 const DisputeResponseCounter = () => {
   const {id:disputeResponseId} = useParams()
-  const token = localStorage.getItem("access");
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const navigate = useNavigate();
   
   const [disputeDetails, setDisputeDetails] = useState({

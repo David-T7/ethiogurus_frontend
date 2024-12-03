@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaUpload } from 'react-icons/fa';
 import axios from 'axios';
-
+import { decryptToken } from '../../utils/decryptToken';
 const EditDisputePage = () => {
   const { id: disputeId } = useParams(); // Get dispute ID from URL
   const navigate = useNavigate();
@@ -17,7 +17,9 @@ const EditDisputePage = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   
-  const token = localStorage.getItem('access');
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
 
   useEffect(() => {
     const fetchDispute = async () => {

@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useLocation , useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FaUpload } from 'react-icons/fa';
-
+import { decryptToken } from '../../utils/decryptToken';
 const DisputeDetails = () => {
   const { id: disputeId } = useParams();
   const [dispute, setDispute] = useState(null);
-  const token = localStorage.getItem("access");
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const location = useLocation();
   const { contract , freelancerId } = location.state || {}; // Assuming you have contract info passed down
   const navigate = useNavigate()

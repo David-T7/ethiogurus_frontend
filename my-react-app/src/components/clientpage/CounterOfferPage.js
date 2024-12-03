@@ -2,7 +2,7 @@ import React from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-
+import { decryptToken } from "../../utils/decryptToken";
 const fetchCounterOffer = async ({ queryKey }) => {
   const [, id, token] = queryKey;
   const response = await axios.get(`http://127.0.0.1:8000/api/counter-offer/${id}/`, {
@@ -30,7 +30,9 @@ const CounterOffer = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const token = localStorage.getItem("access");
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const contract = location.state?.contract || {};
 
   const {

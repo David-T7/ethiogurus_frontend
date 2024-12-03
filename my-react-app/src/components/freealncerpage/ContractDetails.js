@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { decryptToken } from "../../utils/decryptToken";
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://127.0.0.1:8000/api";
 
 const fetchContractDetails = async ({ queryKey }) => {
   const [, { id, token }] = queryKey;
-  const response = await axios.get(`http://127.0.0.1:8000/api/freelancer-contracts/${id}/`, {
+  const response = await axios.get(`${API_BASE_URL}/freelancer-contracts/${id}/`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;
@@ -13,40 +15,31 @@ const fetchContractDetails = async ({ queryKey }) => {
 
 const fetchMilestones = async ({ queryKey }) => {
   const [, { contractId, token }] = queryKey;
-  const response = await axios.get(
-    `http://127.0.0.1:8000/api/contracts/${contractId}/milestones/`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    }
-  );
+  const response = await axios.get(`${API_BASE_URL}/contracts/${contractId}/milestones/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   return response.data;
 };
 
 const fetchDisputes = async ({ queryKey }) => {
   const [, { contractId, token }] = queryKey;
-  const response = await axios.get(
-    `http://127.0.0.1:8000/api/contracts/${contractId}/disputes/`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    }
-  );
+  const response = await axios.get(`${API_BASE_URL}/contracts/${contractId}/disputes/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   return response.data;
 };
 
 const fetchCounterOffers = async ({ queryKey }) => {
   const [, { contractId, token }] = queryKey;
-  const response = await axios.get(
-    `http://127.0.0.1:8000/api/contracts/${contractId}/counter-offers/`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    }
-  );
+  const response = await axios.get(`${API_BASE_URL}/contracts/${contractId}/counter-offers/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   return response.data;
 };
 
 const fetchFreelancerDetails = async ({ queryKey }) => {
   const [, { token }] = queryKey;
-  const response = await axios.get(`http://127.0.0.1:8000/api/user/freelancer/manage/`, {
+  const response = await axios.get(`${API_BASE_URL}/user/freelancer/manage/`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;
@@ -55,80 +48,70 @@ const fetchFreelancerDetails = async ({ queryKey }) => {
 const ContractDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const token = localStorage.getItem("access");
-  const [error , setError] = useState("")
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
+  const [error, setError] = useState("");
+
   const { data: contract, isLoading: contractLoading } = useQuery({
     queryKey: ["contractDetails", { id, token }],
     queryFn: fetchContractDetails,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    cacheTime: 1000 * 60 * 30, // 30 minutes
   });
 
   const { data: milestones = [], isLoading: milestonesLoading } = useQuery({
     queryKey: ["contractMilestones", { contractId: contract?.id, token }],
     queryFn: fetchMilestones,
     enabled: !!contract?.milestone_based,
+    staleTime: 1000 * 60 * 5,
   });
 
-  const { data: disputes = [], isLoading: disputesLoading } = useQuery({
+  const { data: disputes = [] } = useQuery({
     queryKey: ["contractDisputes", { contractId: contract?.id, token }],
     queryFn: fetchDisputes,
     enabled: !!contract?.id,
+    staleTime: 1000 * 60 * 5,
   });
 
   const { data: counterOffers = [] } = useQuery({
     queryKey: ["counterOffers", { contractId: contract?.contract_update || id, token }],
     queryFn: fetchCounterOffers,
     enabled: !!contract,
+    staleTime: 1000 * 60 * 5,
   });
 
   const { data: freelancer } = useQuery({
     queryKey: ["freelancerDetails", { token }],
     queryFn: fetchFreelancerDetails,
+    staleTime: 1000 * 60 * 5,
   });
 
   const handleAcceptContract = async () => {
-    // Handle contract acceptance (POST request using axios)
     try {
-      await axios.patch(`http://127.0.0.1:8000/api/freelancer-contracts-update/${id}/`,{
-        status:"accepted"
-      },
-       {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      navigate(`/mycontracts`); // Navigate back to the contracts list after acceptance
-    } catch (err) {
-      setError(
-        err.response
-          ? err.response.data.detail
-          : "Failed to accept the contract"
+      await axios.patch(
+        `${API_BASE_URL}/freelancer-contracts-update/${id}/`,
+        { status: "accepted" },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
+      navigate(`/mycontracts`);
+    } catch (err) {
+      setError(err.response ? err.response.data.detail : "Failed to accept the contract");
     }
   };
 
-
-  const handleAcceptMilestone = async (id) => {
-    // Handle contract acceptance (POST request using axios)
+  const handleAcceptMilestone = async (milestoneId) => {
     try {
-      const response = await axios.patch(`http://127.0.0.1:8000/api/freelancer-milestones-update/${id}/`,{
-        status:"accepted"
-      },
-       {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      console.log("response is ",response.data)
-
-    } catch (err) {
-      setError(
-        err.response
-          ? err.response.data.detail
-          : "Failed to accept the contract"
+      await axios.patch(
+        `${API_BASE_URL}/freelancer-milestones-update/${milestoneId}/`,
+        { status: "accepted" },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      console.log("error is ",err)
+    } catch (err) {
+      setError(err.response ? err.response.data.detail : "Failed to accept the milestone");
     }
   };
+
 
   const handleCounterOffer = () => {
     navigate(`/submit-counter-offer/${id}`);
@@ -170,19 +153,14 @@ const ContractDetails = () => {
     navigate(`/dispute-response/${disputeId}`);
   };
 
-  if (contractLoading || milestonesLoading || disputesLoading) {
-    return <div className="text-center py-8">Loading contract details...</div>;
-  }
+  const sortedMilestones = React.useMemo(() => 
+    [...milestones].sort((a, b) => new Date(a.due_date) - new Date(b.due_date)),
+    [milestones]
+  );
 
-  if (error) {
-    return <div className="text-center py-8 text-red-600">Error: {error}</div>;
-  }
-
-  if (!contract) {
-    return <div className="text-center py-8">No contract found.</div>;
-  }
-  const sortedMilestones = [...milestones].sort((a, b) => new Date(a.due_date) - new Date(b.due_date));
-
+  if (contractLoading || milestonesLoading) return <div className="text-center">Loading contract details...</div>;
+  if (error) return <div className="text-red-600 text-center">Error: {error}</div>;
+  if (!contract) return <div className="text-center">No contract found.</div>;
 
   return (
     <div className="max-w-2xl mx-auto p-8 mt-8">

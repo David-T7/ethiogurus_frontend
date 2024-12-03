@@ -1,52 +1,54 @@
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { decryptToken } from '../../utils/decryptToken';
 
-const fetchContract = async (contractId) => {
-  const token = localStorage.getItem('access');
+// Utility to get and decrypt the token
+const getDecryptedToken = () => {
+  const encryptedToken = localStorage.getItem('access');
+  const secretKey = process.env.REACT_APP_SECRET_KEY;
+  return decryptToken(encryptedToken, secretKey);
+};
+
+// Fetch contract details
+const fetchContract = async (contractId, token) => {
   const response = await axios.get(`http://127.0.0.1:8000/api/get-contracts/${contractId}/`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;
 };
 
-const fetchMilestone = async (milestoneId) => {
-  const token = localStorage.getItem('access');
+// Fetch milestone details
+const fetchMilestone = async (milestoneId, token) => {
   const response = await axios.get(`http://127.0.0.1:8000/api/milestones/${milestoneId}/`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;
 };
 
-const resolveDispute = async ({ data, drcForwardedItem, disputeId }) => {
-  const token = localStorage.getItem('access');
+// Resolve dispute
+const resolveDispute = async ({ data, drcForwardedItem, disputeId, token }) => {
   try {
-    // Attempt to resolve the dispute
     const resolveResponse = await axios.post('http://127.0.0.1:8000/api/dispute-resolve-drc/', data, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    console.log("Resolve response is", resolveResponse.data); // Success response
+    console.log("Resolve response is", resolveResponse.data);
 
-    // Update the DRC forwarded item to mark it as solved
     await axios.patch(
       `http://127.0.0.1:8000/api/drc-disputes/${drcForwardedItem.id}/`,
       { solved: true },
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
-    // Update the dispute status to resolved
     await axios.patch(
       `http://127.0.0.1:8000/api/disputes/${disputeId}/`,
       { status: 'resolved', got_response: true },
       { headers: { Authorization: `Bearer ${token}` } }
     );
   } catch (error) {
-    // Log and throw the error details for further handling
     if (error.response) {
       console.error("Error response data:", error.response.data);
-      console.error("Error status code:", error.response.status);
-      console.error("Error headers:", error.response.headers);
       throw new Error(error.response.data.detail || "Failed to resolve dispute. Check the details.");
     } else {
       console.error("Unexpected error:", error.message);
@@ -55,13 +57,12 @@ const resolveDispute = async ({ data, drcForwardedItem, disputeId }) => {
   }
 };
 
-
 const ResolveDispute = () => {
   const { id: disputeId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { drcForwardedItem, dispute } = location.state || {};
-  const token = localStorage.getItem('access');
+  const token = getDecryptedToken(); // Decrypt the token once
 
   const [title, setTitle] = useState('');
   const [comment, setComment] = useState('');
@@ -73,24 +74,29 @@ const ResolveDispute = () => {
 
   const { data: contract } = useQuery({
     queryKey: ['contract', dispute.contract],
-    queryFn: () => fetchContract(dispute.contract),
-    enabled: !!dispute.contract,
+    queryFn: () => fetchContract(dispute.contract, token),
+    enabled: !!dispute.contract && !!token,
   });
 
   const { data: milestone } = useQuery({
     queryKey: ['milestone', dispute.milestone],
-    queryFn: () => fetchMilestone(dispute.milestone),
-    enabled: !!dispute.milestone,
+    queryFn: () => fetchMilestone(dispute.milestone, token),
+    enabled: !!dispute.milestone && !!token,
   });
 
+  useEffect(() => {
+    setTitle(dispute.title)
+    setRefundAmount(dispute.return_amount)
+  },[dispute])
+
   const mutation = useMutation({
-    mutationFn: (data) => resolveDispute(data),
+    mutationFn: (data) => resolveDispute({ ...data, token }),
     onSuccess: () => {
       setSuccess(true);
-      navigate(`/dispute-events/${disputeId}` ,{
-        state:{
-          drcForwardedItem:drcForwardedItem
-        }
+      navigate(`/dispute-events/${disputeId}`, {
+        state: {
+          drcForwardedItem: drcForwardedItem,
+        },
       });
     },
     onError: () => {
@@ -196,6 +202,17 @@ const ResolveDispute = () => {
             />
             <label htmlFor="partial">Partial Refund</label>
           </div>
+          
+          {refundType === 'full' && 
+            <div>
+              <p className="block text-lg font-normal text-brand-blue mb-2">
+                Amount for Full Refund
+              </p>
+              <p className="block font-normal mb-2">
+               {refundAmount} Birr
+              </p>
+            </div>
+              }
 
           {refundType === 'partial' && (
             <div>

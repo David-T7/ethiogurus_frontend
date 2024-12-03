@@ -2,40 +2,46 @@ import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 import { useState } from 'react';
+import { decryptToken } from '../../utils/decryptToken';
 
-const fetchProfile = async () => {
-  const token = localStorage.getItem('access');
+// Utility to get and decrypt the token
+const getDecryptedToken = () => {
+  const encryptedToken = localStorage.getItem('access');
+  const secretKey = process.env.REACT_APP_SECRET_KEY;
+  return decryptToken(encryptedToken, secretKey);
+};
+
+// Function to fetch the profile data
+const fetchProfile = async (token) => {
   const response = await axios.get('http://127.0.0.1:8000/api/user/dispute-manager/manage/', {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;
 };
 
-const updateProfile = async (updatedProfile) => {
+// Function to update the profile data
+const updateProfile = async ({ updatedProfile, token }) => {
   const formData = new FormData();
   for (const key in updatedProfile) {
     formData.append(key, updatedProfile[key]);
   }
-  const token = localStorage.getItem('access');
   await axios.patch('http://127.0.0.1:8000/api/user/dispute-manager/manage/', formData, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    headers: { Authorization: `Bearer ${token}` },
   });
 };
 
 const UpdateDrcProfile = () => {
   const [updatedProfile, setUpdatedProfile] = useState({});
+  const token = getDecryptedToken(); // Decrypt the token once
 
   const { data: profile, isLoading, isError, error } = useQuery({
     queryKey: ['drcProfile'],
-    queryFn: fetchProfile,
+    queryFn: () => fetchProfile(token), // Pass the token
+    enabled: !!token,
   });
 
   const mutation = useMutation({
-    mutationFn: updateProfile,
+    mutationFn: (data) => updateProfile({ ...data, token }), // Pass both profile data and token
     onSuccess: () => {
       alert('Profile updated successfully!');
     },
@@ -62,7 +68,7 @@ const UpdateDrcProfile = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    mutation.mutate(updatedProfile);
+    mutation.mutate({ updatedProfile }); // Pass the profile data
   };
 
   if (isLoading) {

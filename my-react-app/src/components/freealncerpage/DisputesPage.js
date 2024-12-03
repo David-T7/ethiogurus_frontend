@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useLocation , useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
+import { decryptToken } from '../../utils/decryptToken';
 const DisputesPage = () => {
   const { id: contractId } = useParams();
   const [disputes, setDisputes] = useState([]);
   const [disputeResponses, setDisputeResponses] = useState([]);
-  const token = localStorage.getItem("access");
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const location = useLocation();
   const navigate = useNavigate()
   const { contract , freelancerId } = location.state || {};

@@ -1,105 +1,105 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
+import { decryptToken } from '../utils/decryptToken';
+const fetchClientData = async (token) => {
+  const response = await axios.get('http://127.0.0.1:8000/api/user/client/manage/', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+const fetchChats = async (clientId, token) => {
+  const response = await axios.get('http://127.0.0.1:8000/api/user/clientChats/', {
+    params: { client_id: clientId },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+const fetchFreelancerData = async (freelancerId) => {
+  const response = await axios.get(`http://127.0.0.1:8000/api/user/freelancer/${freelancerId}/`);
+  return response.data;
+};
 
 const Inbox = () => {
-  const [chats, setChats] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [clientData, setClientData] = useState(null);
-  const [freelancersData, setFreelancersData] = useState({}); // Store freelancer data in an object
-  const token = localStorage.getItem("access");
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
+  const [searchTerm, setSearchTerm] = useState('');
+  const [freelancersData, setFreelancersData] = useState({});
+
+  // Fetch client data using useQuery
+  const { data: clientData, isLoading: clientLoading, error: clientError } = useQuery({
+    queryKey: ['clientData', token],
+    queryFn: () => fetchClientData(token),
+    enabled: !!token,
+  });
+
+  // Fetch chats using useQuery
+  const { data: chats, isLoading: chatsLoading, error: chatsError } = useQuery({
+    queryKey: ['chats', clientData?.id, token],
+    queryFn: () => fetchChats(clientData.id, token),
+    enabled: !!clientData,
+  });
+
+  // Fetch freelancer data for each chat
   useEffect(() => {
-    const fetchClientData = async () => {
-      try {
-        const response = await axios.get(
-          "http://127.0.0.1:8000/api/user/client/manage/",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setClientData(response.data);
-      } catch (err) {
-        setError(err);
-      } finally {
-        setLoading(false);
+    const fetchFreelancers = async () => {
+      const freelancerIds = chats?.map((chat) => chat.chat.freelancer) || [];
+      const uniqueFreelancerIds = [...new Set(freelancerIds)];
+
+      for (const freelancerId of uniqueFreelancerIds) {
+        if (!freelancersData[freelancerId]) {
+          const freelancerData = await fetchFreelancerData(freelancerId);
+          setFreelancersData((prev) => ({ ...prev, [freelancerId]: freelancerData }));
+        }
       }
     };
 
-    fetchClientData();
-  }, [token]);
-
-  useEffect(() => {
-    const fetchChats = async () => {
-      try {
-        const response = await axios.get(
-          "http://127.0.0.1:8000/api/user/clientChats/",
-          {
-            params: {
-              client_id: clientData?.id,
-            },
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setChats(response.data);
-      } catch (err) {
-        setError(err.response ? err.response.data : 'Error fetching chats');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (clientData && token) {
-      fetchChats();
+    if (chats?.length > 0) {
+      fetchFreelancers();
     }
-  }, [clientData, token]);
+  }, [chats, freelancersData]);
 
+  // Polling to refresh chats every 10 seconds
   useEffect(() => {
-    const fetchFreelancerData = async (freelancerId) => {
-      try {
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/user/freelancer/${freelancerId}/`
-        );
-        setFreelancersData((prevData) => ({
-          ...prevData,
-          [freelancerId]: response.data, // Save freelancer data by their ID
-        }));
-      } catch (err) {
-        setError(err);
+    const interval = setInterval(() => {
+      if (clientData?.id) {
+        queryClient.invalidateQueries(['chats', clientData.id, token]);
       }
-    };
+    }, 10000); // Refresh every 10 seconds
 
-    // Fetch freelancer data for each chat
-    chats.forEach(chatItem => {
-      if (!freelancersData[chatItem.chat.freelancer]) {
-        fetchFreelancerData(chatItem.chat.freelancer);
-      }
-    });
-  }, [chats]);
+    return () => clearInterval(interval); // Cleanup interval
+  }, [clientData, token, queryClient]);
 
-  const filteredChats = chats.filter(chat =>
-    freelancersData[chat.chat.freelancer]?.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredChats = chats?.filter((chat) =>
+    freelancersData[chat.chat.freelancer]?.full_name
+      ?.toLowerCase()
+      .includes(searchTerm.toLowerCase())
   );
 
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   const handleChatClick = (freelancerId) => {
     navigate(`/contact-freelancer/${freelancerId}`);
   };
 
-  if (loading) return <div className="text-center py-8">Loading...</div>;
-  if (error) return <div className="text-center py-8 text-red-500">{error.detail || 'Error fetching chats'}</div>;
-  if (chats.length === 0) return <div className="text-center py-8">No Chats Found.</div>;
+  if (clientLoading || chatsLoading) return <div className="text-center py-8">Loading...</div>;
+  if (clientError || chatsError)
+    return (
+      <div className="text-center py-8 text-red-500">
+        {clientError?.message || chatsError?.message || 'Error fetching data'}
+      </div>
+    );
+  if (chats?.length === 0) return <div className="text-center py-8">No Chats Found.</div>;
 
   return (
     <div className="max-w-2xl mx-auto bg-white shadow-lg rounded-lg p-6 mt-6">
@@ -117,7 +117,7 @@ const Inbox = () => {
         {(searchTerm ? filteredChats : chats).length === 0 ? (
           <p>No freelancers match your search.</p>
         ) : (
-          (searchTerm ? filteredChats : chats).map(chatItem => {
+          (searchTerm ? filteredChats : chats).map((chatItem) => {
             const freelancerId = chatItem.chat.freelancer;
             const freelancerData = freelancersData[freelancerId];
 
@@ -136,16 +136,22 @@ const Inbox = () => {
                   <div>
                     <h2 className="text-lg font-semibold">{freelancerData.full_name}</h2>
                     <p className="text-gray-600 text-sm truncate">
-                      {chatItem.messages.length > 0 ? chatItem.messages[chatItem.messages.length - 1].content : 'No messages yet.'}
+                      {chatItem.messages.length > 0
+                        ? chatItem.messages[chatItem.messages.length - 1].content
+                        : 'No messages yet.'}
                     </p>
                   </div>
                   <span className="text-gray-400 text-xs">
-                    {chatItem.messages.length > 0 ? formatTime(chatItem.messages[chatItem.messages.length - 1].timestamp) : ''}
+                    {chatItem.messages.length > 0
+                      ? formatTime(chatItem.messages[chatItem.messages.length - 1].timestamp)
+                      : ''}
                   </span>
                 </div>
               </div>
             ) : (
-              <div key={chatItem.chat.id} className="text-center">Loading freelancer info...</div>
+              <div key={chatItem.chat.id} className="text-center">
+                Loading freelancer info...
+              </div>
             );
           })
         )}

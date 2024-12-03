@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import ClientLayout from './ClientLayoutPage';
 import axios from 'axios';
-
+import { decryptToken } from '../../utils/decryptToken';
 const fetchProject = async ({ queryKey }) => {
   const [, id, token] = queryKey;
   const response = await axios.get(`http://127.0.0.1:8000/api/projects/${id}/`, {
@@ -22,7 +22,9 @@ const updateProject = async ({ id, updatedProject, token }) => {
 const EditProjectPage = () => {
   const { id } = useParams(); // Get project ID from URL
   const navigate = useNavigate();
-  const token = localStorage.getItem('access');
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const [updatedProject, setUpdatedProject] = useState({ title: '', description: '' });
 
   // Fetch the project data

@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams , useLocation } from 'react-router-dom';
 import axios from 'axios';
-
+import { decryptToken } from '../../utils/decryptToken';
 const CounterOffersList = () => {
   const { id:contractId } = useParams(); // Get contract ID from URL params
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [freelancer , setFreelancerData] = useState(null)
-  const token = localStorage.getItem('access'); // Get access token
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const location = useLocation()
   const {counterOffers} = location.state || null
   useEffect(() => {

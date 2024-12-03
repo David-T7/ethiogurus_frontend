@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import ClientLayout from "./ClientLayoutPage";
 import axios from "axios";
-
+import { decryptToken } from "../../utils/decryptToken";
 const CreateProjectPage = () => {
   const [formData, setFormData] = useState({
     title: "",
@@ -17,7 +17,9 @@ const CreateProjectPage = () => {
   // Mutation for creating a project
   const createProjectMutation = useMutation({
     mutationFn: async (data) => {
-      const token = localStorage.getItem("access");
+      const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+      const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+      const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
       return await axios.post("http://127.0.0.1:8000/api/projects/", data, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -56,7 +58,7 @@ const CreateProjectPage = () => {
 
   return (
     <ClientLayout>
-      <div className="max-w-2xl mx-auto p-8 mt-8">
+      <div className="max-w-xl mx-auto p-8 mt-8">
         <h1 className="text-3xl font-thin text-brand-dark-blue mb-6 text-center">
           Create New Project
         </h1>
@@ -146,7 +148,7 @@ const CreateProjectPage = () => {
           <div className="flex justify-center">
             <button
               type="submit"
-              className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md"
+              className="bg-blue-500 w-[505] text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md"
               disabled={createProjectMutation.isLoading}
             >
               {createProjectMutation.isLoading ? "Creating..." : "Create Project"}

@@ -5,7 +5,7 @@ import { MdPending } from "react-icons/md";
 import { MdHourglassEmpty } from "react-icons/md";
 import { FaGlassWhiskey } from "react-icons/fa"; // Import glass icon
 import { useQuery } from "@tanstack/react-query";
-
+import { decryptToken } from "../../utils/decryptToken";
 // import SelectAppointmentDate from './SelectAppointmentDate'; // Import the new component
 
 const SkillsPage = () => {
@@ -20,8 +20,10 @@ const SkillsPage = () => {
   const [pendingInterviews, setPendingInterviews] = useState([]);
   const navigate = useNavigate();
   const [appointmentDateSelected, setAppointmentDateSelected] = useState(false);
-  const token = localStorage.getItem("access");
-
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
+  
   // useEffect(() => {
   //   const fetchSkills = async () => {
   //     try {

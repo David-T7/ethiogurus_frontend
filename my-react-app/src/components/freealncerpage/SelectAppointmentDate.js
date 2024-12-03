@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from "axios";
-
+import { decryptToken } from '../../utils/decryptToken';
 const SelectAppointmentDate = ({ appointmentOptions, appointmentID, setAppointmentDateSelected=false,onClose }) => {
   const [selectedOption, setSelectedOption] = useState(null); // Store both date and interviewer_id
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -27,7 +27,9 @@ const SelectAppointmentDate = ({ appointmentOptions, appointmentID, setAppointme
       interviewer_id: selectedOption.interviewer_id,
     });
   
-    const token = localStorage.getItem("access");
+    const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+    const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+    const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
     try {
       const response = await axios.post(
         "http://127.0.0.1:8000/api/user/select-appointment/",

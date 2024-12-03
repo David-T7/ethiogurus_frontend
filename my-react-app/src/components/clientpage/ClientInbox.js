@@ -5,9 +5,11 @@ import profilePic from '../../images/default-profile-picture.png'; // Replace wi
 import ClientLayout from './ClientLayoutPage';
 import Inbox from '../Inbox';
 import axios from 'axios';
-
+import { decryptToken } from '../../utils/decryptToken';
 const fetchChats = async () => {
-  const token = localStorage.getItem('access'); // Get the access token from localStorage
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const response = await axios.get('http://127.0.0.1:8000/api/user/chats/', {
     headers: {
       Authorization: `Bearer ${token}`, // Include the token in the headers

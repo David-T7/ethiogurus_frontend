@@ -4,6 +4,8 @@ import { useLocation , useNavigate } from "react-router-dom";
 import { FaCalendarAlt, FaMapMarkerAlt, FaInfoCircle } from "react-icons/fa";
 import SelectAppointmentDate from './SelectAppointmentDate'; // Import the new component
 import axios from "axios";
+import { decryptToken } from "../../utils/decryptToken";
+
 const AppointmentDetailsPage = () => {
   const location = useLocation();
   const { appointment } = location.state || {};
@@ -11,6 +13,9 @@ const AppointmentDetailsPage = () => {
   const [newDate, setNewDate] = useState("");
   const [appointmentDateSelected, setAppointmentDateSelected] = useState(false);
   const [cancelAppointment , setCancelAppointment] = useState(false)
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const navigate = useNavigate()
   if (!appointment) {
     return <p>No appointment details available.</p>;
@@ -40,7 +45,6 @@ const AppointmentDetailsPage = () => {
   };
 
   const handleCancelAppointment = async () => {
-     const token = localStorage.getItem("access");
     try {
       const response = await axios.patch(
         `http://127.0.0.1:8000/api/appointments/${appointment.id}/`,

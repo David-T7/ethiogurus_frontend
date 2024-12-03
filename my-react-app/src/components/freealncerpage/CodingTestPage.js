@@ -5,11 +5,37 @@ import FollowUpModal from "./FollowUpModal";
 import beepSound from "../../audio/beepbeepbeep-53921.mp3";
 import PauseModal from "./PauseModal";
 import { CameraContext } from './CameraContext';
+import { useQuery } from "@tanstack/react-query";
+import { decryptToken } from "../../utils/decryptToken";
+const fetchTestDetails = async ({ queryKey }) => {
+  const [, { testId, token }] = queryKey;
+  const response = await axios.get(`http://127.0.0.1:8002/api/practical-test/${testId}/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+const fetchQuestions = async ({ queryKey }) => {
+  const [, { testId, token }] = queryKey;
+  const response = await axios.get(`http://127.0.0.1:8002/api/tests/${testId}/questions/`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+const fetchFreelancerDetails = async ({ queryKey }) => {
+  const [, { token }] = queryKey;
+  const response = await axios.get("http://127.0.0.1:8000/api/user/freelancer/manage/", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+
+
 const CodingTestPage = () => {
   const { id: testId } = useParams();
   const navigate = useNavigate();
-  const [testData, setTestData] = useState([]);
-  const [currentTest, setCurrentTest] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [followUpQuestions, setFollowUpQuestions] = useState([]);
@@ -20,7 +46,6 @@ const CodingTestPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submissionId, setSubmissionId] = useState(null);
   const [followUpSubmissionId, setFollowUpSubmissionId] = useState(null);
-  const token = localStorage.getItem("access");
   const [freelancerId, setFreelancerId] = useState(null);
   const [currentAnswer, setCurrentAnswer] = useState(null);
   const [finalQuestion, setFinalQuestion] = useState(false);
@@ -33,65 +58,65 @@ const CodingTestPage = () => {
   const { startCamera, stopCamera,errorMessage , setErrorMessage, isTerminated, setFreelancerID_, videoRef , showModal ,isPaused, setIsPaused , setShowModal ,updateVideoSource , cameraStream } = useContext(CameraContext);
   const [isSubmitting, setIsSubmitting] = useState(false); // State to track submission status
   const {testDetails} = location.state || null 
+  const {profilePicture , setProfilePicture} = useState(null)
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
+  // Fetch test details
+  const {
+    data: currentTest,
+    isLoading: testLoading,
+  } = useQuery({
+    queryKey: ["testDetails", { testId, token }],
+    queryFn: fetchTestDetails,
+    staleTime: 300000, // Cache for 5 minutes
+  });
+
+  // Fetch test questions
+  const { data: testData = [], isLoading: questionsLoading } = useQuery({
+    queryKey: ["testQuestions", { testId, token }],
+    queryFn: fetchQuestions,
+    staleTime: 300000, // Cache for 5 minutes
+  });
+
+  // Fetch freelancer details
+  const { data: freelancerDetails } = useQuery({
+    queryKey: ["freelancerDetails", { token }],
+    queryFn: fetchFreelancerDetails,
+    onSuccess: (data) => {
+      setFreelancerID_(data.id);
+      setFreelancerId(data.id);
+      setProfilePicture(data.profilePicture);
+      setTimer(currentTest?.duration_in_minutes * 60 || 0);
+    },
+  });
+  
+  
   useEffect(() => {
     const fetchTestData = async () => {
       try {
-        const testResponse = await axios.get(
-          `http://127.0.0.1:8002/api/practical-test/${testId}/`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setCurrentTest(testResponse.data);
-
-        const response = await axios.get(
-          `http://127.0.0.1:8002/api/tests/${testId}/questions/`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        const freelancerResponse = await axios.get(
-          "http://127.0.0.1:8000/api/user/freelancer/manage/",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const { id, profile_picture } = freelancerResponse.data;
-        setFreelancerId(id);
-        setFreelancerID_(id)
-
-
-        if (profile_picture) {
-          const imageResponse = await fetch(profile_picture);
+        if (profilePicture) {
+          const imageResponse = await fetch(profilePicture);
           const imageBlob = await imageResponse.blob();
           const imageFile = new File([imageBlob], 'profile_picture.jpg', { type: imageBlob.type });
           // setProfilePictureFile(imageFile);
           
           // Upload profile picture to the server
           const formData = new FormData();
-          formData.append('freelancer_id', id);
+          formData.append('freelancer_id', freelancerDetails.id);
           formData.append('profile_picture', imageFile);
           await axios.post("http://127.0.0.1:8003/api/fetch-and-store-profile-picture/", formData, {
             headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
           });
         }
-
-        setTestData(response.data);
-        setTimer(testResponse.data.duration_in_minutes * 60); // Convert minutes to seconds
+        setTimer(currentTest.duration_in_minutes * 60); // Convert minutes to seconds
       } catch (error) {
         console.error("Failed to fetch test data", error);
       }
     };
 
     fetchTestData();
-  }, [testId]);
+  }, [currentTest , testData , freelancerDetails]);
 
   useEffect(() => {
     if (timer <= 0 || isPaused || isModalOpen) return;

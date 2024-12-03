@@ -1,130 +1,130 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useState } from "react";
 import { useParams } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+import { decryptToken } from "../../utils/decryptToken";
+const fetchAppointment = async ({ queryKey }) => {
+  const [, { id, token }] = queryKey;
+  const response = await axios.get(`http://127.0.0.1:8000/api/appointments/${id}/`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};
+
+const fetchInterviewer = async ({ queryKey }) => {
+  const [, { token }] = queryKey;
+  const response = await axios.get("http://127.0.0.1:8000/api/user/interviewer/manage/", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};
+
+const updateAppointmentDate = async ({ id, formattedDate, interviewerId, token }) => {
+  const response = await axios.post(
+    "http://127.0.0.1:8000/api/user/select-appointment/",
+    {
+      appointment_id: id.toString(),
+      date: formattedDate,
+      interviewer_id: interviewerId.toString(),
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return response.data;
+};
 
 const AppointmentDetails = () => {
   const { id } = useParams();
-  const [appointment, setAppointment] = useState(null);
-  const [error, setError] = useState(null);
-  const [changeDate, setChangeDate] = useState(false); // For toggling the change date option
-  const [newDate, setNewDate] = useState(""); // For holding the new appointment date
-  const [interviewer , setInterviewer]  = useState(null) 
-  const token = localStorage.getItem("access");
-  useEffect(() => {
-    const fetchAppointment = async () => {
-      try {
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/appointments/${id}/`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setAppointment(response.data);
-      } catch (err) {
-        setError(
-          err.response
-            ? err.response.data.detail
-            : "Failed to fetch appointment details"
-        );
-      }
-    };
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
 
-    fetchAppointment();
-  }, [id, token]);
+  const queryClient = useQueryClient();
 
+  const [changeDate, setChangeDate] = useState(false);
+  const [newDate, setNewDate] = useState("");
 
-  useEffect(() => {
-    const fetchInterviewerData = async () => {
-      try {
-        const response = await axios.get(
-          "http://127.0.0.1:8000/api/user/interviewer/manage/",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setInterviewer(response.data);
-      } catch (error) {
-        console.log("error occured", error);
-      }
-    };
-    fetchInterviewerData();
-  }, []);
+  // Fetch appointment details
+  const {
+    data: appointment,
+    isLoading: appointmentLoading,
+    error: appointmentError,
+  } = useQuery({
+    queryKey: ["appointment", { id, token }],
+    queryFn: fetchAppointment,
+  });
 
-  const handleDateChange = async () => {
-    try {
-        const formattedDate = new Date(newDate).toISOString(); // ISO 8601 format
-        
-        // Logging the data before sending it to the backend
-        console.log("Data to be sent:", {
-            appointment_id: id.toString(),
-            date: formattedDate,
-            interviewer_id: interviewer.id.toString(),
-        });
+  // Fetch interviewer details
+  const {
+    data: interviewer,
+    isLoading: interviewerLoading,
+    error: interviewerError,
+  } = useQuery({
+    queryKey: ["interviewer", { token }],
+    queryFn: fetchInterviewer,
+  });
 
-        const response = await axios.post(
-            "http://127.0.0.1:8000/api/user/select-appointment/",
-            {
-                appointment_id: id.toString(),
-                date: formattedDate,
-                interviewer_id: interviewer.id.toString(),
-            },
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
-        
-        setAppointment({ ...appointment, appointment_date: newDate });
-        setChangeDate(false); // Hide the date input after submission
-        alert("Appointment date updated successfully!");
+  // Mutation for updating appointment date
+  const mutation = useMutation({
+    mutationFn: ({ id, formattedDate, interviewerId, token }) =>
+      updateAppointmentDate({ id, formattedDate, interviewerId, token }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["appointment", { id, token }]);
+      alert("Appointment date updated successfully!");
+      setChangeDate(false);
+    },
+    onError: () => {
+      alert("Failed to update the appointment date.");
+    },
+  });
 
-    } catch (error) {
-        console.error("Error updating appointment date:", error.response ? error.response.data : error);
-        alert("Failed to update the appointment date.");
-    }
-};
+  const handleDateChange = () => {
+    const formattedDate = new Date(newDate).toISOString();
+    mutation.mutate({ id, formattedDate, interviewerId: interviewer.id, token });
+  };
 
-  if (error) {
-    return <div className="text-center py-8 text-red-500">{error}</div>;
+  if (appointmentLoading || interviewerLoading) {
+    return <div className="text-center py-8">Loading appointment details...</div>;
   }
 
-  if (!appointment) {
+  if (appointmentError || interviewerError) {
     return (
-      <div className="text-center py-8">Loading appointment details...</div>
+      <div className="text-center py-8 text-red-500">
+        {appointmentError?.message || interviewerError?.message || "An error occurred."}
+      </div>
     );
   }
 
   return (
     <div className="max-w-xl mx-auto p-8 mt-8">
-      <h1 className="text-3xl font-thin text-brand-dark-blue mb-6">
-        Appointment Details
-      </h1>
+      <h1 className="text-3xl font-thin text-brand-dark-blue mb-6">Appointment Details</h1>
       <div className="flex items-center mb-2">
-      <h1 className="text-xl font-thin text-brand-dark-blue">
-      <span className="font-normal">Type:</span> {appointment.interview_type}
-      </h1>
-      </div>
-
-      {appointment.interview_type !== "soft_skills_assessment" && <>
-      <div className="flex items-center mb-2">
-      <h1 className="text-xl font-thin text-brand-dark-blue">
-        <span className="font-normal">Skills Passed</span>{appointment.skills_passed}
-      </h1>
-      </div>
-      </>}
-
-
-      <div className="flex items-center mb-2">
-     
-      <h1 className="text-xl font-thin text-brand-dark-blue">
-      <span className="font-normal">Selected Date</span>: {new Date(appointment.appointment_date).toLocaleString()}
+        <h1 className="text-xl font-thin text-brand-dark-blue">
+          <span className="font-normal">Type:</span> <span className="text-black">{appointment.interview_type}</span>
         </h1>
+      </div>
+
+      {appointment.interview_type !== "soft_skills_assessment" && appointment.skills_passed.lenght > 0 && (
+        <div className="flex items-center mb-2">
+          <h1 className="text-xl font-thin text-brand-dark-blue">
+            <span className="font-normal">Skills Passed:</span> <span className="text-black">{appointment.skills_passed}</span>
+          </h1>
         </div>
+      )}
+
+      <div className="flex items-center mb-2">
+        <h1 className="text-xl font-thin text-brand-dark-blue">
+          <span className="font-normal">Selected Date:</span>{" "}
+          <span className="text-black">{new Date(appointment.appointment_date).toLocaleString()}</span>
+        </h1>
+      </div>
 
       {/* Checkbox for changing the appointment date */}
       <div className="flex items-center mb-4">
@@ -142,8 +142,8 @@ const AppointmentDetails = () => {
 
       {/* Display datetime input if changeDate is checked */}
       {changeDate && (
-<>
-        <label htmlFor="newDate" className="text-xl font-thin text-brand-dark-blue mb-2">
+        <>
+          <label htmlFor="newDate" className="text-xl font-thin text-brand-dark-blue mb-2">
             Select New Date and Time
           </label>
           <input
@@ -152,14 +152,15 @@ const AppointmentDetails = () => {
             value={newDate}
             onChange={(e) => setNewDate(e.target.value)}
             className="block border mr-2 border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-            />
+          />
           <button
-            onClick={() => handleDateChange()}
+            onClick={handleDateChange}
             className="mt-4 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
           >
             Update Appointment Date
           </button>
-          </>)}
+        </>
+      )}
     </div>
   );
 };

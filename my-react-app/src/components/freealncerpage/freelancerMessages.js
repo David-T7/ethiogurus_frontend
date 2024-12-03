@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import { decryptToken } from "../../utils/decryptToken";
 
 const fetchFreelancerData = async (token) => {
   const response = await axios.get("http://127.0.0.1:8000/api/user/freelancer/manage/", {
@@ -24,11 +25,15 @@ const fetchClientData = async (clientId) => {
 };
 
 const FreelancerMessages = () => {
-  const token = localStorage.getItem("access");
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [clientsData, setClientsData] = useState({});
-
+  
   // Query to fetch freelancer data
   const { data: freelancerData, isLoading: freelancerLoading } = useQuery({
     queryKey: ["freelancerData", token],
@@ -37,13 +42,13 @@ const FreelancerMessages = () => {
   });
 
   // Query to fetch chats
-  const {data:chats ,isLoading: chatsLoading } = useQuery({
+  const { data: chats, isLoading: chatsLoading } = useQuery({
     queryKey: ["chats", freelancerData?.id, token],
     queryFn: () => fetchChats(freelancerData.id, token),
     enabled: !!freelancerData,
   });
 
-  // Effect to fetch client data for each chat
+  // Fetch client data for each chat
   useEffect(() => {
     const fetchClients = async () => {
       const clientIds = [...new Set(chats.map((chat) => chat.chat.client))];
@@ -63,6 +68,17 @@ const FreelancerMessages = () => {
       fetchClients();
     }
   }, [chats]);
+
+  // Polling mechanism for refreshing chats
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (freelancerData?.id) {
+        queryClient.invalidateQueries(["chats", freelancerData.id, token]);
+      }
+    }, 10000); // Fetch new data every 10 seconds
+
+    return () => clearInterval(interval); // Cleanup on unmount
+  }, [freelancerData, token, queryClient]);
 
   const filteredChats = chats?.filter((chat) => {
     const client = clientsData[chat.chat.client];

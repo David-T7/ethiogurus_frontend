@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import axios from "axios";
-
+import { decryptToken } from "../../utils/decryptToken";
 const EditCounterOffer = () => {
   const { id } = useParams(); // Counter Offer ID from URL
   const navigate = useNavigate();
@@ -25,7 +25,9 @@ const EditCounterOffer = () => {
     endDate: "",
   });
 
-  const token = localStorage.getItem("access"); // Ensure token is stored correctly
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
 
   useEffect(() => {
     const fetchCounterOffer = async () => {

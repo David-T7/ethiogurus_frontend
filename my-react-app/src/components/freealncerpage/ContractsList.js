@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-
+import { decryptToken } from '../../utils/decryptToken';
 // Fetch contracts function
 const fetchContracts = async ({ queryKey }) => {
   const [, { token }] = queryKey;
@@ -18,7 +18,9 @@ const fetchContracts = async ({ queryKey }) => {
 
 // The ContractsList component
 const ContractsList = () => {
-  const token = localStorage.getItem('access'); // Retrieve token from localStorage
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
 
   const {
     data: contracts = [],

@@ -4,9 +4,13 @@ import { FaProjectDiagram, FaPlus } from 'react-icons/fa';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import getRelativeTime from '../../utils/getRelativeTime';
+import { decryptToken } from "../../utils/decryptToken";
+
 
 const fetchRecentProjects = async () => {
-  const token = localStorage.getItem('access'); // Get the access token from localStorage
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const response = await axios.get('http://127.0.0.1:8000/api/projects/', {
     headers: {
       Authorization: `Bearer ${token}`, // Include the token in the headers

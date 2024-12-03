@@ -4,8 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
-
-
+import { decryptToken } from "../../utils/decryptToken";
 const fetchCounterOffer = async ({ queryKey }) => {
   const [, id, token] = queryKey;
   
@@ -56,10 +55,12 @@ const EditCounterOfferPage = () => {
     endDate: "",
   });
 
-  const token = localStorage.getItem("access"); // Ensure token is stored correctly
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
 
   // Fetch counter offer details
- const { data: fetchedCounterOffer, isLoading: loadingCounterOffer } = useQuery({
+  const { data: fetchedCounterOffer, isLoading: loadingCounterOffer } = useQuery({
   queryKey: ["counterOffer", id, token],
   queryFn: fetchCounterOffer,
 });
