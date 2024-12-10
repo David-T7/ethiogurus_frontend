@@ -97,7 +97,7 @@ const FreelancerMessages = () => {
 
   if (freelancerLoading || chatsLoading) return <div className="text-center py-8">Loading...</div>;
 
-  if (chats.length === 0) {
+  if (chats?.length === 0) {
     return <div className="text-center py-8">No Chats Found.</div>;
   }
 

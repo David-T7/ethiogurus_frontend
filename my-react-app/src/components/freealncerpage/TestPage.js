@@ -55,7 +55,7 @@ const TestPage = () => {
   const [profilePictureFile, setProfilePictureFile] = useState(null);
   const location = useLocation()
   const startingPath = location.pathname.split('/').slice(0, 2).join('/'); // e.g., '/assessment-camera-check'
-  const {testDetails} = location.state || null 
+  const { testDetails = null, assessment = null } = location.state || {};
   const navigate = useNavigate();
   const { id } = useParams();
   const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
@@ -74,10 +74,6 @@ const TestPage = () => {
   const { data: fetchedFreelancerId, isLoading: freelancerLoading, error: freelancerError } = useQuery({
     queryKey: ["fetchFreelancerId", { token }],
     queryFn: fetchFreelancerId,
-    onSuccess: (id) => {
-      setFreelancerId(id);
-      setFreelancerID_(id);
-    },
   });
 
   useEffect(() => {
@@ -258,14 +254,7 @@ const TestPage = () => {
 
       const passed = finalSubmission.data.submission.passed;
       if (passed) {
-        if(skillTests.theoretical.title === "Soft Skills Assessment"){
-          console.log("in update soft skills",skillTests.theoretical.title)
-          await updateSoftSkills(skillTests.theoretical.title)
-        }
-        else{
-          console.log("in update freelancer skills",skillTests.theoretical.title)
         await updateFreelancerSkills(skillTests.theoretical.title);
-        }
       }
       else{
         await updateAssessmentStatus(finalSubmission.data.submission.score , 70)
@@ -343,108 +332,108 @@ const TestPage = () => {
     }
   };
 
-  const updateSoftSkills = async (skillType) => {
-    try {
-      // Fetch freelancer's current profile data
-      const freelancerResponse = await axios.get(
-        "http://127.0.0.1:8000/api/user/freelancer/manage/",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+  // const updateSoftSkills = async (skillType) => {
+  //   try {
+  //     // Fetch freelancer's current profile data
+  //     const freelancerResponse = await axios.get(
+  //       "http://127.0.0.1:8000/api/user/freelancer/manage/",
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
   
-      const freelancer = freelancerResponse.data;
+  //     const freelancer = freelancerResponse.data;
   
-      // Parse and normalize skills
+  //     // Parse and normalize skills
     
-        // Ensure skills array is handled correctly
-      let originalCurrentSkills = Array.isArray(freelancer.skills) ? freelancer.skills : [];
-      let lowerCaseCurrentSkills = [];
-      if (Array.isArray(freelancer.skills)) {
-        lowerCaseCurrentSkills = freelancer.skills.map(skill => ({
-          ...skill,
-          category: skill.category.toLowerCase(),
-          skill: skill.skill.toLowerCase(),
-          type: skill.type.toLowerCase(),
-        }));
-      } else {
-        lowerCaseCurrentSkills = JSON.parse(freelancer.skills || "[]").map(skill => ({
-          ...skill,
-          category: skill.category.toLowerCase(),
-          skill: skill.skill.toLowerCase(),
-          type: skill.type.toLowerCase(),
-        }));
-      }
+  //       // Ensure skills array is handled correctly
+  //     let originalCurrentSkills = Array.isArray(freelancer.skills) ? freelancer.skills : [];
+  //     let lowerCaseCurrentSkills = [];
+  //     if (Array.isArray(freelancer.skills)) {
+  //       lowerCaseCurrentSkills = freelancer.skills.map(skill => ({
+  //         ...skill,
+  //         category: skill.category.toLowerCase(),
+  //         skill: skill.skill.toLowerCase(),
+  //         type: skill.type.toLowerCase(),
+  //       }));
+  //     } else {
+  //       lowerCaseCurrentSkills = JSON.parse(freelancer.skills || "[]").map(skill => ({
+  //         ...skill,
+  //         category: skill.category.toLowerCase(),
+  //         skill: skill.skill.toLowerCase(),
+  //         type: skill.type.toLowerCase(),
+  //       }));
+  //     }
   
-      // Normalize the skillType for comparison
-      const normalizedSkillType = skillType.toLowerCase();
+  //     // Normalize the skillType for comparison
+  //     const normalizedSkillType = skillType.toLowerCase();
   
-      /// Append the new skill under the appropriate category with both_practical_theoretical field
-      const newSkill = {
-        category: "Soft Skills",
-        skill: skillType,
-        type: "theoretical", // Default to theoretical
-        both_practical_theoretical: true,
-      };
+  //     /// Append the new skill under the appropriate category with both_practical_theoretical field
+  //     const newSkill = {
+  //       category: "Soft Skills",
+  //       skill: skillType,
+  //       type: "theoretical", // Default to theoretical
+  //       both_practical_theoretical: true,
+  //     };
   
-      // Check if the skill already exists
-      const skillExists = lowerCaseCurrentSkills.some(
-        (skill) =>
-          skill.category === "soft skills" &&
-          skill.type === "theoretical" &&
-          skill.skill === normalizedSkillType
-      );
+  //     // Check if the skill already exists
+  //     const skillExists = lowerCaseCurrentSkills.some(
+  //       (skill) =>
+  //         skill.category === "soft skills" &&
+  //         skill.type === "theoretical" &&
+  //         skill.skill === normalizedSkillType
+  //     );
   
-      // Check if a practical version of the skill exists
-      const practicalSkillExists = lowerCaseCurrentSkills.some(
-        (skill) =>
-          skill.category === "soft skills" &&
-          skill.type === "practical" &&
-          skill.skill === normalizedSkillType
-      );
+  //     // Check if a practical version of the skill exists
+  //     const practicalSkillExists = lowerCaseCurrentSkills.some(
+  //       (skill) =>
+  //         skill.category === "soft skills" &&
+  //         skill.type === "practical" &&
+  //         skill.skill === normalizedSkillType
+  //     );
   
-      console.log("Skills in database:", lowerCaseCurrentSkills);
-      console.log("Skill exists:", skillExists, "Practical skill exists:", practicalSkillExists);
+  //     console.log("Skills in database:", lowerCaseCurrentSkills);
+  //     console.log("Skill exists:", skillExists, "Practical skill exists:", practicalSkillExists);
   
-      if (!skillExists) {
-        originalCurrentSkills.push(newSkill);
+  //     if (!skillExists) {
+  //       originalCurrentSkills.push(newSkill);
 
-        if (practicalSkillExists) {
-          await axios.patch(
-            `http://127.0.0.1:8000/api/full-assessment/${freelancer.id}/update/`,
-            {
-              depth_skill_assessment_status: "pending",
-              soft_skills_assessment_status: "passed",
-            },
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-        }
-      }
+  //       if (practicalSkillExists) {
+  //         await axios.patch(
+  //           `http://127.0.0.1:8000/api/full-assessment/${freelancer.id}/update/`,
+  //           {
+  //             depth_skill_assessment_status: "pending",
+  //             soft_skills_assessment_status: "passed",
+  //           },
+  //           {
+  //             headers: {
+  //               Authorization: `Bearer ${token}`,
+  //             },
+  //           }
+  //         );
+  //       }
+  //     }
   
-      // Patch the freelancer profile with the updated skills
-      await axios.patch(
-        `http://127.0.0.1:8000/api/user/freelancer/manage/`,
-        {
-          skills: JSON.stringify(originalCurrentSkills),
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+  //     // Patch the freelancer profile with the updated skills
+  //     await axios.patch(
+  //       `http://127.0.0.1:8000/api/user/freelancer/manage/`,
+  //       {
+  //         skills: JSON.stringify(originalCurrentSkills),
+  //       },
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
   
-      console.log("Freelancer skills updated successfully.");
-    } catch (error) {
-      console.error("Failed to update freelancer skills:", error);
-    }
-  };
+  //     console.log("Freelancer skills updated successfully.");
+  //   } catch (error) {
+  //     console.error("Failed to update freelancer skills:", error);
+  //   }
+  // };
 
 
 
@@ -515,7 +504,7 @@ const TestPage = () => {
   
       // Check if the skill already exists
       const skillExists = currentSkills.some(skill =>
-        skill.category === category && skill.skill.toLowerCase() === skillType.toLowerCase()
+        skill.category === category && skill.skill.toLowerCase() === skillType.toLowerCase() && newSkill.type === "theoretical"
       );
   
       if (!skillExists) {
@@ -558,18 +547,31 @@ const TestPage = () => {
       
         // Step 4: Update assessment status if the category has >= 2 skills
         if (skillsInCategory >= 2) {
-          const assessmentUpdatePayload = {
-            depth_skill_assessment_status: "passed",
-            finished: true,
-            passed:true
-          };
-      
-          const assessmentResponse = await axios.patch(
-            `http://127.0.0.1:8000/api/full-assessment/${updatedFreelancer.id}/update/`,
-            assessmentUpdatePayload,
+          await axios.patch(
+            `http://127.0.0.1:8000/api/assessments/${assessment.id}/`,
+            {depth_skill_assessment_status:"passed"},
             { headers: { Authorization: `Bearer ${token}` } }
           );
-      
+          if(assessment.live_assessment_status === "not_started"){
+         await axios.patch(
+            `http://127.0.0.1:8000/api/assign-live-assessment-appointment/${updatedFreelancer.id}/`,
+            {
+              applied_position_id:assessment.applied_position
+            },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        }
+        else{
+          console.log("live assmment started!")
+        }
+        const assessmentUpdatePayload = {
+          live_assessment_status: "pending",
+        };
+        const assessmentResponse = await axios.patch(
+          `http://127.0.0.1:8000/api/full-assessment/${updatedFreelancer.id}/update/`,
+          assessmentUpdatePayload,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
           console.log(`Assessment for category ${category} marked as finished:`, assessmentResponse.data);
         }
       } catch (error) {

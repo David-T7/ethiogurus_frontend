@@ -5,12 +5,14 @@ import axios from "axios";
 import { decryptToken } from "../../utils/decryptToken";
 const fetchAppointments = async ({ queryKey }) => {
   const [_, { token }] = queryKey;
-  const response = await axios.get("http://127.0.0.1:8000/api/appointments/", {
+  const response = await axios.get("http://127.0.0.1:8000/api/interviewer/appointments/", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
-  return response.data;
+  console.log("appointments are ",response.data.appointments)
+  return response.data.appointments;
+
 };
 
 const AppointmentsPage = () => {

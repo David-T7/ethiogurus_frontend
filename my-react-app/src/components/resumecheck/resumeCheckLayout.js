@@ -9,10 +9,11 @@ import {
   FaLock,
 } from "react-icons/fa";
 import { AuthContext } from '../AuthContext'; // Update this path according to your project structure
-import { UserContext } from "../UserContext";
+import { UserContext } from "../ResumeCheckerContext";
 import defaultProfilePic from "../../images/default-profile-picture.png"
 import logo from "../../images/EG_MIX_Logo.png"
-const AssessmentLayout = ({ children }) => {
+
+const ResumeCheckLayout = ({ children }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false); // Dropdown menu for profile
   const location = useLocation(); // For determining the current route
@@ -90,12 +91,13 @@ const AssessmentLayout = ({ children }) => {
             <FaBars />
           </button>
         )}
-     {/* Top-left branding */}
+
+        {/* Top-left branding */}
      <div className="absolute left-6 top-6 flex items-center">
-       <Link to="/assessments">
+       <Link to="/resume-check">
       <img src={logo} alt="EthioGurus Logo" className="w-20 h-12" />
       </Link> {/* Adjust size as needed */}
-      <Link to="/assessments" className="font-normal text-2xl">
+      <Link to="/resume-check" className="font-normal text-2xl">
         EthioGurus
       </Link>
     </div>
@@ -103,20 +105,17 @@ const AssessmentLayout = ({ children }) => {
         {/* Top-right navigation */}
         <nav className="hidden md:flex space-x-8 absolute right-6 top-6 mr-20">
           <Link
-            to="/assessments"
-            className={getLinkClasses("/assessments")}
+            to="/drc-disputes"
+            className={getLinkClasses("/drc-disputes")}
             onClick={() => setIsMenuOpen(false)}
           >
-            Assessment
-            {unreadMessages > 0 && (
-              <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
-                {unreadMessages}
-              </span>
-            )}
+            Resumes
           </Link>
+
+
           <Link
-            to="/assessment-notifications"
-            className={getLinkClasses("/assessment-notifications")}
+            to="/resume-notifications"
+            className={getLinkClasses("/resume-notifications")}
             onClick={() => setIsMenuOpen(false)}
           >
             Notification
@@ -126,15 +125,6 @@ const AssessmentLayout = ({ children }) => {
               </span>
             )}
           </Link>
-          <Link
-                    to="/my-skills"
-                    className={getLinkClasses("/my-skills")}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Skills
-          </Link>
-
-
         </nav>
 
         {/* Profile Picture and Dropdown Menu */}
@@ -155,17 +145,17 @@ const AssessmentLayout = ({ children }) => {
               className="absolute right-0 mt-16 w-48 bg-white border border-gray-300 rounded-lg shadow-lg"
             >
               <ul className="p-2">
-                <li>
+                {/* <li>
                   <Link
-                    to="/my-settings"
+                    to="/drc-settings"
                     className="flex items-center gap-2 p-2 text-gray-700 hover:bg-gray-100 rounded"
                   >
                     <FaUserCog /> Settings
                   </Link>
-                </li>
+                </li> */}
                 <li>
                   <Link
-                    to="/profileupdate"
+                    to="/update-myprofile"
                     className="flex items-center gap-2 p-2 text-gray-700 hover:bg-gray-100 rounded"
                   >
                     <FaUserEdit /> Update Profile
@@ -173,7 +163,7 @@ const AssessmentLayout = ({ children }) => {
                 </li>
                 <li>
                   <Link
-                    to="/passwordupdate"
+                    to="/drc-change-password"
                     className="flex items-center gap-2 p-2 text-gray-700 hover:bg-gray-100 rounded"
                   >
                     <FaLock /> Change Password
@@ -208,28 +198,24 @@ const AssessmentLayout = ({ children }) => {
                 <FaTimes />
               </button>
               <div className="flex flex-col items-center space-y-4">
-              <Link to="/assessments">
+              <Link to="/latest-disputes">
       <img src={logo} alt="EthioGurus Logo" className="w-20 h-12" />
       </Link> {/* Adjust size as needed */}
-      <Link to="/assessments" className="font-normal text-2xl">
+      <Link to="/latest-disputes" className="font-normal text-2xl">
         EthioGurus
       </Link>
                 <nav className="flex flex-col space-y-4">
                   <Link
-                    to="/assessments"
-                    className={getLinkClasses("/assessments")}
+                    to="/drc-disputes"
+                    className={getLinkClasses("/drc-disputes")}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Assessment
-                    {unreadMessages > 0 && (
-                      <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
-                        {unreadMessages}
-                      </span>
-                    )}
+                    Resumes
                   </Link>
+                  
                   <Link
-                    to="/assessment-notifications"
-                    className={getLinkClasses("/assessment-notifications")}
+                    to="/resume-notifications"
+                    className={getLinkClasses("/resume-notifications")}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Notification
@@ -239,13 +225,6 @@ const AssessmentLayout = ({ children }) => {
               </span>
             )}
                   </Link>
-                  <Link
-                    to="/my-skills"
-                    className={getLinkClasses("/my-skills")}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Skills
-          </Link>
                 </nav>
               </div>
             </nav>
@@ -257,4 +236,4 @@ const AssessmentLayout = ({ children }) => {
   );
 };
 
-export default AssessmentLayout;
+export default ResumeCheckLayout;

@@ -9,6 +9,7 @@ import { SkillTestProvider } from './components/SkillTestContext';
 import { CameraProvider } from './components/freealncerpage/CameraContext';
 import { InterviewerUserProvider } from './components/interviewerUserContext';
 import { DisputeMangerUserProvider } from './components/DisputeManagerContext';
+import { ResumeCheckerUserProvider } from './components/ResumeCheckerContext';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 const queryClient = new QueryClient();
 
@@ -26,7 +27,9 @@ const App = () => {
       <AuthProvider>
       <InterviewerUserProvider>
       <DisputeMangerUserProvider>
+      <ResumeCheckerUserProvider>
         <Routes />
+      </ResumeCheckerUserProvider>
       </DisputeMangerUserProvider>
       </InterviewerUserProvider>
       </AuthProvider>

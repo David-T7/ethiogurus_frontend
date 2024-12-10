@@ -6,9 +6,9 @@ import { decryptToken } from '../utils/decryptToken';
 export const UserContext = createContext();
 
 
-const fetchDisputeManagerProfile = async ({ queryKey }) => {
+const fetchResumeCheckerProfile = async ({ queryKey }) => {
   const [, token] = queryKey;
-  const response = await axios.get('http://127.0.0.1:8000/api/user/dispute-manager/manage/', {
+  const response = await axios.get('http://127.0.0.1:8000/api/user/resume-check/manage/', {
     headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;
@@ -22,13 +22,13 @@ const fetchUnreadNotifications = async ({ queryKey }) => {
   return response.data.count;
 };
 
-export const DisputeMangerUserProvider = ({ children }) => {
+export const ResumeCheckerUserProvider = ({ children }) => {
   const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
   const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
   const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const { data: profileData } = useQuery({
-    queryKey: ['disputeManagerProfile', token],
-    queryFn: fetchDisputeManagerProfile,
+    queryKey: ['resumeCheckerProfile', token],
+    queryFn: fetchResumeCheckerProfile,
     staleTime: 300000, // Cache for 5 minutes
   });
 

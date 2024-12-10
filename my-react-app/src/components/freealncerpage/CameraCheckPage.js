@@ -8,6 +8,7 @@ const CameraCheckPage = () => {
   const location = useLocation()
   // Get the first segment of the path
   const startingPath = location.pathname.split('/').slice(0, 2).join('/'); // e.g., '/assessment-camera-check'
+  const {assessment} = location.state || null
   console.log("starting path is ",startingPath)
   useEffect(() => {
     const checkCameraAccess = async () => {
@@ -25,10 +26,18 @@ const CameraCheckPage = () => {
 
   const handleProceed = () => {
     if(startingPath === "/assessment-camera-check"){
-      navigate(`/skill-test/${id}/${type}`); // Replace '/test-details' with the actual route to TestDetailPage
+      navigate(`/skill-test/${id}/${type}`,{
+        state:{
+          assessment:assessment
+        }
+      }); // Replace '/test-details' with the actual route to TestDetailPage
     }
     else{
-      navigate(`/test/${id}/${type}`); // Replace '/test-details' with the actual route to TestDetailPage
+      navigate(`/test/${id}/${type}`,{
+        state:{
+          assessment:assessment
+        }
+      }); // Replace '/test-details' with the actual route to TestDetailPage
     }
     };
 

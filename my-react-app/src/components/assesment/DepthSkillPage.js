@@ -1,213 +1,129 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { useNavigate , useLocation } from "react-router-dom";
 import SkillDetailsModal from "../freealncerpage/SkillDetailsModal";
+import { decryptToken } from "../../utils/decryptToken";
+const fetchServiceName = async (appliedPosition) => {
+    const response = await axios.get(`http://127.0.0.1:8000/api/services/${appliedPosition}/`);
+    return response.data.name;
+};
+
+const fetchTests = async ({ appliedPositionNames, token }) => {
+  const codingTestsResponse = await axios.post(
+    "http://127.0.0.1:8002/api/practical-tests/assessment/",
+    { applied_position_names: [appliedPositionNames] },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  const theoreticalTestsResponse = await axios.post(
+    "http://127.0.0.1:8001/api/theoretical-tests/assessment/",
+    { applied_position_names: appliedPositionNames },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+
+  const codingTests = codingTestsResponse.data || {};
+  const theoreticalTests = theoreticalTestsResponse.data || {};
+
+  // Combine data
+  const combinedData = { ...theoreticalTests };
+  for (const category in codingTests) {
+    if (!combinedData[category]) {
+      combinedData[category] = [];
+    }
+    const techMap = new Map(combinedData[category].map((tech) => [tech.name, tech]));
+    codingTests[category].forEach((tech) => {
+      if (!techMap.has(tech.name)) {
+        techMap.set(tech.name, tech);
+      }
+    });
+    combinedData[category] = Array.from(techMap.values());
+  }
+
+  return combinedData;
+};
+
+const fetchSkillTests = async ({ technology, token }) => {
+  const [theoreticalResponse, codingResponse] = await Promise.allSettled([
+    axios.get(`http://127.0.0.1:8001/api/theoretical-tests/${technology}/`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+    axios.get(`http://127.0.0.1:8002/api/practical-tests/${technology}/`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+  ]);
+
+  const theoreticalTests = theoreticalResponse.status === "fulfilled" ? [theoreticalResponse.value.data] : [];
+  const codingTests = codingResponse.status === "fulfilled" ? [codingResponse.value.data] : [];
+
+  return { theoreticalTests, codingTests };
+};
+
 const DepthSkillTestPage = () => {
-  const [categories, setCategories] = useState({}); // State to store categories and technologies
-  const [selectedCategory, setSelectedCategory] = useState(""); // State for the selected category
-  const [selectedTechnology, setSelectedTechnology] = useState(""); // State for the selected technology
-  const [selectedSkill, setSelectedSkill] = useState(null); // State for the selected skill
-  const [codingTests, setCodingTests] = useState({}); // State for coding tests
-  const [theoreticalTests, setTheoreticalTests] = useState({}); // State for theoretical tests
-  const [loading, setLoading] = useState(true); // State for loading indicator
-  const [error, setError] = useState(null); // State for error handling
-  const [noTests, setNoTests] = useState(false); // State to handle no tests found
   const navigate = useNavigate();
-  const location = useLocation()
-  const {assessment } = location.state || null
-  const [appliedPostionNames , setAppliedPostionNames] = useState([])
+  const location = useLocation();
+  const { assessment } = location.state || null;
 
-  useEffect(() => {
-    const fetchServiceNames = async () => {
-      try {
-        const serviceNamesList = await Promise.all(
-          assessment.applied_positions.map(async (id) => {
-            const response = await axios.get(`http://127.0.0.1:8000/api/services/${id}/`);
-            return response.data.name; // Extract the service name
-          })
-        );
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedTechnology, setSelectedTechnology] = useState("");
+  const [selectedSkill, setSelectedSkill] = useState(null);
 
-        setAppliedPostionNames(serviceNamesList);
-      } catch (error) {
-        console.error('Error fetching service names:', error);
-      }
-    };
+  // Fetch applied position names
+  const { data: appliedPositionNames, isLoading: loadingPositions, error: positionsError } = useQuery({
+    queryKey: ["appliedPositionName", assessment],
+    queryFn: () => fetchServiceName(assessment.applied_position),
+  });
 
-    if (assessment && assessment.applied_positions.length > 0) {
-      fetchServiceNames();
-    }
-  }, [assessment]);
+  // Fetch test categories and technologies
+  const { data: categories, isLoading: loadingTests, error: testsError } = useQuery({
+    queryKey: ["tests", appliedPositionNames],
+    queryFn: () => fetchTests({ appliedPositionNames, token }),
+  });
 
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch coding tests
-        // Verify `appliedPostionNames` has the correct data before sending the request
-        if (!appliedPostionNames || !Array.isArray(appliedPostionNames) || appliedPostionNames.length === 0) {
-          console.error("Invalid applied_position_names data:", appliedPostionNames);
-          return;
-      }
-        const token = localStorage.getItem('access'); // Get the access token from localStorage
-        const codingResponse = await axios.post(
-          "http://127.0.0.1:8002/api/practical-tests/assessment/",
-          {
-            applied_position_names:appliedPostionNames
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`, // Include the token in the headers
-            }
-          }
-        );
-        const codingTestsData = codingResponse.data || {}; // Ensure data is not undefined
-        setCodingTests(codingTestsData);
-        console.log("Coding response data: ", codingTestsData);
-    
-        // Fetch theoretical tests
-        const theoreticalResponse = await axios.post(
-          "http://127.0.0.1:8001/api/theoretical-tests/assessment/",
-          {
-            applied_position_names:appliedPostionNames
-          }
-          ,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`, // Include the token in the headers
-            }
-          }
-        );
-        const theoreticalTestsData = theoreticalResponse.data || {}; // Ensure data is not undefined
-        setTheoreticalTests(theoreticalTestsData);
-        console.log("Theoretical response data: ", theoreticalTestsData);
-    
-        // Combine data
-        const combinedData = { ...theoreticalTestsData }; // Start with theoretical tests data
-    
-        // Add coding tests to combined data without duplicating technologies based on name
-        for (const category in codingTestsData) {
-          const codingTechnologies = codingTestsData[category];
-          if (!combinedData[category]) {
-            combinedData[category] = [];
-          }
-    
-          // Use a map to track unique technologies by their name
-          const technologyMap = new Map(combinedData[category].map((tech) => [tech.name, tech]));
-    
-          codingTechnologies.forEach((tech) => {
-            if (!technologyMap.has(tech.name)) {
-              technologyMap.set(tech.name, tech);
-            }
-          });
-    
-          // Convert map values back to an array
-          combinedData[category] = Array.from(technologyMap.values());
-        }
-    
-        setCategories(combinedData);
-        setNoTests(Object.keys(combinedData).length === 0);
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setError("Failed to fetch tests");
-        setLoading(false);
-      }
-    };
-    if (appliedPostionNames.length > 0) {
-    fetchData();
-    }
-  }, [appliedPostionNames]); // Dependency array is empty, so this runs only once when the component mounts
-  
-  // Handle category change and reset technology selection
   const handleCategoryChange = (event) => {
-    const category = event.target.value;
-    setSelectedCategory(category);
-    setSelectedTechnology(""); // Reset selected technology when category changes
+    setSelectedCategory(event.target.value);
+    setSelectedTechnology("");
   };
 
-  // Handle technology change
   const handleTechnologyChange = (event) => {
     setSelectedTechnology(event.target.value);
   };
 
-  // Handle starting a test
-  const handleStartTest = (testId, testType) => {
-    navigate(`/assessment-camera-check/${testId}/${testType}`);
-  };
-
-  // Handle skill click to open modal
   const handleSkillClick = async (technology) => {
     try {
-      // Initialize empty arrays for tests
-      let theoreticalTest = [];
-      let codingTest = [];
-      const token = localStorage.getItem('access'); // Get the access token from localStorage
-
-      // Fetch random theoretical test by technology
-      try {
-        const theoreticalResponse = await axios.get(
-          `http://127.0.0.1:8001/api/theoretical-tests/${technology}/`,{headers: {
-            Authorization: `Bearer ${token}`, // Include the token in the headers
-          }}
-        );
-        theoreticalTest = theoreticalResponse.data ? [theoreticalResponse.data] : [];
-        console.log("the theoritical test is ",theoreticalTest)
-      } catch (err) {
-        console.error("Error fetching theoretical test:", err);
-        // Optionally handle specific errors for theoretical test fetch
-      }
-  
-      // Fetch random coding (practical) test by technology
-      try {
-        const codingResponse = await axios.get(
-          `http://127.0.0.1:8002/api/practical-tests/${technology}/`,{headers: {
-            Authorization: `Bearer ${token}`, // Include the token in the headers
-          }}
-        );
-        codingTest = codingResponse.data ? [codingResponse.data] : [];
-      } catch (err) {
-        console.error("Error fetching coding test:", err);
-        // Optionally handle specific errors for coding test fetch
-      }
-  
-      // Set selected skill with the fetched tests
+      const { theoreticalTests, codingTests } = await fetchSkillTests({ technology, token });
       setSelectedSkill({
         name: technology,
-        codingTests: codingTest, // Directly use the fetched coding test array
-        theoreticalTests: theoreticalTest, // Directly use the fetched theoretical test array
+        theoreticalTests,
+        codingTests,
       });
-  
-    } catch (err) {
-      console.error("Error handling skill click:", err);
-      setError("Failed to fetch random tests");
+    } catch (error) {
+      console.error("Error fetching skill tests:", error);
     }
   };
 
-  // Close the skill details modal
   const handleCloseModal = () => {
     setSelectedSkill(null);
   };
 
-  // Handle "Next" button click
-  const handleNextClick = () => {
-    if (selectedTechnology) {
-      handleSkillClick(selectedTechnology);
-    }
+  const handleStartTest = (testId, testType) => {
+    navigate(`/assessment-camera-check/${testId}/${testType}`,{
+      state:{assessment:assessment}
+    });
   };
 
-  // Loading and error handling UI
-  if (loading) return <div className="text-center">Loading...</div>;
-  if (error) return <div className="text-center text-red-500">{error}</div>;
+  if (loadingPositions || loadingTests) return <div className="text-center">Loading...</div>;
+  if (positionsError || testsError) return <div className="text-center text-red-500">Failed to load tests</div>;
 
-  // No tests available message
-  if (noTests)
+  if (!categories || Object.keys(categories).length === 0) {
     return <div className="text-center text-red-500">No tests available</div>;
+  }
 
   return (
     <div className="max-w-3xl mx-auto py-10 px-4">
-      <h1 className="text-2xl font-normal mb-8 text-brand-blue">
-        Start a New Test
-      </h1>
+      <h1 className="text-2xl font-normal mb-8 text-brand-blue">Start a New Test</h1>
 
       {/* Category Selection */}
       <div className="mb-8">
@@ -250,8 +166,7 @@ const DepthSkillTestPage = () => {
             <option value="">-- Select Technology --</option>
             {categories[selectedCategory]?.map((item) => (
               <option key={item.id} value={item.technology}>
-                {item.technology.charAt(0).toUpperCase() +
-                  item.technology.slice(1)}
+                {item.technology.charAt(0).toUpperCase() + item.technology.slice(1)}
               </option>
             ))}
           </select>
@@ -262,7 +177,7 @@ const DepthSkillTestPage = () => {
       {selectedTechnology && (
         <div className="mt-6">
           <button
-            onClick={handleNextClick}
+            onClick={() => handleSkillClick(selectedTechnology)}
             className="w-3/4 sm:w-1/2 px-4 py-2 border bg-brand-blue text-white font-normal rounded-lg shadow-md hover:bg-brand-dark-blue transition-colors duration-300"
           >
             Next

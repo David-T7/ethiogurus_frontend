@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect, useRef } from 'react';
 import axios from "axios";
 import { useNavigate , useLocation } from "react-router-dom";
-
+import { decryptToken } from '../../utils/decryptToken';
 // Create the CameraContext
 export const CameraContext = createContext();
 
@@ -17,7 +17,9 @@ export const CameraProvider = ({ children }) => {
   const [retryCount, setRetryCount] = useState(0);
   const [testStatus, setTestStatus] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
-  const token = localStorage.getItem("access");
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const navigate = useNavigate();
   const canvasRef = useRef(document.createElement('canvas')); // Reusable canvas
   const location = useLocation()

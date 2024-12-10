@@ -40,6 +40,7 @@ const submitInterviewResult = async ({
   interviewPayload,
   assessmentPayload,
   appointmentId,
+  freelancerId
 }) => {
   // Update interview
   const interviewResponse = await axios.patch(
@@ -55,7 +56,7 @@ const submitInterviewResult = async ({
 
   // Update assessment status
   await axios.patch(
-    `http://127.0.0.1:8000/api/full-assessment/${appointmentId}/update/`,
+    `http://127.0.0.1:8000/api/full-assessment/${freelancerId}/update/`,
     assessmentPayload,
     {
       headers: {
@@ -89,7 +90,6 @@ const InterviewPage = () => {
   const [feedback, setFeedback] = useState("");
   const [passed, setPassed] = useState(false);
   const [onHoldDuration, setOnHoldDuration] = useState(""); // Duration state
-
   // Fetch interview details
   const { data, isLoading, error } = useQuery({
     queryKey: ["interviewDetails", { id, token }],
@@ -120,6 +120,7 @@ const InterviewPage = () => {
     };
 
     const fieldToUpdate = `${data.appointment.interview_type}_status`;
+
     const assessmentPayload = passed
       ? { [fieldToUpdate]: "passed" }
       : {
@@ -127,13 +128,20 @@ const InterviewPage = () => {
           on_hold: true,
           on_hold_duration: onHoldDuration,
         };
-
+    if(passed && fieldToUpdate === "soft_skills_assessment_status"){
+      assessmentPayload.depth_skill_assessment_status = "pending";
+    }
+    else if (passed && fieldToUpdate === "live_assessment_status"){
+      assessmentPayload.status = "passed"
+      assessmentPayload.finished = true
+    }
     mutation.mutate({
       id,
       token,
       interviewPayload,
       assessmentPayload,
-      appointmentId: data.appointment.freelancer,
+      appointmentId: data.appointment.id,
+      freelancerId:data.freelancer.id
     });
     navigate("/interviews")
   };

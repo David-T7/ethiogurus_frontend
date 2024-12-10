@@ -1,23 +1,36 @@
 import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { FaFileAlt, FaUser, FaCode , FaBullhorn, FaEnvelope, FaAward, FaPencilAlt, FaLock, FaList, FaEye, FaEyeSlash } from "react-icons/fa";
+import {
+  FaFileAlt,
+  FaUser,
+  FaCode,
+  FaBullhorn,
+  FaEnvelope,
+  FaAward,
+  FaPencilAlt,
+  FaLock,
+  FaList,
+  FaEye,
+  FaEyeSlash,
+} from "react-icons/fa";
 import axios from "axios";
 
 const ApplyAsFreelancer = () => {
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
-    field: "", // Selected field
+    field: "",
     services: [],
     password: "",
     confirmPassword: "",
     resume_file: null,
   });
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [errors, setErrors] = useState({});
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch fields
   const fetchFields = async () => {
     const response = await axios.get("http://127.0.0.1:8000/api/fields/");
     return response.data;
@@ -27,7 +40,6 @@ const ApplyAsFreelancer = () => {
     queryFn: fetchFields,
   });
 
-  // Fetch services for a selected field
   const fetchServices = async ({ queryKey }) => {
     const [, fieldId] = queryKey;
     const response = await axios.get(`http://127.0.0.1:8000/api/field-services/?field_id=${fieldId}`);
@@ -36,34 +48,45 @@ const ApplyAsFreelancer = () => {
   const { data: availableServices = [], refetch: refetchServices } = useQuery({
     queryKey: ["services", formData.field],
     queryFn: fetchServices,
-    enabled: !!formData.field, // Fetch only when a field is selected
+    enabled: !!formData.field,
   });
 
-  // Form data change handlers
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === "services") {
-      const selectedOptions = Array.from(e.target.selectedOptions, (option) => option.value);
-      setFormData({ ...formData, [name]: selectedOptions });
-    } else {
-      setFormData({ ...formData, [name]: value });
-    }
+    setFormData({ ...formData, [name]: value });
+    setErrors({ ...errors, [name]: "" });
   };
 
   const handleFileChange = (e) => {
     setFormData({ ...formData, resume_file: e.target.files[0] });
+    setErrors({ ...errors, resume_file: "" });
   };
 
-  // Submit form
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.full_name) newErrors.full_name = "Full name is required.";
+    if (!formData.email) newErrors.email = "Email is required.";
+    if (!formData.field) newErrors.field = "Field of expertise is required.";
+    if (!formData.services.length) newErrors.services = "At least one service must be selected.";
+    if (!formData.password) newErrors.password = "Password is required.";
+    if (!formData.confirmPassword) newErrors.confirmPassword = "Confirm password is required.";
+    if (formData.password && formData.password.length < 5)
+      newErrors.password = "Password must be at least 5 characters long.";
+    if (formData.password !== formData.confirmPassword)
+      newErrors.confirmPassword = "Passwords do not match.";
+    if (!formData.resume_file) newErrors.resume_file = "Resume file is required.";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const mutation = useMutation({
     mutationFn: async (data) => {
+      setIsSubmitting(true);
       const formData = new FormData();
       formData.append("full_name", data.full_name);
       formData.append("email", data.email);
       formData.append("password", data.password);
-      if (data.resume_file) {
-        formData.append("resume_file", data.resume_file);
-      }
+      if (data.resume_file) formData.append("resume_file", data.resume_file);
       data.services.forEach((service) => {
         formData.append("applied_positions", service);
       });
@@ -74,6 +97,7 @@ const ApplyAsFreelancer = () => {
     },
     onSuccess: () => {
       setSuccessMessage("Application successful! Watch out for emails regarding your results.");
+      setIsSubmitting(false);
       setFormData({
         full_name: "",
         email: "",
@@ -83,10 +107,12 @@ const ApplyAsFreelancer = () => {
         confirmPassword: "",
         resume_file: null,
       });
+      setErrors({});
     },
     onError: (error) => {
+      setIsSubmitting(false);
       if (error.response?.data?.email) {
-        alert("Email already in use!");
+        setErrors({ email: "Email already in use!" });
       } else {
         console.error("Error submitting application:", error);
       }
@@ -95,170 +121,167 @@ const ApplyAsFreelancer = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
-      return;
-    }
-    if (formData.password.length < 5) {
-      alert("Password must be at least 5 characters long!");
-      return;
-    }
-    mutation.mutate(formData);
-  };
-
-  if (fieldsLoading) return <p>Loading...</p>;
-  if (fieldsError) return <p>Error loading fields: {fieldsError.message}</p>;
-
-  // Icons for fields
-  const getFieldIcon = (fieldName) => {
-    switch (fieldName) {
-      case "Project Manager":
-        return <FaPencilAlt className="text-brand-blue mr-2" />;
-      case "Developer":
-        return <FaCode className="text-brand-blue mr-2" />;
-      case "Marketing Expert":
-        return <FaBullhorn className="text-brand-blue mr-2" />;
-      default:
-        return <FaAward className="text-brand-blue mr-2" />;
+    if (validateForm()) {
+      mutation.mutate(formData);
     }
   };
+
+  if (fieldsLoading) return <p className="text-center mt-4">Loading...</p>;
+  if (fieldsError) return <p className="text-center mt-4">Error loading fields: {fieldsError.message}</p>;
 
   return (
     <div className="container mx-auto py-12 px-6">
-      <section className="text-center mb-5">
-        <h2 className="text-3xl font-normal text-brand-blue mb-4">Apply as a Freelancer</h2>
-        <p className="text-lg text-brand-gray-dark">
-          Join our network of top freelancers by filling out the application form below.
-        </p>
-      </section>
-
-      <section className="bg-gray-100 p-8 rounded-lg max-w-md mx-auto">
+    <section className="text-center mb-5">
+      <h2 className="text-3xl font-normal text-brand-blue mb-4">Apply as a Freelancer</h2>
+      <p className="text-lg text-brand-gray-dark">
+        Join our network of top freelancers by filling out the application form below.
+      </p>
+    </section>
+    <section className="bg-gray-100 p-8 rounded-lg max-w-md mx-auto">
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-          <div className="flex flex-col gap-2">
-            <label htmlFor="full_name" className="text-lg font-normal text-brand-blue">
-              <FaUser className="inline mr-2" />
-              Full Name
-            </label>
-            <input
-              id="full_name"
-              name="full_name"
-              type="text"
-              placeholder="Your Name"
-              value={formData.full_name}
-              onChange={handleChange}
-              className="w-full border border-gray-300 p-2 rounded-lg"
-            />
-          </div>
+        <div className="flex flex-col gap-2">
+        <label htmlFor="full_name" className="text-lg font-normal text-brand-blue">
+              <FaUser className="inline mr-2" />Full Name</label>
+          <input
+            id="full_name"
+            name="full_name"
+            type="text"
+            value={formData.full_name}
+            onChange={handleChange}
+            className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
+          />
+          {errors.full_name && <p className="text-red-600">{errors.full_name}</p>}
+        </div>
 
-          <div className="flex flex-col gap-2">
-            <label htmlFor="email" className="text-lg font-normal text-brand-blue">
-              <FaEnvelope className="inline mr-2" />
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="Your Email"
-              value={formData.email}
-              onChange={handleChange}
-              className="w-full border border-gray-300 p-2 rounded-lg"
-            />
-          </div>
+        <div className="flex flex-col gap-2">
+        <label htmlFor="email" className="text-lg font-normal text-brand-blue">
+        <FaEnvelope className="inline mr-2" />Email</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
+          />
+          {errors.email && <p className="text-red-600">{errors.email}</p>}
+        </div>
 
-          <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2">
             <label htmlFor="field" className="text-lg font-normal text-brand-blue">
-              <FaAward className="inline mr-2" />
-              Field of Expertise
-            </label>
+              <FaAward className="inline mr-2" />Field</label>
+          <select
+            id="field"
+            name="field"
+            value={formData.field}
+            onChange={(e) => {
+              handleChange(e);
+              refetchServices();
+            }}
+            className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
+          >
+            <option value="">Select a field</option>
+            {fields.map((field) => (
+              <option key={field.id} value={field.id}>
+                {field.name}
+              </option>
+            ))}
+          </select>
+          {errors.field && <p className="text-red-600">{errors.field}</p>}
+        </div>
+
+        {formData.field && (
+         <div className="flex flex-col gap-2">
+         <label htmlFor="services" className="text-lg font-normal text-brand-blue">
+           <FaList className="inline mr-2" />Services</label>
             <select
-              id="field"
-              name="field"
-              value={formData.field}
+              id="services"
+              name="services"
+              multiple
+              value={formData.services}
               onChange={(e) => {
-                handleChange(e);
-                refetchServices();
+                const selectedOptions = Array.from(e.target.selectedOptions, (option) => option.value);
+                setFormData({ ...formData, services: selectedOptions });
+                setErrors({ ...errors, services: "" });
               }}
-              className="w-full border border-gray-300 p-2 rounded-lg"
-            >
-              <option value="">Select a Field</option>
-              {fields.map((field) => (
-                <option key={field.id} value={field.id}>
-                  {field.name}
+              className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
+              >
+              {availableServices.map((service) => (
+                <option key={service.id} value={service.id}>
+                  {service.name}
                 </option>
               ))}
             </select>
+            {errors.services && <p className="text-red-600">{errors.services}</p>}
           </div>
+        )}
 
-          {formData.field && (
-            <div className="flex flex-col gap-2">
-              <label htmlFor="services" className="text-lg font-normal text-brand-blue">
-                <FaList className="inline mr-2" />
-                Services Offered
-              </label>
-              <select
-                id="services"
-                name="services"
-                multiple
-                value={formData.services}
-                onChange={handleChange}
-                className="w-full border border-gray-300 p-2 rounded-lg"
-              >
-                {availableServices.map((service) => (
-                  <option key={service.id} value={service.id}>
-                    {service.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          <div className="flex flex-col gap-2 relative">
+        <div className="flex flex-col gap-2 relative">
             <label htmlFor="password" className="text-lg font-normal text-brand-blue">
               <FaLock className="inline mr-2" />
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type={passwordVisible ? "text" : "password"}
-              placeholder="Your Password"
-              value={formData.password}
-              onChange={handleChange}
-              className="w-full border border-gray-300 p-2 rounded-lg"
-            />
-            <button
+              Password</label>
+          <input
+            id="password"
+            name="password"
+            type={passwordVisible ? "text" : "password"}
+            value={formData.password}
+            onChange={handleChange}
+            className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
+          />
+           <button
               type="button"
               onClick={() => setPasswordVisible(!passwordVisible)}
               className="absolute right-3 top-10 text-gray-600 hover:text-gray-800"
             >
-              {passwordVisible ? <FaEyeSlash /> : <FaEye />}
+              {!passwordVisible ? <FaEyeSlash /> : <FaEye />}
             </button>
-          </div>
+          {errors.password && <p className="text-red-600">{errors.password}</p>}
+        </div>
 
-          <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 relative">
+            <label htmlFor="password" className="text-lg font-normal text-brand-blue">
+              <FaLock className="inline mr-2" />Confirm Password</label>
+          <input
+            id="confirmPassword"
+            name="confirmPassword"
+            type={confirmPasswordVisible ? "text" : "password"}
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
+          />
+           <button
+              type="button"
+              onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
+              className="absolute right-3 top-10 text-gray-600 hover:text-gray-800"
+            >
+              {!confirmPasswordVisible ? <FaEyeSlash /> : <FaEye />}
+            </button>
+          {errors.confirmPassword && <p className="text-red-600">{errors.confirmPassword}</p>}
+        </div>
+
+        <div className="flex flex-col gap-2">
             <label htmlFor="resume_file" className="text-lg font-normal text-brand-blue">
-              <FaFileAlt className="inline mr-2" />
-              Upload Resume
-            </label>
-            <input
-              id="resume_file"
-              name="resume_file"
-              type="file"
-              onChange={handleFileChange}
-              className="w-full border border-gray-300 p-2 rounded-lg"
-            />
-          </div>
+              <FaFileAlt className="inline mr-2" />Resume File</label>
+          <input
+            id="resume_file"
+            name="resume_file"
+            type="file"
+            onChange={handleFileChange}
+            className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
+          />
+          {errors.resume_file && <p className="text-red-600">{errors.resume_file}</p>}
+        </div>
 
-          <button
-            type="submit"
-            className="bg-brand-blue text-white p-3 rounded-lg hover:bg-brand-dark-blue transition-colors duration-300"
-          >
-            Submit Application
-          </button>
+        {successMessage && <p className="text-green-600 mb-4">{successMessage}</p>}
 
-          {successMessage && <p className="text-green-600 text-center">{successMessage}</p>}
-        </form>
+        <button
+          type="submit"
+          className="bg-brand-blue text-white p-3 rounded-lg hover:bg-brand-dark-blue transition-colors duration-300"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Submitting..." : "Apply"}
+        </button>
+      </form>
       </section>
     </div>
   );

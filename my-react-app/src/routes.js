@@ -108,6 +108,11 @@ import DepthSkillTestPage from './components/assesment/DepthSkillPage';
 import SoftSkillTestPage from './components/assesment/SoftSkillTestPage';
 import CheckVerification from './components/freealncerpage/VerificationCheck';
 import FreelancerMessages from './components/freealncerpage/freelancerMessages';
+import ResumeCheckLayout from './components/resumecheck/resumeCheckLayout';
+import ResumeCheckDashboard from './components/resumecheck/resumeCheckDashboard';
+import ResumeDetails from './components/resumecheck/ResumeDetails';
+import UpdateRCheckerProfile from './components/resumecheck/UpdateProfilePage';
+
 const RoutesConfig = () => {
   return (
       <Routes>
@@ -233,6 +238,13 @@ const RoutesConfig = () => {
         <Route path='/skill-test-result' element={<AssessmentLayout><TestResultPage/> </AssessmentLayout>} />                
         <Route path='/my-skills' element={<AssessmentLayout><SkillsPage/> </AssessmentLayout>} />                
         <Route path='/practical-test-result/:id' element={<AssessmentLayout><CodingTestResultPage/> </AssessmentLayout>} />                
+        <Route path="/my-settings" element={<AssessmentLayout><FreelancerSettingsPage /> </AssessmentLayout>} />        
+        <Route path="/profileupdate" element={<AssessmentLayout><UpdateProfilePage /> </AssessmentLayout>} />              
+        <Route path="/passwordupdate" element={<AssessmentLayout><ChangePasswordPage /></AssessmentLayout>} />
+        <Route path="/resume-check" element={<ResumeCheckLayout><ResumeCheckDashboard /></ResumeCheckLayout>} />
+        <Route path="/resume-notifications" element={<ResumeCheckLayout><NotificationPage/></ResumeCheckLayout>} />
+        <Route path="/resume/:id" element={<ResumeCheckLayout><ResumeDetails /></ResumeCheckLayout>} />
+        <Route path="/update-myprofile" element={<ResumeCheckLayout><UpdateRCheckerProfile /></ResumeCheckLayout>} />
 
       </Routes>
   );

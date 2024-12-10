@@ -85,6 +85,10 @@ const Layout = ({ children }) => {
           } else if (role === "dispute-manager") {
             navigate("/latest-disputes");
           }
+         else if (role === "resume-checker") {
+          navigate("/resume-check");
+        } 
+          
         } else {
           console.warn("Invalid data returned from getRole:", data);
           navigate("/login");

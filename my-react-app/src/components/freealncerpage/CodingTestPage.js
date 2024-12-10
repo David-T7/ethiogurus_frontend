@@ -57,8 +57,8 @@ const CodingTestPage = () => {
   const startingPath = location.pathname.split('/').slice(0, 2).join('/'); // e.g., '/assessment-camera-check'
   const { startCamera, stopCamera,errorMessage , setErrorMessage, isTerminated, setFreelancerID_, videoRef , showModal ,isPaused, setIsPaused , setShowModal ,updateVideoSource , cameraStream } = useContext(CameraContext);
   const [isSubmitting, setIsSubmitting] = useState(false); // State to track submission status
-  const {testDetails} = location.state || null 
-  const {profilePicture , setProfilePicture} = useState(null)
+  const { testDetails = null, assessment = null } = location.state || {};
+  const [profilePicture , setProfilePicture] = useState(null)
   const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
   const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
   const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
@@ -83,13 +83,13 @@ const CodingTestPage = () => {
   const { data: freelancerDetails } = useQuery({
     queryKey: ["freelancerDetails", { token }],
     queryFn: fetchFreelancerDetails,
-    onSuccess: (data) => {
-      setFreelancerID_(data.id);
-      setFreelancerId(data.id);
-      setProfilePicture(data.profilePicture);
-      setTimer(currentTest?.duration_in_minutes * 60 || 0);
-    },
   });
+  useEffect(() => {
+    setFreelancerID_(freelancerDetails?.id);
+    setFreelancerId(freelancerDetails?.id);
+    setProfilePicture(freelancerDetails?.profilePicture);
+    setTimer(currentTest?.duration_in_minutes * 60 || 0);
+  },freelancerDetails)
   
   
   useEffect(() => {
@@ -428,14 +428,9 @@ useEffect(() => {
       );
 
       const { submission } = finalizeResponse.data;
-
+      console.log("submission resutl is ",submission)
       if (submission.passed) {
-        if(currentTest.category === "Soft Skills"){
-          await updateSoftSkills(currentTest.skill_type)
-        }
-        else{
         await updateFreelancerSkills(currentTest.skill_type);
-        }
       }
       else{
         await updateAssessmentStatus(submission.score , 70)
@@ -485,7 +480,7 @@ useEffect(() => {
     try {
       // Send patch request to update the assessment
       const response = await axios.patch(
-        `http://127.0.0.1:8000/api/full-assessment/${freelancerId}/update/`,
+        `http://127.0.0.1:8000/api/full-assessment/${assessment.id}/`,
         assessmentUpdatePayload,
         {
           headers: {
@@ -506,76 +501,100 @@ useEffect(() => {
     }
   };
 
-  const updateSoftSkills = async (skillType) => {
-    try {
-      // Fetch freelancer's current profile data
-      const freelancerResponse = await axios.get(
-        "http://127.0.0.1:8000/api/user/freelancer/manage/",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+  // const updateSoftSkills = async (skillType) => {
+  //   try {
+  //     // Fetch freelancer's current profile data
+  //     const freelancerResponse = await axios.get(
+  //       "http://127.0.0.1:8000/api/user/freelancer/manage/",
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
   
-      const freelancer = freelancerResponse.data;
+  //     const freelancer = freelancerResponse.data;
       
-      // Handle freelancer.skills based on its type
-      let currentSkills = Array.isArray(freelancer.skills) ? freelancer.skills : [];
+  //     // Handle freelancer.skills based on its type
+  //     let currentSkills = Array.isArray(freelancer.skills) ? freelancer.skills : [];
     
 
-      // Append the new skill under the appropriate category with both_practical_theoretical field
-      const newSkill = {
-        category: "Soft Skills",
-        skill: skillType,
-        type: "practical", // Default to theoretical
-        both_practical_theoretical: true,
-      };
+  //     // Append the new skill under the appropriate category with both_practical_theoretical field
+  //     const newSkill = {
+  //       category: "Soft Skills",
+  //       skill: skillType,
+  //       type: "practical", // Default to theoretical
+  //       both_practical_theoretical: true,
+  //     };
   
-      // Check if the skill already exists
-      const skillExists = currentSkills.some(skill =>
-        skill.category === "Soft Skills" && skill.skill.toLowerCase() === skillType.toLowerCase()
-      );
+  //     // Check if the skill already exists
+  //     const skillExists = currentSkills.some(skill =>
+  //       skill.category === "Soft Skills" && skill.skill.toLowerCase() === skillType.toLowerCase()
+  //     );
 
-      const theoreticalSkillExists = currentSkills.some(skill =>
-        skill.category === "Soft Skills" && skill.type === "theoretical" && skill.skill.toLowerCase() === skillType.toLowerCase()
-      );
+  //     const theoreticalSkillExists = currentSkills.some(skill =>
+  //       skill.category === "Soft Skills" && skill.type === "theoretical" && skill.skill.toLowerCase() === skillType.toLowerCase()
+  //     );
   
-      if (!skillExists) {
-        currentSkills.push(newSkill);
-        if(theoreticalSkillExists){
-          await axios.patch(
-            `http://127.0.0.1:8000/api/full-assessment/${freelancerId}/update/`,
-            {
-              depth_skill_assessment_status:"pending",
-              soft_skills_assessment_status :"passed"
-            },
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            } )   
-        }
-      }
+  //     if (!skillExists) {
+  //       currentSkills.push(newSkill);
+  //       if(theoreticalSkillExists){
+  //         await axios.patch(
+  //           `http://127.0.0.1:8000/api/full-assessment/${freelancerId}/update/`,
+  //           {
+  //             depth_skill_assessment_status:"pending",
+  //             soft_skills_assessment_status :"passed"
+  //           },
+  //           {
+  //             headers: {
+  //               Authorization: `Bearer ${token}`,
+  //             },
+  //           } )   
+  //       }
+  //     }
   
-      // Patch the freelancer profile with the updated skills (as a JSON string)
+  //     // Patch the freelancer profile with the updated skills (as a JSON string)
+  //     await axios.patch(
+  //       `http://127.0.0.1:8000/api/user/freelancer/manage/`,
+  //       {
+  //         skills: JSON.stringify(currentSkills), // Convert array to JSON string for storage
+  //       },
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
+  
+  //     console.log("Freelancer skills updated successfully under the category:", "Soft skills");
+  //   } catch (error) {
+  //     console.error("Failed to update freelancer skills", error);
+  //   }
+  // };
+
+  const updateFullAssessmentStatus = async () => {
+    await axios.patch(
+      `http://127.0.0.1:8000/api/full-assessment/${freelancerId}/update/`,
+      {
+        live_assessment_status:"pending",
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      } )
+
       await axios.patch(
-        `http://127.0.0.1:8000/api/user/freelancer/manage/`,
+        `http://127.0.0.1:8000/api/full-assessment/${assessment.id}/`,
         {
-          skills: JSON.stringify(currentSkills), // Convert array to JSON string for storage
+          depth_skill_assessment_status:"passed",
         },
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
-      );
-  
-      console.log("Freelancer skills updated successfully under the category:", "Soft skills");
-    } catch (error) {
-      console.error("Failed to update freelancer skills", error);
-    }
-  };
+        } )
+  }
 
   const updateFreelancerSkills = async (skillType) => {
     try {
@@ -645,7 +664,7 @@ useEffect(() => {
   
       // Check if the skill already exists
       const skillExists = currentSkills.some(skill =>
-        skill.category === category && skill.skill.toLowerCase() === skillType.toLowerCase()
+        skill.category === category && skill.skill.toLowerCase() === skillType.toLowerCase() && newSkill.type==="practical"
       );
   
       if (!skillExists) {
@@ -689,9 +708,7 @@ useEffect(() => {
         // Step 4: Update assessment status if the category has >= 2 skills
         if (skillsInCategory >= 2) {
           const assessmentUpdatePayload = {
-            depth_skill_assessment_status: "passed",
-            finished: true,
-            passed:true
+            live_assessment_status: "pending",
           };
       
           const assessmentResponse = await axios.patch(
@@ -699,7 +716,21 @@ useEffect(() => {
             assessmentUpdatePayload,
             { headers: { Authorization: `Bearer ${token}` } }
           );
-      
+
+          await axios.patch(
+            `http://127.0.0.1:8000/api/full-assessment/${assessment.id}/`,
+            {depth_skill_assessment_status:"passed"},
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          if(assessment.live_assessment_status === "not_started"){
+          await axios.patch(
+            `http://127.0.0.1:8000/api/assign-live-assessment-appointment/${updatedFreelancer.id}/`,
+            {
+              applied_position_id:assessment.applied_position
+            },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        }
           console.log(`Assessment for category ${category} marked as finished:`, assessmentResponse.data);
         }
       } catch (error) {

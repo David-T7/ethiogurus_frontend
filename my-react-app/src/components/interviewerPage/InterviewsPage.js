@@ -8,7 +8,7 @@ const fetchInterviews = async ({ queryKey }) => {
   const [, { token }] = queryKey;
 
   const interviewsResponse = await axios.get(
-    "http://127.0.0.1:8000/api/interviews/",
+    "http://127.0.0.1:8000/api/interviewer/interviews/",
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -16,7 +16,7 @@ const fetchInterviews = async ({ queryKey }) => {
     }
   );
 
-  const interviews = interviewsResponse.data;
+  const interviews = interviewsResponse.data.interviews;
 
   const freelancerRequests = [];
   const appointmentRequests = [];

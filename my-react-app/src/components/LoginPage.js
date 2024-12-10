@@ -42,13 +42,15 @@ const LoginPage = () => {
         navigate("/dashboard");
       } else if (userData.role === "dispute-manager") {
         navigate("/latest-disputes");
+      } else if (userData.role === "resume-checker") {
+        navigate("/resume-check");
       } else {
         navigate("/dashboard"); // Default dashboard for other roles
       }
     } catch (err) {
       console.error("Login error:", err.response?.data || err.message);
       setError(
-        err.response?.data?.detail || "An error occurred. Please try again."
+        err.response?.data?.detail || "Incorrect Email or Password."
       );
     } finally {
       setLoading(false); // Hide loading spinner
