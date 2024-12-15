@@ -14,13 +14,13 @@ const LandingPage = () => {
     <div className="flex flex-col items-center min-h-screen bg-gradient-to-b from-brand-blue to-brand-gray-light p-6">
       <div className="text-center">
         <h1 className="text-4xl font-normal mb-4 text-white shadow-lg">
-          Hire the Top Freelance Talent®
+          Hire the Top Freelance Talent in Ethiopia
         </h1>
-        <p className="text-lg mb-8 text-white shadow-md">
-          EthioGuru is an exclusive network of Ethiopia's top freelance software
+        <p className="text-lg mb-8 md:mx-32 text-white shadow-md">
+          EthioGurus is an exclusive network of Ethiopia's top freelance software
           developers, designers, marketing experts, finance experts, product
-          managers, and project managers. Leading Ethiopian companies hire
-          EthioGuru freelancers for their most crucial projects.
+          managers, and project managers. {/*Leading Ethiopian companies hire
+           EthioGurus freelancers for their most crucial projects. */}
         </p>
 
         {/* why you choose us Section */}
@@ -153,7 +153,7 @@ const LandingPage = () => {
       </div>
 
       {/* Testimonials */}
-      <TestimonialSection />
+      {/* <TestimonialSection /> */}
     </div>
   );
 };

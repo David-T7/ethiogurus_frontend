@@ -60,7 +60,7 @@ const LoginPage = () => {
   return (
     <div className="container mx-auto py-12 px-6">
       <section className="bg-gray-100 p-8 rounded-lg max-w-md mx-auto">
-        <h2 className="text-3xl font-normal text-brand-blue mb-6">Log In</h2>
+        <h2 className="text-3xl font-thin text-brand-blue mb-6">Log In</h2>
         {error && (
           <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded mb-6">
             {error}

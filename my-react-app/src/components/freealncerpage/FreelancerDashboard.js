@@ -45,7 +45,7 @@ const FreelancerDashboard = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-8 mt-8">
+    <div className="max-w-xl mx-auto p-8 mt-8">
       <h1 className="text-3xl font-thin mb-8 text-brand-dark-blue text-center">Recent Projects</h1>
       <div className="p-6">
         {recentProjects.map((project) => (

@@ -54,7 +54,7 @@ const ClientDashboard = () => {
       </header>
 
       {/* Recent Projects Highlights */}
-      <div className="max-w-3xl mx-auto p-6 mb-8">
+      <div className="max-w-lg mx-auto p-6 mb-8">
         <h2 className="text-blue-600 text-2xl mb-6 flex items-center gap-3">
           <FaProjectDiagram className="text-blue-600 text-2xl" />
           Recent Projects
@@ -84,7 +84,7 @@ const ClientDashboard = () => {
       <div className="text-center">
         <Link
           to="/create-project"
-          className="inline-flex items-center gap-3 px-6 py-2 bg-blue-600 text-white rounded-lg shadow-lg text-xl font-semibold transition-all duration-300 hover:bg-blue-700 hover:shadow-xl"
+          className="inline-flex items-center gap-3 px-6 py-2 bg-blue-600 text-white rounded-lg shadow-lg text-xl font-semibold transition-all duration-300 hover:bg-blue-700 hover:shadow-xl hover:scale-110"
         >
           <FaPlus className="text-2xl" /> Create Project
         </Link>

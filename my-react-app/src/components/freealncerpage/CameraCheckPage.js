@@ -8,7 +8,7 @@ const CameraCheckPage = () => {
   const location = useLocation()
   // Get the first segment of the path
   const startingPath = location.pathname.split('/').slice(0, 2).join('/'); // e.g., '/assessment-camera-check'
-  const {assessment} = location.state || null
+  const assessment = location.state || null
   console.log("starting path is ",startingPath)
   useEffect(() => {
     const checkCameraAccess = async () => {

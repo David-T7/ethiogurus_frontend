@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
-
+import { decryptToken } from "../../utils/decryptToken";
 
 const fetchFreelancer = async ({ queryKey }) => {
   const [, { token }] = queryKey;
@@ -51,7 +51,9 @@ const SubmitCounterOffer = () => {
   const [rejectMilestoneOption, setRejectMilestoneOption] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const token = localStorage.getItem("access");
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+   const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+   const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
 
  // Fetch freelancer details
  const { data: freelancer } = useQuery({
@@ -60,20 +62,9 @@ const SubmitCounterOffer = () => {
   staleTime: 300000, // Cache for 5 minutes
 });
 
-// Fetch contract details
 const { data: contract } = useQuery({
   queryKey: ["contract", { contractId, token }],
   queryFn: fetchContract,
-  onSuccess: (data) => {
-    setOffer((prevOffer) => ({
-      ...prevOffer,
-      title: data.title || "",
-      proposed_amount: data.amount_agreed || "",
-      start_date: data.start_date ? data.start_date.split("T")[0] : "",
-      end_date: data.end_date ? data.end_date.split("T")[0] : "",
-      milestone_based: data.milestone_based || false,
-    }));
-  },
   staleTime: 300000,
 });
 
@@ -82,18 +73,37 @@ const { data: milestones } = useQuery({
   queryKey: ["milestones", { contractId: contract?.contract_update || contractId, token }],
   queryFn: fetchMilestones,
   enabled: !!contract, // Only fetch milestones if contract data is available
-  onSuccess: (data) => {
+});
+
+// Update offer state when contract data changes
+useEffect(() => {
+  if (contract) {
     setOffer((prevOffer) => ({
       ...prevOffer,
-      milestones: data.map((milestone) => ({
+      title: contract.title || "",
+      proposed_amount: contract.amount_agreed || "",
+      start_date: contract.start_date ? contract.start_date.split("T")[0] : "",
+      end_date: contract.end_date ? contract.end_date.split("T")[0] : "",
+      milestone_based: contract.milestone_based || false,
+    }));
+  }
+}, [contract]);
+
+// Update offer state and loading when milestones data changes
+useEffect(() => {
+  if (milestones) {
+    setOffer((prevOffer) => ({
+      ...prevOffer,
+      milestones: milestones.map((milestone) => ({
         id: milestone.id,
         title: milestone.title || "",
         amount: milestone.amount || "",
         due_date: milestone.due_date ? milestone.due_date.split("T")[0] : "",
       })),
     }));
-  },
-});
+    setLoading(false);
+  }
+}, [milestones]);
 
 
 

@@ -1,7 +1,7 @@
 import React, { createContext, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-
+import { decryptToken } from "../utils/decryptToken";
 const ProjectContext = createContext();
 
 const fetchProject = async ({ queryKey }) => {
@@ -38,7 +38,9 @@ const fetchMilestones = async ({ queryKey }) => {
 };
 
 const ProjectProvider = ({ children }) => {
-  const token = localStorage.getItem("access");
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const [projectId, setProjectId] = useState(null);
 
   // Fetch project data

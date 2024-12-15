@@ -1,9 +1,8 @@
 // ChangePasswordPage.jsx
-
 import React, { useState } from 'react';
 import axios from 'axios';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-
+import { decryptToken } from '../utils/decryptToken';
 const ChangePasswordPage = () => {
   const [profile, setProfile] = useState({
     oldPassword: '',
@@ -18,7 +17,16 @@ const ChangePasswordPage = () => {
   });
 
   const [errors, setErrors] = useState({}); // State to hold error messages
-
+  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
+  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
+  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
+  const [oldPasswordError, setOldPasswordError] = useState("");
+  const [newPasswordError, setNewPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [succesMessage , setSuccesMessage ] = useState("")
+  const [errorMessage , setErrorMessage ] = useState("")
+  const [loading, setLoading] = useState(false);
+  
   const togglePasswordVisibility = (field) => {
     setPasswordVisibility((prevState) => ({
       ...prevState,
@@ -36,20 +44,43 @@ const ChangePasswordPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrors({}); // Reset errors
-
-    if (profile.newPassword !== profile.confirmPassword) {
-      setErrors({ confirmPassword: "Passwords do not match!" });
-      return;
+    
+    let valid = true;
+    if (!profile.newPassword.trim()) {
+      setNewPasswordError("New passowrd is required.");
+      valid = false;
+    } else {
+      setNewPasswordError("");
     }
+
+    if (!profile.oldPassword.trim()) {
+      setOldPasswordError("Old passowrd is required.");
+      valid = false;
+    } else {
+      setOldPasswordError("");
+    }
+
+    if (!profile.confirmPassword.trim()) {
+      setConfirmPasswordError("Confirm passowrd is required.");
+      valid = false;
+    } else {
+      setConfirmPasswordError("");
+    }
+    
+    if (profile.newPassword !== profile.confirmPassword) {
+      setConfirmPasswordError("Passwords do not match!" );
+      valid = false;
+    }
+
+    if (!valid) return;
+    setLoading(true);
+
 
     try {
       const data = {
         'old_password': profile.oldPassword,
         'new_password': profile.newPassword
       };
-
-      const token = localStorage.getItem('access');
       const response = await axios.post(`http://127.0.0.1:8000/api/user/change-password/`, data, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -57,7 +88,8 @@ const ChangePasswordPage = () => {
         },
       });
 
-      alert('Password updated successfully!');
+      setSuccesMessage('Password updated successfully!');
+      setErrorMessage("")
       // Optionally, reset the form
       setProfile({
         oldPassword: '',
@@ -66,15 +98,18 @@ const ChangePasswordPage = () => {
       });
     } catch (err) {
       if (err.response && err.response.data) {
-        setErrors(err.response.data); // Set error messages from the backend
+        // Display backend validation errors
+        setErrorMessage(JSON.stringify(err.response.data));
       } else {
-        alert('Failed to update password.');
+        setErrorMessage('Failed to update password');
       }
+      setSuccesMessage("")
     }
+    setLoading(false);
   };
 
   return (
-    <div className="max-w-lg mx-auto p-6 mt-8">
+    <div className="max-w-md mx-auto p-6 mt-8">
       <h2 className="text-3xl font-thin text-brand-dark-blue mb-6 text-center">Change Password</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
 
@@ -97,9 +132,7 @@ const ChangePasswordPage = () => {
           >
             {passwordVisibility.oldPasswordVisible ? <FaEye /> : <FaEyeSlash />}
           </span>
-          {errors.old_password && (
-            <p className="text-red-500 text-sm mt-1">{errors.old_password}</p>
-          )}
+          {oldPasswordError && <div className="text-red-500 mt-1">{oldPasswordError}</div>}
         </div>
 
         {/* New Password */}
@@ -121,9 +154,7 @@ const ChangePasswordPage = () => {
           >
             {passwordVisibility.newPasswordVisible ? <FaEye /> : <FaEyeSlash />}
           </span>
-          {errors.new_password && (
-            <p className="text-red-500 text-sm mt-1">{errors.new_password}</p>
-          )}
+          {newPasswordError && <div className="text-red-500 mt-1">{newPasswordError}</div>}
         </div>
 
         {/* Confirm Password */}
@@ -139,25 +170,36 @@ const ChangePasswordPage = () => {
             onChange={handleInputChange}
             className={`w-full border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'} p-2 rounded-lg focus:outline-none focus:border-blue-500`}
           />
-          {errors.confirmPassword && (
-            <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
-          )}
+           <span
+            className="absolute right-3 top-10 text-gray-600 hover:text-gray-800 cursor-pointer"
+            onClick={() => togglePasswordVisibility('confirmPasswordVisible')}
+          >
+            {passwordVisibility.confirmPasswordVisible ? <FaEye /> : <FaEyeSlash />}
+          </span>
+          {confirmPasswordError && <div className="text-red-500 mt-1">{confirmPasswordError}</div>}
+
         </div>
 
-        {/* General Error Message */}
-        {errors.non_field_errors && (
-          <div className="text-red-500 text-center">{errors.non_field_errors}</div>
-        )}
 
         {/* Submit Button */}
         <div className="flex justify-center">
           <button
             type="submit"
-            className="bg-brand-blue text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200"
+            className="bg-blue-500 w-full text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200"
           >
-            Update Password
-          </button>
+              {loading ? 'Submitting...' : 'Submit'}
+        </button>
         </div>
+        {succesMessage && (
+    <div className="text-green-500 text-center mt-4 text-md">
+      {succesMessage}
+    </div>
+  )}
+  {errorMessage && (
+    <div className="text-red-500 text-center mt-4 text-md">
+      {typeof errorMessage === "string" && errorMessage.length<=100 ? errorMessage : "An error occurred. Please try again."}
+    </div>
+  )}
       </form>
     </div>
   );

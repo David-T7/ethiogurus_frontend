@@ -17,12 +17,14 @@ const ContractDisputePage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  
+  const [titleError, setTitleError] = useState("");
+  const [descriptionError, setDescriptionError] = useState("");
   const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
   const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
   const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const { milestoneId } = location.state || null;
-
+  const [partialRefundError, setPartialRefundError] = useState("");
+  
   // Handle file selection
   const handleFileChange = (e) => {
     setFiles([...e.target.files]);
@@ -32,7 +34,7 @@ const ContractDisputePage = () => {
     
     const fetchContract = async () => {
       try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/contracts/${contractId}/`, {
+        const response = await axios.get(`http://127.0.0.1:8000/api/get-contracts/${contractId}/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setContract(response.data);
@@ -63,23 +65,39 @@ const ContractDisputePage = () => {
         setLoading(false);
       }
     };
-
+    if(milestoneId){
     fetchMilestone();
+    }
   }, [milestoneId]);
 
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Basic validation
+    let valid = true;
     if (!title.trim()) {
-      setError('Please provide a title for the dispute.');
-      return;
+      setTitleError("Title is required.");
+      valid = false;
+    } else {
+      setTitleError("");
     }
-    if (refundType === 'partial' && !refundAmount) {
-      setError('Please specify the refund amount for a partial refund.');
-      return;
+
+    if (!disputeDetails.trim()) {
+      setDescriptionError("Description is required.");
+      valid = false;
+    } else {
+      setDescriptionError("");
     }
+
+    if (refundType === "partial" && !refundAmount) {
+      setPartialRefundError("Please specify the refund amount for a partial refund.");
+      valid = false;
+    }
+    else{
+    setPartialRefundError("")
+    }
+
+    if (!valid) return;
 
     setLoading(true);
     setError(null);
@@ -152,17 +170,11 @@ const ContractDisputePage = () => {
   };
 
   return (
-      <div className="max-w-2xl mx-auto p-6 mt-6">
+      <div className="max-w-xl mx-auto p-6 mt-6">
         <h1 className="text-3xl font-thin text-brand-dark-blue mb-6 text-center">
           File a Dispute for {milestone? milestone?.title :contract?.title}
         </h1>
-        {/* Display Error Message */}
-        {error && <div className="text-red-500 mb-4">{error}</div>}
-
-        {/* Display Success Message */}
-        {success && <div className="text-green-500 mb-4">Dispute submitted successfully!</div>}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit}>
           {/* Dispute Title */}
           <div className="p-6">
             <label htmlFor="title" className="block text-lg font-normal text-brand-blue mb-2">
@@ -175,8 +187,9 @@ const ContractDisputePage = () => {
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter dispute title..."
               className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-              required
             />
+            {titleError && <div className="text-red-500 mt-1">{titleError}</div>}
+
           </div>
 
           {/* Dispute Details */}
@@ -190,8 +203,9 @@ const ContractDisputePage = () => {
               onChange={(e) => setDisputeDetails(e.target.value)}
               placeholder="Describe your issue here..."
               className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none h-40 focus:border-blue-500"
-              required
             />
+            {descriptionError && <div className="text-red-500 mt-1">{descriptionError}</div>}
+
           </div>
 
           {/* Upload Evidence Documents */}
@@ -262,8 +276,9 @@ const ContractDisputePage = () => {
                   onChange={(e) => setRefundAmount(e.target.value)}
                   placeholder="Enter amount"
                   className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-                  required={refundType === 'partial'}
                 />
+                {partialRefundError && <div className="text-red-500 mt-1">{partialRefundError}</div>}
+
               </div>
             )}
           </div>
@@ -272,11 +287,22 @@ const ContractDisputePage = () => {
           <div className="text-center">
             <button
               type="submit"
-              className={`bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`bg-blue-500 w-[50%] text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               disabled={loading}
             >
               {loading ? 'Submitting...' : 'Submit Dispute'}
             </button>
+             {/* Display Success or Error Message */}
+  {success && (
+    <div className="text-green-500 mt-4 text-sm">
+      Dispute submitted successfully!
+    </div>
+  )}
+  {error && (
+    <div className="text-red-500 mt-4 text-sm">
+      {typeof error === "string" && error.length<=100 ? error : "An error occurred. Please try again."}
+    </div>
+  )}
           </div>
         </form>
       </div>

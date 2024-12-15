@@ -32,7 +32,7 @@ const ContractsPage = () => {
       case 'pending':
         return 'bg-yellow-500 text-black';
       case 'inDispute':
-        return 'bg-red-500 text-black';
+        return 'bg-red-500 text-white';
       case 'draft':
         return 'bg-gray-300 text-black';
       default:
@@ -61,14 +61,17 @@ const ContractsPage = () => {
   if (contracts.length === 0) return <div className="text-center py-8">No contracts available.</div>;
 
   return (
-    <div className="max-w-4xl mx-auto p-8 mt-8">
-      <h1 className="text-4xl font-thin mb-8 text-brand-dark-blue">My Contracts</h1>
+    <div className="max-w-6xl mx-auto p-8 mt-8">
+    <h1 className="text-4xl font-thin mb-8 text-brand-dark-blue">My Contracts</h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {contracts.map((contract) => (
-          <div key={contract.id} className="bg-gray-50 border border-gray-200 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-            <div className="p-6">
-              <div className="flex items-center mb-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      {contracts.map((contract) => (
+        <div
+          key={contract.id}
+          className="bg-gray-50 border border-gray-200 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300"
+        >
+          <div className="p-8">
+            <div className="flex items-center mb-6">
                 <h2 className="text-2xl font-normal text-brand-blue">{contract.title || 'No Title'}</h2>
                 <span className={`ml-3 px-2 py-2 text-xs font-semibold rounded-full ${getStatusStyle(contract.status)}`}>
                   {contract.status}

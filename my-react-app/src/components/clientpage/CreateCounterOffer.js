@@ -1,9 +1,10 @@
-import React, { useState , useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaPlus, FaTrash } from "react-icons/fa";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { decryptToken } from "../../utils/decryptToken";
+
 const fetchClientData = async ({ queryKey }) => {
   const [, token] = queryKey;
   const response = await axios.get("http://127.0.0.1:8000/api/user/client/manage/", {
@@ -17,7 +18,6 @@ const fetchCounterOffer = async ({ queryKey }) => {
   const response = await axios.get(`http://127.0.0.1:8000/api/counter-offer/${counterOfferID}/`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  console.log("counter offfer response data is ",response.data)
   return response.data;
 };
 
@@ -37,9 +37,9 @@ const fetchMilestones = async ({ queryKey }) => {
 const CreateCounterOffer = () => {
   const { id: counterOfferID } = useParams();
   const navigate = useNavigate();
-  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
-  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
-  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
+  const encryptedToken = localStorage.getItem('access');
+  const secretKey = process.env.REACT_APP_SECRET_KEY;
+  const token = decryptToken(encryptedToken, secretKey);
 
   const [offer, setOffer] = useState({
     title: "",
@@ -51,6 +51,9 @@ const CreateCounterOffer = () => {
   });
   const [rejectMilestoneOption, setRejectMilestoneOption] = useState(false);
   const [error, setError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   const { data: client, isLoading: clientLoading } = useQuery({
     queryKey: ["client", token],
@@ -61,10 +64,9 @@ const CreateCounterOffer = () => {
     queryKey: ["counterOffer", counterOfferID, token],
     queryFn: fetchCounterOffer,
   });
-  
+
   useEffect(() => {
     if (counterOffer) {
-      console.log("Counter Offer Data:", counterOffer);
       setOffer((prevOffer) => ({
         ...prevOffer,
         title: counterOffer.title || "",
@@ -75,7 +77,6 @@ const CreateCounterOffer = () => {
       }));
     }
   }, [counterOffer]);
-  console.log("counter offer is ",offer)
 
   const { data: milestones, isLoading: milestonesLoading } = useQuery({
     queryKey: ["milestones", counterOfferID, token],
@@ -93,15 +94,6 @@ const CreateCounterOffer = () => {
       [name]: type === "checkbox" ? checked : value,
       ...(name === "milestone_based" && !checked ? { milestones: [] } : {}),
     }));
-  };
-
-  const handleMilestoneChange = (index, e) => {
-    const { name, value } = e.target;
-    setOffer((prevOffer) => {
-      const updatedMilestones = [...prevOffer.milestones];
-      updatedMilestones[index] = { ...updatedMilestones[index], [name]: value };
-      return { ...prevOffer, milestones: updatedMilestones };
-    });
   };
 
   const handleAddMilestone = () => {
@@ -132,20 +124,47 @@ const CreateCounterOffer = () => {
   };
   }
 
+  const handleMilestoneChange = (index, e) => {
+    const { name, value } = e.target;
+    setOffer((prevOffer) => {
+      const updatedMilestones = [...prevOffer.milestones];
+      updatedMilestones[index] = { ...updatedMilestones[index], [name]: value };
+      return { ...prevOffer, milestones: updatedMilestones };
+    });
+  };
+
   const handleCheckboxChange = () => {
     setRejectMilestoneOption(!rejectMilestoneOption);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
-    if (!offer.title || !offer.proposed_amount || !offer.start_date || !offer.end_date) {
-      setError("Please fill out all required fields.");
+    if (!offer.title) {
+      setError("Title is required.");
+      setIsSubmitting(false);
+      return;
+    }
+    if (!offer.proposed_amount) {
+      setError("Proposed Fee is required.");
+      setIsSubmitting(false);
+      return;
+    }
+    if (!offer.start_date) {
+      setError("Start Date is required.");
+      setIsSubmitting(false);
+      return;
+    }
+    if (!offer.end_date) {
+      setError("End Date is required.");
+      setIsSubmitting(false);
       return;
     }
 
     if (offer.milestone_based && offer.milestones.length === 0 && !rejectMilestoneOption) {
       setError("Please add at least one milestone or reject the milestone-based option.");
+      setIsSubmitting(false);
       return;
     }
 
@@ -153,6 +172,7 @@ const CreateCounterOffer = () => {
       for (const milestone of offer.milestones) {
         if (!milestone.title || !milestone.amount || !milestone.due_date) {
           setError("Please fill out all fields for each milestone.");
+          setIsSubmitting(false);
           return;
         }
       }
@@ -203,10 +223,13 @@ const CreateCounterOffer = () => {
         );
       }
 
+      setSuccessMessage("Counter offer submitted successfully!");
+      setIsSubmitting(false);
+      setError(null);
       navigate(-1);
     } catch (err) {
-      console.error("Error submitting counter offer:", err);
-      setError("Failed to submit counter offer. Please try again.");
+      setErrorMessage("Failed to submit counter offer. Please try again.");
+      setIsSubmitting(false);
     }
   };
 
@@ -215,18 +238,11 @@ const CreateCounterOffer = () => {
   }
 
   return (
-    <div className="max-w-xl mx-auto p-8 mt-8 bg-white shadow-lg rounded-lg">
-      <h1 className="text-3xl font-thin text-brand-dark-blue mb-6">
-        Submit Counter Offer
-      </h1>
+    <div className="max-w-lg mx-auto p-8 mt-8">
+      <h1 className="text-3xl font-thin text-brand-dark-blue mb-6">Submit Counter Offer</h1>
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
-          <label
-            htmlFor="title"
-            className="block text-lg font-normal text-brand-blue mb-2"
-          >
-           {offer?.title}
-          </label>
+          <label htmlFor="title" className="block text-lg font-normal text-brand-blue mb-2">Title</label>
           <input
             type="text"
             id="title"
@@ -235,16 +251,11 @@ const CreateCounterOffer = () => {
             onChange={handleInputChange}
             className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
             placeholder="Enter title for the offer"
-            required
           />
+          {error && offer.title === "" && <span className="text-red-500">Title is required.</span>}
         </div>
         <div className="mb-4">
-          <label
-            htmlFor="proposed_amount"
-            className="block text-lg font-normal text-brand-blue mb-2"
-          >
-            Proposed Fee (Birr)
-          </label>
+          <label htmlFor="proposed_amount" className="block text-lg font-normal text-brand-blue mb-2">Proposed Fee (Birr)</label>
           <input
             type="number"
             id="proposed_amount"
@@ -253,16 +264,11 @@ const CreateCounterOffer = () => {
             onChange={handleInputChange}
             className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
             placeholder="Enter proposed fee in Birr"
-            required
           />
+          {error && offer.proposed_amount === "" && <span className="text-red-500">Proposed Fee is required.</span>}
         </div>
         <div className="mb-4">
-          <label
-            htmlFor="start_date"
-            className="block text-lg font-normal text-brand-blue mb-2"
-          >
-            Start Date
-          </label>
+          <label htmlFor="start_date" className="block text-lg font-normal text-brand-blue mb-2">Start Date</label>
           <input
             type="date"
             id="start_date"
@@ -270,16 +276,11 @@ const CreateCounterOffer = () => {
             value={offer.start_date}
             onChange={handleInputChange}
             className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-            required
           />
+          {error && offer.start_date === "" && <span className="text-red-500">Start Date is required.</span>}
         </div>
         <div className="mb-6">
-          <label
-            htmlFor="end_date"
-            className="block text-lg font-normal text-brand-blue mb-2"
-          >
-            End Date
-          </label>
+          <label htmlFor="end_date" className="block text-lg font-normal text-brand-blue mb-2">End Date</label>
           <input
             type="date"
             id="end_date"
@@ -287,8 +288,8 @@ const CreateCounterOffer = () => {
             value={offer.end_date}
             onChange={handleInputChange}
             className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-            required
           />
+          {error && offer.end_date === "" && <span className="text-red-500">End Date is required.</span>}
         </div>
           <>
             {offer.milestone_based && <div className="mb-6 flex items-center">
@@ -386,14 +387,16 @@ const CreateCounterOffer = () => {
               </div>
             )}
           </>
-        
-        {error && <div className="mb-4 text-red-500 text-center">{error}</div>}
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700"
+          className="w-full py-2 bg-blue-500 text-white font-semibold rounded-lg mt-4"
+          disabled={isSubmitting}
         >
-          Submit Counter Offer
+          {isSubmitting ? "Submitting..." : "Submit"}
         </button>
+
+        {errorMessage && <div className="text-red-500 mt-4">{errorMessage}</div>}
+        {successMessage && <div className="text-green-500 mt-4">{successMessage}</div>}
       </form>
     </div>
   );

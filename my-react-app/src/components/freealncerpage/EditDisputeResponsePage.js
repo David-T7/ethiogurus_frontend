@@ -9,7 +9,9 @@ const EditDisputeResponsePage = () => {
   const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
   const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const navigate = useNavigate();
-  
+  const [partialRefundMessage , setPartialRefundMessage] = useState("")
+  const [successMessage , setSuccessMessage] = useState("")
+  const [errorMessage , setErrorMessage] = useState("")
   const [disputeDetails, setDisputeDetails] = useState({
     title: '',
     description: '',
@@ -88,6 +90,20 @@ const EditDisputeResponsePage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    let valid = true;
+
+    if(response.counterReturnType === "partial"){
+      if (!response.counterOfferAmount){
+        setPartialRefundMessage("Please specify the refund amount for a partial refund.")
+        valid = false
+      }
+      else {
+        setPartialRefundMessage("")
+      }
+    }
+    if (!valid) return;
+
+    
 
     const payload = {
       title: response.title,
@@ -180,13 +196,20 @@ const EditDisputeResponsePage = () => {
         }, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        alert("Response updated successfully.");
       }
 
+      setSuccessMessage("Response updated successfully.");
 
-    } catch (error) {
-      console.error('Error submitting dispute response:', error.response?.data || error.message);
-      alert("There was an error submitting your response.");
+
+
+    } catch (err) {
+      console.error('Error submitting dispute response:', err.response?.data || err.message);
+      if (err.response && err.response.data) {
+        // Display backend validation errors
+        setErrorMessage(JSON.stringify(err.response.data));
+      } else {
+        setErrorMessage('Failed to update dispute response. Please try again.');
+      }
     }
 
   };
@@ -219,15 +242,15 @@ const EditDisputeResponsePage = () => {
    
 
   return (
-    <div className="max-w-xl mx-auto p-8 mt-8">
-      <h1 className="text-3xl font-thin text-brand-dark-blue mb-6">Edit Response</h1>
+    <div className="max-w-lg mx-auto p-8 mt-8">
+      <h1 className="text-3xl font-thin text-center text-brand-dark-blue mb-6">Edit Response</h1>
       
       {/* Refund Offer Information */}
       <div className="mb-6 p-4 border rounded-lg border-gray-300 bg-gray-50">
         <h3 className="font-medium text-gray-700 mb-2">Refund Offer Details</h3>
         <p className="text-gray-800">
           {disputeDetails.return_type === 'full' ? 'Full Refund Offer' : 'Partial Refund Offer'}
-          <p className="text-gray-800">Amount: ${disputeDetails.return_amount}</p>
+          <p className="text-gray-800">Amount: {disputeDetails.return_amount} Birr</p>
         </p>
         <div className="flex space-x-4 mt-4">
           <button type="button" onClick={() => handleDecision('accept')} className={`w-full py-2 rounded-lg border ${response.decision === 'accept' ? 'bg-green-500 text-white' : 'border-gray-300'}`}>
@@ -251,9 +274,11 @@ const EditDisputeResponsePage = () => {
             <option value="partial">Partial</option>
             <option value="full">Full</option>
           </select>
-
+          {response.counterReturnType === "partial" && <>
           <label htmlFor="counterOfferAmount" className="block text-lg font-normal text-brand-blue mt-4 mb-2">Proposed Amount</label>
           <input type="number" id="counterOfferAmount" name="counterOfferAmount" value={response.counterOfferAmount} onChange={handleInputChange} placeholder="Enter counter offer amount in Birr" className="w-full border p-2 rounded-lg" />
+          {partialRefundMessage && <div className="text-red-500 mt-1">{partialRefundMessage}</div>}
+          </>}
         </div>
       )}
 
@@ -323,10 +348,22 @@ const EditDisputeResponsePage = () => {
       {/* Submit Button */}
       <div className="flex justify-center">
 
-      <button onClick={handleSubmit} className="w-[50%] bg-brand-blue hover:bg-brand-dark-blue text-white py-2 rounded-lg">Edit Response</button>
+      <button onClick={handleSubmit} className="w-[50%] bg-blue-500 hover:bg-blue-700 text-white py-2 rounded-lg">Edit Response</button>
+      
     </div>
+    {successMessage && (
+    <div className="text-green-500 text-center mt-4 text-sm">
+      {successMessage}
+    </div>
+  )}
+  {errorMessage && (
+    <div className="text-red-500 text-center mt-4 text-sm">
+      {typeof errorMessage === "string" && errorMessage.length<=100 ? errorMessage : "An error occurred. Please try again."}
+    </div>
+  )}
     </div>
   );
 };
 
 export default EditDisputeResponsePage;
+

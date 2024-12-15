@@ -29,13 +29,13 @@ const fetchDisputes = async ({ queryKey }) => {
   return response.data;
 };
 
-const fetchCounterOffers = async ({ queryKey }) => {
-  const [, { contractId, token }] = queryKey;
-  const response = await axios.get(`${API_BASE_URL}/contracts/${contractId}/counter-offers/`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.data;
-};
+// const fetchCounterOffers = async ({ queryKey }) => {
+//   const [, { contractId, token }] = queryKey;
+//   const response = await axios.get(`${API_BASE_URL}/contracts/${contractId}/counter-offers/`, {
+//     headers: { Authorization: `Bearer ${token}` },
+//   });
+//   return response.data;
+// };
 
 const fetchFreelancerDetails = async ({ queryKey }) => {
   const [, { token }] = queryKey;
@@ -74,12 +74,12 @@ const ContractDetails = () => {
     staleTime: 1000 * 60 * 5,
   });
 
-  const { data: counterOffers = [] } = useQuery({
-    queryKey: ["counterOffers", { contractId: contract?.contract_update || id, token }],
-    queryFn: fetchCounterOffers,
-    enabled: !!contract,
-    staleTime: 1000 * 60 * 5,
-  });
+  // const { data: counterOffers = [] } = useQuery({
+  //   queryKey: ["counterOffers", { contractId: contract?.contract_update || id, token }],
+  //   queryFn: fetchCounterOffers,
+  //   enabled: !!contract,
+  //   staleTime: 1000 * 60 * 5,
+  // });
 
   const { data: freelancer } = useQuery({
     queryKey: ["freelancerDetails", { token }],
@@ -87,11 +87,11 @@ const ContractDetails = () => {
     staleTime: 1000 * 60 * 5,
   });
 
-  const handleAcceptContract = async () => {
+  const handleUpdateContract = async (status) => {
     try {
       await axios.patch(
         `${API_BASE_URL}/freelancer-contracts-update/${id}/`,
-        { status: "accepted" },
+        { status: status },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       navigate(`/mycontracts`);
@@ -99,6 +99,10 @@ const ContractDetails = () => {
       setError(err.response ? err.response.data.detail : "Failed to accept the contract");
     }
   };
+
+  
+
+  
 
   const handleAcceptMilestone = async (milestoneId) => {
     try {
@@ -113,19 +117,19 @@ const ContractDetails = () => {
   };
 
 
-  const handleCounterOffer = () => {
-    navigate(`/submit-counter-offer/${id}`);
-  };
-  const handleCheckCounterOffers = () => {
-    navigate(`/counter-offers/${id}`,
-      {
-        state:{
-          counterOffers:counterOffers,
-          contract:contract
-        }
-      }
-    );
-  };
+  // const handleCounterOffer = () => {
+  //   navigate(`/submit-counter-offer/${id}`);
+  // };
+  // const handleCheckCounterOffers = () => {
+  //   navigate(`/counter-offers/${id}`,
+  //     {
+  //       state:{
+  //         counterOffers:counterOffers,
+  //         contract:contract
+  //       }
+  //     }
+  //   );
+  // };
 
   const handleCreateDispute = (milestoneId) => {
     navigate(`/contractDispute/${contract.id}/createdispute`, {
@@ -169,9 +173,14 @@ const ContractDetails = () => {
           {contract.title}
         </h1>
       </div>
-      {!contract.hourly &&<p className="mb-2">
-        Deadline: {new Date(contract.end_date).toLocaleDateString()}
-      </p>}
+      {!contract.hourly &&
+      <><h1 className="text-2xl font-thin text-brand-dark-blue mb-4">
+       Deadline
+     </h1>
+      <p className="mb-2">
+        {new Date(contract.end_date).toLocaleDateString()}
+      </p>
+      </>}
       <h1 className="text-2xl font-thin text-brand-dark-blue mb-4">
       {contract.hourly ? "Hourly Fee":"Project Fee"}
       </h1>
@@ -237,20 +246,33 @@ const ContractDetails = () => {
         </div>
       )      
            : (
+            <>
           <p className="text-gray-600 mb-2">
             No milestones found for this contract.
           </p>
+           {(contract?.status === "active" || contract?.status === "pendingApproval")   && <div className="mb-6">
+            <p className="text-gray-600 mb-2">
+            Finished your work ?
+          </p>
+            <button
+                onClick={() =>{ if(contract?.status === "active"){ handleUpdateContract("pendingApproval")}else{handleUpdateContract("active")}}}
+                className={`${contract?.status === "active"?"bg-green-500 hover:bg-green-700":"bg-red-500 hover:bg-red-700"} text-white py-2 px-4 rounded`}
+              >
+                {contract?.status === "active" ? "Request Approval":"Cancel Approval Request"}
+              </button>
+          </div>
+      } </>
         )}
       </div>
       {contract.status === "pending" && (
         <div className="flex space-x-4">
           <button
-            onClick={handleAcceptContract}
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-200"
+            onClick={() => handleUpdateContract("accepted")}
+            className="bg-green-500 w-[50%] text-white px-4 py-2 rounded hover:bg-green-600 transition duration-200"
           >
             Accept
           </button>
-          {counterOffers.length > 0 ? (
+          {/* {counterOffers.length > 0 ? (
             <button
               onClick={handleCheckCounterOffers}
               className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-200"
@@ -264,16 +286,16 @@ const ContractDetails = () => {
             >
               Make Counter Offer
             </button>
-          )}
+          )} */}
 
-{counterOffers.length > 0 && contract.status == "pending"  && (
+{/* {counterOffers.length > 0 && contract.status == "pending"  && (
             <button
               onClick={handleCounterOffer}
               className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-200"
             >
               Make Counter Offer
             </button>
-          )}
+          )} */}
         </div>
 
         
@@ -287,8 +309,19 @@ const ContractDetails = () => {
         Check Disputes
       </button>
        </div>
+      }
+    {contract.status === "active" && <div className="mb-6">
+            <button
+                    onClick={() => handleCreateDispute(null)}
+                    className="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded"
+                  >
+                    Create Dispute
+                  </button>
+                  </div>
 }
-    </div>
+
+
+</div>
   );
 };
 

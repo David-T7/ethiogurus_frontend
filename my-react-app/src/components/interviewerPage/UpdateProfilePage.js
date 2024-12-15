@@ -76,7 +76,7 @@ const UpdateInterviewerProfile = () => {
   }
 
   return (
-    <div className="max-w-lg mx-auto p-6 mt-8">
+    <div className="max-w-md mx-auto p-6 mt-8">
       <h2 className="text-3xl font-thin text-brand-dark-blue mb-6 text-center">
         Update Profile
       </h2>
@@ -130,7 +130,7 @@ const UpdateInterviewerProfile = () => {
         <div className="flex justify-center">
           <button
             type="submit"
-            className="bg-brand-blue text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200"
+            className="bg-blue-500 w-full text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200"
             disabled={mutation.isLoading}
           >
             {mutation.isLoading ? 'Updating...' : 'Update Profile'}

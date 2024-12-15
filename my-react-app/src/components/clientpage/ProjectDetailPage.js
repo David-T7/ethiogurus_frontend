@@ -46,7 +46,7 @@ const ProjectDetailPage = () => {
         </div>
       ) : (
         project && (
-          <div className="max-w-4xl mx-auto p-6 mt-6 mb-4 bg-brand-gray-light shadow-lg rounded-lg border border-gray-300">
+          <div className="max-w-3xl mx-auto p-6 mt-6 mb-4 bg-brand-gray-light shadow-lg rounded-lg border border-gray-300">
             <div className="flex justify-between mb-6">
               <h1 className="text-4xl font-thin text-brand-blue flex items-center">
                 {project.title}

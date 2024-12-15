@@ -46,13 +46,13 @@ const ProjectsPage = () => {
 
   return (
     <ClientLayout>
-      <div className="max-w-2xl mx-auto p-6 mt-6">
+      <div className="max-w-xl mx-auto p-6 mt-6">
         <h1 className="text-3xl font-thin text-brand-blue mb-8 text-center">Your Projects</h1>
 
         <div className="flex justify-end items-center mb-8">
           <Link
             to="/create-project"
-            className="inline-flex items-center gap-3 px-4 py-2 bg-blue-600 text-white rounded-lg shadow-lg text-xl font-semibold transition-all duration-300 hover:bg-blue-700 hover:shadow-xl"
+            className="inline-flex items-center gap-3 px-4 py-2 bg-blue-600 text-white rounded-lg shadow-lg text-xl font-semibold transition-all duration-300 hover:bg-blue-700 hover:scale-110 hover:shadow-xl"
           >
             <FaPlus className="text-2xl" /> Create Project
           </Link>

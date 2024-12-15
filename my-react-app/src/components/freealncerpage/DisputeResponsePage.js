@@ -9,6 +9,11 @@ const DisputeResponsePage = () => {
   const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
   const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
   const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
+  const [successMessage , setSuccessMessage] = useState("")
+  const [errorMessage , setErrorMessage] = useState("")
+  const [decisionErrorMessage , setdecisionErrorMessage] = useState("")
+  const [partialRefundMessage , setPartialRefundMessage] = useState("")
+  
   const [disputeDetails, setDisputeDetails] = useState({
     title: '',
     description: '',
@@ -61,12 +66,35 @@ const DisputeResponsePage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    let valid = true;
+    if (!response.decision) {
+      setdecisionErrorMessage("You should select one of the above decsisions!");
+      valid = false;
+    } else {
+      setdecisionErrorMessage("");
+    }
+
+    if(response.counterReturnType === "partial"){
+      if (!response.counterOfferAmount){
+        setPartialRefundMessage("Please specify the refund amount for a partial refund.")
+        valid = false
+      }
+      else {
+        setPartialRefundMessage("")
+      }
+    }
+
+    if (!valid) return;
+
+
+
     const formData = new FormData();
-    formData.append("title", response.title);
+    formData.append("title", response.title|| disputeDetails.title);
     formData.append("description", response.comments);
     formData.append("return_type", response.counterReturnType || disputeDetails.return_type);
     formData.append("return_amount", response.counterOfferAmount || disputeDetails.return_amount);
     formData.append("dispute", disputeId);
+    formData.append("response",response.decision === "accept" ?"accepted":response.decision === "reject" ?"rejected":"counter_offer" );
 
     response.documents.forEach((file) => formData.append("documents", file));
 
@@ -78,7 +106,13 @@ const DisputeResponsePage = () => {
         }, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        alert("Dispute has been resolved.");
+
+        await axios.post('http://127.0.0.1:8000/api/dispute-response/', formData, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          },
+        });
       } 
       else if (response.decision === 'reject' && response.forwardToResolutionCenter ){
         await axios.patch(`http://127.0.0.1:8000/api/disputes/${disputeId}/`, {
@@ -87,19 +121,19 @@ const DisputeResponsePage = () => {
          }, {
            headers: { Authorization: `Bearer ${token}` },
          });
-         alert("Dispute has been rejected.");
-
-
          await axios.post(`http://127.0.0.1:8000/api/drc-disputes/`, {
           dispute: disputeDetails.id,
         }, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        alert("Forwarded to DRC");
+
+        await axios.post('http://127.0.0.1:8000/api/dispute-response/', formData, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          },
+        });
        }
-
-       
-
       else {
         await axios.post('http://127.0.0.1:8000/api/dispute-response/', formData, {
           headers: { 
@@ -113,17 +147,23 @@ const DisputeResponsePage = () => {
         }, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        alert("Response submitted successfully.");
       }
-    } catch (error) {
-      console.error('Error submitting dispute response:', error);
-      alert("There was an error submitting your response.");
+      setSuccessMessage("Response submitted successfully.");
+
+    } catch (err) {
+      console.error('Error submitting dispute response:', err);
+      if (err.response && err.response.data) {
+        // Display backend validation errors
+        setErrorMessage(JSON.stringify(err.response.data));
+      } else {
+        setErrorMessage('Failed to submit dispute response. Please try again.');
+      }
     }
   };
 
 
   return (
-    <div className="max-w-2xl mx-auto p-8 mt-8">
+    <div className="max-w-lg mx-auto p-8 mt-8">
       <h1 className="text-3xl font-thin text-brand-dark-blue mb-6">Respond to Dispute</h1>
       
       {/* Display Dispute Details */}
@@ -170,6 +210,8 @@ const DisputeResponsePage = () => {
             Reject Refund
           </button>
         </div>
+        {decisionErrorMessage && <div className="text-red-500 mt-1">{decisionErrorMessage}</div>}
+
       </div>
 
       {/* Counter Offer Form */}
@@ -192,7 +234,7 @@ const DisputeResponsePage = () => {
               <option value="full">Full</option>
           </select>
 
-          <label htmlFor="counterOfferAmount" className="block text-lg font-normal text-brand-blue mt-4 mb-2">
+         {response.counterReturnType === 'partial' && <> <label htmlFor="counterOfferAmount" className="block text-lg font-normal text-brand-blue mt-4 mb-2">
             Proposed Amount
           </label>
           <input
@@ -204,6 +246,8 @@ const DisputeResponsePage = () => {
             placeholder="Enter counter offer amount in Birr"
             className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
           />
+          {partialRefundMessage && <div className="text-red-500 mt-1">{partialRefundMessage}</div>}
+          </>}
         </div>
       )}
 
@@ -289,11 +333,21 @@ const DisputeResponsePage = () => {
         <button
           type="submit"
           onClick={handleSubmit}
-          className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md"
+          className="bg-blue-500 w-[50%] text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md"
         >
           Submit Response
         </button>
       </div>
+      {successMessage && (
+    <div className="text-green-500 text-center mt-4 text-sm">
+      {successMessage}
+    </div>
+  )}
+  {errorMessage && (
+    <div className="text-red-500 text-center mt-4 text-sm">
+      {typeof errorMessage === "string" && errorMessage.length<=100 ? errorMessage : "An error occurred. Please try again."}
+    </div>
+  )}
     </div>
   );
 };

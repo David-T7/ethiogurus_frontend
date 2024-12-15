@@ -322,6 +322,7 @@ useEffect(() => {
     });
   };
 
+
   const handleContractStatusUPdate = async (statusValue) => {
     try {
       await axios.patch(
@@ -356,21 +357,12 @@ useEffect(() => {
   if (error) return <div>{error}</div>;
 
   return (
-    <div className="max-w-3xl mx-auto p-8 mt-8">
+    <div className="max-w-xl mx-auto p-8 mt-8">
       <h1 className="text-3xl font-thin mb-6 text-brand-dark-blue">
         Edit Contract
       </h1>
       {/* Create Dispute Button */}
       <div className="mt-6 flex justify-end space-x-4">
-        {updatedContract?.status === "active" && !updatedContract.milestone_based && (
-          <button
-            onClick={handleCreateDispute}
-            className="bg-red-500 text-white py-2 px-4 rounded"
-          >
-            Create Dispute
-          </button>
-        )}
-
         {/* Cancel Project Button */}
         {["draft"].includes(updatedContract?.status) && (
           <button
@@ -408,7 +400,7 @@ useEffect(() => {
           onChange={(e) =>
             handleContractChange("amount_agreed", e.target.value)
           }
-          className="w-full border border-gray-300 p-4 rounded-lg focus:outline-none focus:border-blue-500"
+          className="w-[50%] border border-gray-300 p-4 rounded-lg focus:outline-none focus:border-blue-500"
         />
       </div>
 
@@ -653,7 +645,7 @@ useEffect(() => {
       </div>
     }
 
-      <div className="mt-6 flex justify-end space-x-4">
+      <div className="mt-6 flex justify-start space-x-4">
         <button
           onClick={handleUpdate}
           className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition"
@@ -666,6 +658,14 @@ useEffect(() => {
         >
           <FaTimes className="inline mr-2" /> Cancel
         </button>
+        {updatedContract?.status === "active" && !updatedContract.milestone_based && (
+          <button
+            onClick={() =>handleCreateDispute(updatedContract.milestone)}
+            className="bg-red-500 text-white py-2 px-4 rounded"
+          >
+            Create Dispute
+          </button>
+        )}
       </div>
     </div>
   );

@@ -4,12 +4,17 @@ import { useNavigate } from "react-router-dom";
 import ClientLayout from "./ClientLayoutPage";
 import axios from "axios";
 import { decryptToken } from "../../utils/decryptToken";
+
 const CreateProjectPage = () => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     budget: "",
     deadline: "",
+  });
+  const [errors, setErrors] = useState({
+    title: "",
+    description: "",
   });
   const [successMessage, setSuccessMessage] = useState(""); // Success message state
   const navigate = useNavigate();
@@ -30,22 +35,44 @@ const CreateProjectPage = () => {
     },
     onError: (error) => {
       console.error("Error creating project:", error);
-      alert("Failed to create project. Please try again.");
+
+      // Handle the case where title already exists
+      if (error.response && error.response.data.title) {
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          title: error.response.data.title, // Display the error message for title
+        }));
+      } else {
+        alert("Failed to create project. Please try again.");
+      }
     },
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+    setErrors({ ...errors, [name]: "" }); // Clear error when user starts typing
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!formData.title || !formData.description) {
-      alert("Title and Description are required.");
-      return;
+    let isValid = true;
+    const newErrors = { title: "", description: "" };
+
+    // Validation
+    if (!formData.title) {
+      newErrors.title = "Title is required.";
+      isValid = false;
     }
+    if (!formData.description) {
+      newErrors.description = "Description is required.";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+
+    if (!isValid) return;
 
     const data = new FormData();
     data.append("title", formData.title);
@@ -77,7 +104,7 @@ const CreateProjectPage = () => {
               htmlFor="title"
               className="block text-lg font-normal text-brand-blue mb-2"
             >
-              Project Title
+              Project Title <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -86,8 +113,10 @@ const CreateProjectPage = () => {
               onChange={handleChange}
               placeholder="Enter project title"
               className="w-full border border-gray-300 p-4 rounded-lg focus:outline-none focus:border-blue-500"
-              required
             />
+            {errors.title && (
+              <p className="text-red-500 text-md mt-1">{errors.title}</p>
+            )}
           </div>
 
           {/* Project Description */}
@@ -96,7 +125,7 @@ const CreateProjectPage = () => {
               htmlFor="description"
               className="block text-lg font-normal text-brand-blue mb-2"
             >
-              Project Description
+              Project Description <span className="text-red-500">*</span>
             </label>
             <textarea
               name="description"
@@ -105,8 +134,10 @@ const CreateProjectPage = () => {
               placeholder="Enter project description"
               className="w-full border border-gray-300 p-4 rounded-lg focus:outline-none focus:border-blue-500"
               rows="4"
-              required
             />
+            {errors.description && (
+              <p className="text-red-500 text-md mt-1">{errors.description}</p>
+            )}
           </div>
 
           {/* Project Budget */}
@@ -115,7 +146,7 @@ const CreateProjectPage = () => {
               htmlFor="budget"
               className="block text-lg font-normal text-brand-blue mb-2"
             >
-              Budget (Optional)
+              Budget
             </label>
             <input
               type="number"

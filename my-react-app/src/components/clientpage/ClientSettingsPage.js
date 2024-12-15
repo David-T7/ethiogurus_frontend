@@ -90,7 +90,7 @@ const ClientSettingsPage = () => {
   if (isError) return <div>Error loading settings: {error.message}</div>;
 
   return (
-    <div className="max-w-2xl mx-auto p-8 mt-8">
+    <div className="max-w-md mx-auto p-8 mt-8">
       <form onSubmit={handleSubmit}>
         <div className="mb-6">
           <h3 className="text-xl font-normal text-brand-blue mb-4">Payment Methods</h3>

@@ -30,13 +30,13 @@ const fetchMilestones = async (contractId, token) => {
 };
 
 // Fetch counter offers
-const fetchCounterOffers = async (contractId, token) => {
-  const response = await axios.get(
-    `http://127.0.0.1:8000/api/contracts/${contractId}/counter-offers/`,
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
-  return response.data;
-};
+// const fetchCounterOffers = async (contractId, token) => {
+//   const response = await axios.get(
+//     `http://127.0.0.1:8000/api/contracts/${contractId}/counter-offers/`,
+//     { headers: { Authorization: `Bearer ${token}` } }
+//   );
+//   return response.data;
+// };
 
 // Fetch disputes
 const fetchDisputes = async (contractId, token) => {
@@ -75,12 +75,12 @@ const ContractDetailsPage = () => {
     enabled: !!contract && !!token,
   });
 
-  // Fetch counter offers
-  const { data: counterOffers = [] } = useQuery({
-    queryKey: ["counterOffers", contract?.contract_update || contractId],
-    queryFn: () => fetchCounterOffers(contract?.contract_update || contractId, token),
-    enabled: !!contract && !!token,
-  });
+  // // Fetch counter offers
+  // const { data: counterOffers = [] } = useQuery({
+  //   queryKey: ["counterOffers", contract?.contract_update || contractId],
+  //   queryFn: () => fetchCounterOffers(contract?.contract_update || contractId, token),
+  //   enabled: !!contract && !!token,
+  // });
 
   // Fetch disputes
   const { data: disputes = [] } = useQuery({
@@ -138,6 +138,21 @@ const ContractDetailsPage = () => {
     }
   };
 
+  const handleUpdateContract= async (status)=>{
+    try{
+    axios.patch(
+      `http://127.0.0.1:8000/api/contracts/${contractId}/`,
+      { status:status},
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+    navigate("/contracts")
+  }
+  catch(error){
+    console.error("Error sending contract:", error);
+    alert("Failed to send contract.");
+  }
+  }
+
   const handleDisputes = () =>
     navigate(`/contract-disputes/${contract?.id}`, {
       state: {
@@ -150,16 +165,16 @@ const ContractDetailsPage = () => {
   const handleDispute = (milestoneId) =>
     navigate(`/contract/${contractId}/createdispute`, { state: { milestoneId } });
 
-  const handleCheckCounterOffers = () =>
-    navigate(`/contract-counter-offers/${contractId}`, {
-      state: { counterOffers, contract },
-    });
+  // const handleCheckCounterOffers = () =>
+  //   navigate(`/contract-counter-offers/${contractId}`, {
+  //     state: { counterOffers, contract },
+  //   });
 
   const sortedMilestones = milestones.sort(
     (a, b) => new Date(a.due_date) - new Date(b.due_date)
   );
 
-  if (loadingContract || loadingMilestones) return <div>Loading...</div>;
+  if (loadingContract || loadingMilestones) return <div className="text-center">Loading...</div>;
   if (!contract) return <div>No contract found.</div>;
 
   const projectFee = contract.amount_agreed;
@@ -184,7 +199,7 @@ const ContractDetailsPage = () => {
       </div>}
       
 
-      {contract.milestone_based && milestones.length > 0 && (
+      {contract.milestone_based && milestones.length > 0 ? (
         <div className="mb-6">
           <h2 className="text-xl font-normal text-gray-800 mb-4">Milestones</h2>
           <div className="relative">
@@ -208,7 +223,24 @@ const ContractDetailsPage = () => {
             </div>
           </div>
         </div>
-      )}
+      ):
+      <>
+      <p className="text-gray-600 mb-2">
+        No milestones found for this contract.
+      </p>
+       {contract?.status === "pendingApproval" && <div className="mb-6">
+        <p className="text-gray-600 mb-2">
+        Freelancer is requesting approval of finished work
+      </p>
+        <button
+            onClick={() =>{handleUpdateContract("completed")}}
+            className="w-[50%] bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded"
+          >
+            Approve
+          </button>
+      </div>
+  } </>
+    }
 
       {disputes.length > 0 && (
         <div className="mb-6">
@@ -231,14 +263,14 @@ const ContractDetailsPage = () => {
             >
               <FaEdit className="inline mr-2" /> Edit Contract
             </button>
-            {counterOffers.length > 0 && (
+            {/* {counterOffers.length > 0 && (
               <button
                 onClick={handleCheckCounterOffers}
                 className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition"
               >
                 Check Counter Offers
               </button>
-            )}
+            )} */}
           </>
         )}
 
@@ -260,14 +292,14 @@ const ContractDetailsPage = () => {
           </button>
         )}
 
-        {contract.status === "active" && !contract.milestone_based && (
+        {/* {contract.status === "active" && !contract.milestone_based && (
           <button
             onClick={() => handleDispute(null)}
             className="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition"
           >
             <FaExclamationTriangle className="inline mr-2" /> Create Dispute
           </button>
-        )}
+        )} */}
       </div>
     </div>
   );

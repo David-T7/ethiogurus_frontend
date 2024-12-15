@@ -42,7 +42,7 @@ const ContractDisputeDetails = () => {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-8 mt-8">
+    <div className="max-w-md mx-auto p-8 mt-8">
       <h1 className="text-3xl font-thin text-brand-dark-blue mb-6">
         Dispute for {contract?.title || 'Contract'}
       </h1>
@@ -75,19 +75,19 @@ const ContractDisputeDetails = () => {
       {/* Submit Button */}
       <div className="flex justify-center">
         {dispute.created_by === clientId ? (
-          !dispute.got_response && (
+          !dispute.got_response && dispute.status === "open" && (
             <button
-              className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md"
+              className="bg-blue-500 w-[50%] text-white px-6 py-3 rounded-lg hover:bg-brand-dark-blue transition-all duration-200 shadow-md"
               onClick={() => handleUpdateDispute(dispute.id)}
             >
               Edit Dispute
             </button>
           )
         ) : (
-          !dispute.got_response && (
+          !dispute.got_response && dispute.status === "open" &&  (
             <button
               onClick={() => handleRespondToDispute(dispute.id)}
-              className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md"
+              className="bg-blue-500 w-[50%] text-white px-6 py-3 rounded-lg hover:bg-brand-dark-blue transition-all duration-200 shadow-md"
             >
               Respond
             </button>
@@ -104,7 +104,7 @@ const getDisputeResponseStatus = (got_response) => {
     case true:
       return 'bg-yellow-500 text-black';
     case false:
-      return 'bg-red-500 text-black';
+      return 'bg-red-500 text-white';
     default:
       return 'bg-gray-300 text-black';
   }

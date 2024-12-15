@@ -278,7 +278,7 @@ const InterviewPage = () => {
               )}
               <button
                 type="submit"
-                className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
+                className="bg-blue-500 w-[50%] text-white px-6 py-2 rounded-lg hover:bg-blue-600"
                 disabled={mutation.isLoading}
               >
                 {mutation.isLoading ? "Submitting..." : "Submit"}

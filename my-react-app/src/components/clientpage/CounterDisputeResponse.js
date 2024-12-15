@@ -9,7 +9,9 @@ const CounterDisputeResponsePage = () => {
   const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
   const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const navigate = useNavigate();
-  
+  const [successMessage , setSuccessMessage] = useState("")
+  const [decisionErrorMessage , setdecisionErrorMessage] = useState("")
+  const [partialRefundMessage , setPartialRefundMessage] = useState("")
   const [disputeDetails, setDisputeDetails] = useState({
     title: '',
     description: '',
@@ -83,21 +85,37 @@ const CounterDisputeResponsePage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    let valid = true;
+    if (!response.decision) {
+      setdecisionErrorMessage("You should select one of the above decsisions!");
+      valid = false;
+    } else {
+      setdecisionErrorMessage("");
+    }
+
+    if(response.counterReturnType === "partial"){
+      if (!response.counterOfferAmount){
+        setPartialRefundMessage("Please specify the refund amount for a partial refund.")
+        valid = false
+      }
+      else {
+        setPartialRefundMessage("")
+      }
+    }
+
+    if (!valid) return;
+
+
     console.log("repsonse is ",response.title)
     const payload = {
-      title: response?.title,
-      description: response?.description,
+      title: response?.title || prevDisputeResponse.title ,
+      description: response?.description || prevDisputeResponse.description ,
       dispute: prevDisputeResponse.dispute,
       return_type: response?.counterReturnType || prevDisputeResponse.return_type,
       return_amount: response?.counterOfferAmount || prevDisputeResponse.return_amount,
       response: response?.decision === 'accept' ? 'accepted' : response.decision === 'reject'  ? 'rejected' : 'counter_offer',
     };
-
-     // Validate required fields
-     if (response.title.length === 0 || response.description.length===0 || response.decision.length===0) {
-        setErrorMessage("Please fill in the title, description, and round offer fields.");
-        return;
-      }
 
     // Handle document uploads and save IDs
     const uploadedIds = [];
@@ -167,13 +185,16 @@ const CounterDisputeResponsePage = () => {
         }, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        alert("Response created successfully.");
       }
-
-
-    } catch (error) {
-      console.error('Error submitting dispute response:', error.response?.data || error.message);
-      alert("There was an error submitting your response.");
+      setSuccessMessage("Response submitted successfully.");
+    } catch (err) {
+      console.error('Error submitting dispute response:', err.response?.data || err.message);
+      if (err.response && err.response.data) {
+        // Display backend validation errors
+        setErrorMessage(JSON.stringify(err.response.data));
+      } else {
+        setErrorMessage('Failed to submit dispute response. Please try again.');
+      }
     }
   };
 
@@ -205,7 +226,7 @@ const CounterDisputeResponsePage = () => {
    
 
   return (
-    <div className="max-w-xl mx-auto p-8 mt-8">
+    <div className="max-w-lg mx-auto p-8 mt-8">
       <h1 className="text-3xl font-thin text-brand-dark-blue mb-6">Counter Dispute Response</h1>
       {/* Refund Offer Information */}
       <div className="mb-6 p-4 border rounded-lg border-gray-300 bg-gray-50">
@@ -225,6 +246,7 @@ const CounterDisputeResponsePage = () => {
             Reject Refund
           </button>
         </div>
+        {decisionErrorMessage && <div className="text-red-500 mt-1">{decisionErrorMessage}</div>}
       </div>
 
       {/* Counter Offer Form */}
@@ -236,9 +258,11 @@ const CounterDisputeResponsePage = () => {
             <option value="partial">Partial</option>
             <option value="full">Full</option>
           </select>
-
+          {response.counterReturnType === "partial" && <>
           <label htmlFor="counterOfferAmount" className="block text-lg font-normal text-brand-blue mt-4 mb-2">Proposed Amount</label>
           <input type="number" id="counterOfferAmount" name="counterOfferAmount" value={response.counterOfferAmount} onChange={handleInputChange} placeholder="Enter counter offer amount in Birr" className="w-full border p-2 rounded-lg" />
+          {partialRefundMessage && <div className="text-red-500 mt-1">{partialRefundMessage}</div>}
+          </>}
         </div>
       )}
 
@@ -308,12 +332,19 @@ const CounterDisputeResponsePage = () => {
       {/* Submit Button */}
       <div className="flex justify-center">
 
-      <button onClick={handleSubmit} className="w-[50%] bg-brand-blue hover:bg-brand-dark-blue text-white py-2 rounded-lg">Submit Response</button>
+      <button onClick={handleSubmit} className="w-[50%] bg-blue-500 hover:bg-blue-700 text-white py-2 rounded-lg">Submit Response</button>
     </div>
     <div className="flex justify-center">
-    {errorMessage && (
-        <div className="mb-4 text-red-600">{errorMessage}</div>
-      )}
+    {successMessage && (
+    <div className="text-green-500 text-center mt-4 text-sm">
+      {successMessage}
+    </div>
+  )}
+  {errorMessage && (
+    <div className="text-red-500 text-center mt-4 text-sm">
+      {typeof errorMessage === "string" && errorMessage.length<=100 ? errorMessage : "An error occurred. Please try again."}
+    </div>
+  )}
       </div>
     </div>
   );

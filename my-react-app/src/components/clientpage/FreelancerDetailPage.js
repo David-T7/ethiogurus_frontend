@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, {useContext} from "react";
 import { FaCheckCircle } from "react-icons/fa";
-import { useParams } from "react-router-dom";
+import { useParams , useNavigate} from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import profilePic from "../../images/default-profile-picture.png"; // Default profile picture
+import { AuthContext } from "../AuthContext"; // Update this path according to your project structure
 
 const fetchFreelancerData = async ({ queryKey }) => {
   const [, freelancerId] = queryKey;
@@ -11,9 +12,13 @@ const fetchFreelancerData = async ({ queryKey }) => {
   return response.data;
 };
 
-const FreelancerDetailPage = () => {
+const FreelancerDetailPage = () => { 
+  const { isAuthenticated , getRole} = useContext(AuthContext);
   const { id: freelancerId } = useParams();
-
+  const authenticated = isAuthenticated();
+  const role = getRole()
+  const isClientAuthenticated = authenticated && role==="client"
+  const navigate = useNavigate()
   const {
     data: freelancerData,
     isLoading,
@@ -26,6 +31,15 @@ const FreelancerDetailPage = () => {
   if (isLoading) return <div className="text-center py-8">Loading...</div>;
   if (isError) return <div className="text-center py-8">Error fetching freelancer details</div>;
   if (!freelancerData) return <div className="text-center py-8">No data available</div>;
+
+
+  const handleRedirectToSignup = (id) => {
+    if (!authenticated) {
+      navigate("/hire-talent/finalize");
+    } else {
+      navigate(`/hire-talent/talent-list/${id}`);
+    }
+  };
 
   const {
     profile_picture,
@@ -72,13 +86,25 @@ const FreelancerDetailPage = () => {
                   <span className="text-red-700">Not Available</span> for hire
                 </p>
               )}
+        
+           
 
-              {is_active && (
+              {is_active && isClientAuthenticated && (
                 <button className="bg-green-500 text-white py-2 px-4 rounded-lg">
                   Hire {full_name || "John Doe"}
                 </button>
+
               )}
+
             </div>
+
+            { is_active && !isClientAuthenticated && <><span
+              className="text-lg text-brand-blue underline hover:text-brand-dark-blue cursor-pointer"
+              onClick={handleRedirectToSignup}
+            >
+              Sign up
+            </span>{" "}
+            <span className="text-lg text-blue-700 mr-4">to hire {full_name}.</span></>}
           </div>
         </div>
 
@@ -114,7 +140,7 @@ const FreelancerDetailPage = () => {
           </section>
         )}
 
-        <section className="mb-8">
+        {portfolio?.length > 0 && <section className="mb-8">
           <h3 className="text-2xl font-normal text-blue-800 mb-4">Portfolio</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {portfolio.map((project, index) => (
@@ -140,35 +166,36 @@ const FreelancerDetailPage = () => {
               </div>
             ))}
           </div>
-        </section>
+        </section>}
 
-        {certifications && certifications.length > 0 && (
-          <section className="mb-8">
-            <h3 className="text-2xl font-normal text-blue-800 mb-4">Certifications</h3>
-            <ul className="list-disc list-inside">
-              {certifications.map((certification, index) => (
-                <li key={index} className="text-lg text-blue-700">
-                  <a
-                    href={certification.link || "#"}
-                    className="text-blue-600 underline hover:text-blue-800"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <strong>{certification.name}</strong>
-                  </a>{" "}
-                  - {certification.organization} ({certification.date})
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
+        {certifications?.length > 0 && (
+  <section className="mb-8">
+    <h3 className="text-2xl font-normal text-blue-800 mb-4">Certifications</h3>
+    <ul className="list-disc list-inside">
+      {certifications.map((certification, index) => (
+        <li key={index} className="text-lg text-blue-700">
+          <a
+            href={certification.link || "#"}
+            className="text-blue-600 underline hover:text-blue-800"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <strong>{certification.title}</strong>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+)}
 
-        <section>
+
+        {preferred_working_hours && <section>
           <h3 className="text-2xl font-normal text-blue-800 mb-4">
             Preferred Working Style:{" "}
             <span className="text-lg text-blue-700">{preferred_working_hours}</span>
           </h3>
         </section>
+        }
       </div>
     </div>
   );

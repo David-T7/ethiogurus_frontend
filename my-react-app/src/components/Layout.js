@@ -104,11 +104,11 @@ const Layout = ({ children }) => {
 
   const getLinkClasses = (path) => {
     const baseClasses =
-      "relative px-4 transition-colors duration-300 text-md font-normal";
+      "relative px-4 py-2 transition-colors duration-300 text-md font-medium";
     const activeClasses =
-      'text-brand-green font-normal before:content-[""] before:absolute before:block before:w-full before:h-[2px] before:bg-brand-green before:bottom-0 before:left-0';
+      'text-brand-green font-semibold before:content-[""] before:absolute before:block before:w-full before:h-[2px] before:bg-brand-green before:bottom-0 before:left-0';
     const hoverClasses =
-      'hover:text-brand-green hover:before:content-[""] hover:before:block hover:before:w-full hover:h-[2px] hover:before:bg-brand-green hover:before:bottom-0 hover:before:left-0';
+      'hover:text-brand-green hover:before:content-[""] hover:before:block hover:before:w-full hover:before:h-[2px] hover:before:bg-brand-green hover:before:bottom-0 hover:before:left-0';
 
     return location.pathname === path
       ? `${baseClasses} ${activeClasses}`
@@ -140,9 +140,6 @@ const Layout = ({ children }) => {
             <Link to="/services" className={getLinkClasses("/services")}>
               Services
             </Link>
-            <Link to="/clients" className={getLinkClasses("/clients")}>
-              Clients
-            </Link>
             <Link to="/contact" className={getLinkClasses("/contact")}>
               Contact
             </Link>
@@ -167,6 +164,59 @@ const Layout = ({ children }) => {
             Login
           </Link>
         </nav>
+
+         {/* Mobile Menu Navigation */}
+{isMenuOpen && (
+  <div
+    className={`fixed inset-0 bg-black bg-opacity-70 transition-opacity duration-300 ease-in-out z-10`}
+    onClick={() => setIsMenuOpen(false)}
+  >
+    <nav
+      className={`fixed inset-0 flex flex-col items-center justify-center space-y-6 bg-gradient-to-r from-brand-blue to-brand-dark-blue text-white transition-transform duration-300 ease-in-out`}
+    >
+      <button
+        className="absolute top-6 right-6 text-2xl text-white"
+        onClick={() => setIsMenuOpen(false)}
+      >
+        <FaTimes />
+      </button>
+      <div className="flex flex-col items-center space-y-4">
+        <Link to="/assessments">
+          <img src={logo} alt="EthioGurus Logo" className="w-20 h-12" />
+        </Link> {/* Adjust size as needed */}
+        <Link to="/assessments" className="font-normal text-2xl">
+          EthioGurus
+        </Link>
+        <nav className="flex flex-col items-center space-y-4">
+          <Link to="/services" className={getLinkClasses("/services")}>
+            Services
+          </Link>
+          <Link to="/contact" className={getLinkClasses("/contact")}>
+            Contact
+          </Link>
+          <Link to="/about" className={getLinkClasses("/about")}>
+            About Us
+          </Link>
+          <Link
+            to="/apply-freelancer"
+            className={getLinkClasses("/apply-freelancer")}
+          >
+            Apply as a Freelancer
+          </Link>
+          <Link
+            to="/hire-talent"
+            className="flex items-center justify-center bg-brand-green text-white px-6 py-3 rounded-lg transition-transform duration-300 transform hover:scale-105 hover:shadow-lg hover:bg-green-600"
+          >
+            <FaUserPlus className="mr-2" /> Hire a Talent
+          </Link>
+          <Link to="/login" className={getLinkClasses("/login")}>
+            Login
+          </Link>
+        </nav>
+      </div>
+    </nav>
+  </div>
+)}
       </header>
 
       {/* Page Content */}

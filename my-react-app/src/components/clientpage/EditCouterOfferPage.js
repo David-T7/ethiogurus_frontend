@@ -265,13 +265,13 @@ const EditCounterOfferPage = () => {
   }
 
   return (
-    <div className="max-w-xl mx-auto p-8 mt-8 bg-white shadow-lg rounded-lg">
+    <div className="max-w-lg mx-auto p-8 mt-8">
       <h1 className="text-3xl font-thin mb-6 text-brand-dark-blue">
         Edit Offer
       </h1>
 
       <div className="mb-6">
-        <h2 className="text-xl font-normal text-gray-800 mb-4">Title</h2>
+        <h2 className="text-lg font-normal text-gray-800 mb-4">Title</h2>
         <input
           type="text"
           id="title"
@@ -279,13 +279,13 @@ const EditCounterOfferPage = () => {
           placeholder="Enter offer title"
           value={offer?.title}
           onChange={handleInputChange}
-          className="w-full border border-gray-300 p-4 rounded-lg focus:outline-none focus:border-blue-500"
+          className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
           required
         />
       </div>
 
       <div className="mb-6">
-        <h2 className="text-xl font-normal text-gray-800 mb-4">
+        <h2 className="text-lg font-normal text-gray-800 mb-4">
           {" "}
           Proposed Amount (Birr)
         </h2>
@@ -296,13 +296,13 @@ const EditCounterOfferPage = () => {
           value={offer?.proposed_amount}
           onChange={handleInputChange}
           placeholder="Enter proposed amount"
-          className="w-full border border-gray-300 p-4 rounded-lg focus:outline-none focus:border-blue-500"
+          className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
           required
         />
       </div>
 
       <div className="mb-6">
-        <h2 className="text-xl font-normal text-gray-800 mb-4"> Start Date</h2>
+        <h2 className="text-lg font-normal text-gray-800 mb-4"> Start Date</h2>
         <input
           type="date"
           id="startDate"
@@ -310,13 +310,13 @@ const EditCounterOfferPage = () => {
           value={offer?.startDate.split("T")[0]}
           onChange={handleInputChange}
           placeholder="Enter start date"
-          className="w-full border border-gray-300 p-4 rounded-lg focus:outline-none focus:border-blue-500"
+          className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
           required
         />
       </div>
 
       <div className="mb-6">
-        <h2 className="text-xl font-normal text-gray-800 mb-4"> End Date</h2>
+        <h2 className="text-lg font-normal text-gray-800 mb-4"> End Date</h2>
         <input
           type="date"
           id="endDate"
@@ -324,13 +324,12 @@ const EditCounterOfferPage = () => {
           value={offer?.endDate.split("T")[0]}
           onChange={handleInputChange}
           placeholder="Enter end date"
-          className="w-full border border-gray-300 p-4 rounded-lg focus:outline-none focus:border-blue-500"
+          className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
           required
         />
       </div>
       {/* Milestones Section */}
-      {offer.milestone_based && (
-        <>
+      {offer.milestone_based && 
           <div className="mb-6 flex items-center">
             <input
               type="checkbox"
@@ -345,7 +344,7 @@ const EditCounterOfferPage = () => {
             >
               Reject Milestone-Based Option
             </label>
-          </div>
+          </div>}
           {!rejectMilestoneOption && (
             <div className="mb-6">
               <h3 className="text-lg font-normal text-brand-blue mb-4">
@@ -440,8 +439,6 @@ const EditCounterOfferPage = () => {
               </button>
             </div>
           )}
-        </>
-      )}
       {/* If there are no milestones, provide an option to add them */}
       {addMilestone && (
         <div className="mb-6">
@@ -527,14 +524,14 @@ const EditCounterOfferPage = () => {
         <button
           type="submit"
           onClick={() => handleUpdate()}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-200"
+          className="bg-blue-500 w-[50%] text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-200"
         >
           Update Offer
         </button>
         <button
           type="button"
           onClick={() => handleCancelUpdate()}
-          className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition duration-200"
+          className="bg-gray-500 w-[50%] text-white px-4 py-2 rounded hover:bg-gray-600 transition duration-200"
         >
           Cancel
         </button>

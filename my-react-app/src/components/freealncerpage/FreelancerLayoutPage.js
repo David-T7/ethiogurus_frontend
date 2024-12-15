@@ -79,13 +79,12 @@ const FreelancerProfileLayout = ({ children }) => {
     const activeClasses =
       'text-brand-green font-semibold before:content-[""] before:absolute before:block before:w-full before:h-[2px] before:bg-brand-green before:bottom-0 before:left-0';
     const hoverClasses =
-      'hover:text-brand-green hover:before:content-[""] hover:before:block hover:before:w-full hover:h-[2px] hover:before:bg-brand-green hover:before:bottom-0 hover:before:left-0';
+      'hover:text-brand-green hover:before:content-[""] hover:before:block hover:before:w-full hover:before:h-[2px] hover:before:bg-brand-green hover:before:bottom-0 hover:before:left-0';
 
     return location.pathname === path
       ? `${baseClasses} ${activeClasses}`
       : `${baseClasses} ${hoverClasses}`;
   };
-
   const handleLogout = async () => {
     try {
       await logout();
@@ -209,7 +208,7 @@ const FreelancerProfileLayout = ({ children }) => {
                 <FaTimes />
               </button>
               <div className="flex flex-col items-center space-y-4">
-                <Link to="/home">
+              <Link to="/home">
                   <img src={logo} alt="EthioGurus Logo" className="w-20 h-12" />
                 </Link>
                 <Link to="/home" className="font-normal text-2xl">

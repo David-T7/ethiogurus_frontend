@@ -71,18 +71,18 @@ const ContactPage = () => {
                 <p className="text-lg text-brand-gray-dark">+1 (123) 456-7890</p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
+            {/* <div className="flex items-center gap-4">
               <FaMapMarkerAlt className="text-3xl text-brand-blue" />
               <div>
                 <h3 className="text-xl font-normal text-brand-blue">Address</h3>
                 <p className="text-lg text-brand-gray-dark">123 Main Street, City, Country</p>
               </div>
-            </div>
+            </div> */}
           </div>
         </section>
       </div>
 
-      {/* Map Section */}
+      {/* Map Section
       <section className="mt-12">
         <h2 className="text-2xl font-normal text-center text-brand-blue mb-6">Our Location</h2>
         <div className="relative w-full h-64 rounded-lg overflow-hidden shadow-lg">
@@ -93,7 +93,7 @@ const ContactPage = () => {
             loading="lazy"
           ></iframe>
         </div>
-      </section>
+      </section> */}
     </div>
   );
 };

@@ -43,7 +43,8 @@ const FreelancerSettingsPage = () => {
   const [verificationStatus, setVerificationStatus] = useState(false);
 
   const token = getDecryptedToken(); // Decrypt the token once and reuse it
-
+  const [successMessage , setSuccessMessage] = useState("")
+  const [errorMessage , setErrorMessage] = useState("")
   // Fetch settings using React Query
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["freelancerSettings", token], // Include token in queryKey
@@ -66,10 +67,12 @@ const FreelancerSettingsPage = () => {
   const mutation = useMutation({
     mutationFn: (data) => updateSettings(data), // Pass both settings and token
     onSuccess: () => {
-      alert("Settings saved successfully!");
+      setSuccessMessage("Settings saved successfully!");
+      setErrorMessage("")
     },
     onError: () => {
-      alert("Failed to save settings. Please try again.");
+      setErrorMessage("Failed to save settings. Please try again.");
+      setSuccessMessage("")
     },
   });
 
@@ -115,11 +118,11 @@ const FreelancerSettingsPage = () => {
     navigate("/verify-account", { state: { freelancerData: data } });
   };
 
-  if (isLoading) return <div>Loading...</div>;
-  if (isError) return <div>Error: {error.message}</div>;
+  if (isLoading) return <div className="text-center">Loading...</div>;
+  if (isError) return <div className="text-center">Error: {error.message}</div>;
 
   return (
-    <div className="max-w-xl mx-auto p-8 mt-8">
+    <div className="max-w-lg mx-auto p-8 mt-8">
       <form onSubmit={handleSubmit}>
         {/* Account Preferences */}
         <div className="mb-6">
@@ -209,6 +212,8 @@ const FreelancerSettingsPage = () => {
         >
           Save Settings
         </button>
+        {errorMessage && <div className="text-red-500 mt-4">{errorMessage}</div>}
+        {successMessage && <div className="text-green-500 mt-4">{successMessage}</div>}
       </form>
     </div>
   );

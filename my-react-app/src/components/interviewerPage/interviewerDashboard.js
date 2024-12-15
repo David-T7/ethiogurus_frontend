@@ -36,7 +36,7 @@ const InterviewerDashboard = () => {
   const { latest_appointments: appointments, latest_interviews: interviews } = data;
 
   return (
-    <div className="max-w-xl mx-auto p-8 mt-8">      
+    <div className="max-w-lg mx-auto p-8 mt-8">      
       {/* Latest Appointments Section */}
       <section className="mb-12">
         <h2 className="text-lg font-normal text-center text-brand-dark-blue mb-6">Latest Appointments</h2>

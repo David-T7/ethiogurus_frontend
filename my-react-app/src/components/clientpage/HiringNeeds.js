@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 const HiringNeeds = () => {
   const [selectedDuration, setSelectedDuration] = useState('');
   const navigate = useNavigate();
-
   const handleDurationChange = (e) => {
     setSelectedDuration(e.target.value);
   };

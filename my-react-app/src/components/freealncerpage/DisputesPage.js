@@ -61,7 +61,7 @@ const DisputesPage = () => {
 
 
   return (
-    <div className="max-w-xl mx-auto p-8 mt-8">
+    <div className="max-w-lg mx-auto p-8 mt-8">
       <h1 className="text-3xl font-thin text-brand-dark-blue mb-6">Disputes for Contract: {contract?.title}</h1>
 
       {/* Dispute Cards */}
@@ -76,8 +76,7 @@ const DisputesPage = () => {
         <div className="absolute w-4 h-4 bg-blue-600 rounded-full text-white flex items-center justify-center right-8 top-4">
 
             <span className={`text-xs font-semibold rounded-full px-4 py-1  ${getDisputeStatusStyle(dispute.status)}`}>
-              {contract.status}
-            
+              {dispute.status}
             </span>
             </div>
             <p className="font-medium text-gray-700 mb-2">{dispute.title}</p>

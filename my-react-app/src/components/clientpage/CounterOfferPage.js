@@ -130,11 +130,6 @@ const CounterOffer = () => {
         <h1 className="text-4xl font-thin text-brand-dark-blue">
           {counterOffer.title}
         </h1>
-        <span
-          className={`ml-3 text-lg font-medium ${getContractStatusStyle(counterOffer.status)}`}
-        >
-          ({counterOffer.status})
-        </span>
       </div>
       <p className="mb-2">
         Start Date: {new Date(counterOffer.start_date).toLocaleDateString()}

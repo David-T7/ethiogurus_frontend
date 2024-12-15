@@ -29,13 +29,15 @@ const ContractDisputes = () => {
   const { data: disputes, isLoading: loadingDisputes, error: disputeError } = useQuery({
     queryKey: ['disputes', contractId],
     queryFn: () => fetchDisputes(contractId, token),
-    enabled: !!contractId && !!token,
-  });
+    staleTime: 5 * 60 * 1000, // Data considered fresh for 5 minutes
 
+  });
+  
   const { data: disputeResponses, isLoading: loadingResponses, error: responseError } = useQuery({
     queryKey: ['disputeResponses', contractId],
     queryFn: () => fetchDisputeResponses(contractId, token),
-    enabled: !!contractId && !!token,
+    staleTime: 5 * 60 * 1000, // Data considered fresh for 5 minutes
+
   });
 
   const handleDisputeDetails = (disputeId) => {
@@ -57,15 +59,15 @@ const ContractDisputes = () => {
   };
 
   if (loadingDisputes || loadingResponses) {
-    return <p className="text-gray-600">Loading disputes...</p>;
+    return <p className="text-gray-600 text-center mt-2">Loading disputes...</p>;
   }
 
-  if (disputeError || responseError) {
-    return <p className="text-red-600">Error fetching disputes or responses.</p>;
+  if (disputeError) {
+    return <p className="text-red-600 text-center mt-2">Error fetching disputes</p>;
   }
 
   return (
-    <div className="max-w-xl mx-auto p-8 mt-8">
+    <div className="max-w-md mx-auto p-8 mt-8">
       <h1 className="text-3xl font-thin text-brand-dark-blue mb-6">Disputes for Contract: {contract?.title}</h1>
 
       {disputes.length === 0 ? (
@@ -98,10 +100,9 @@ const ContractDisputes = () => {
                 Check Dispute
               </button>
 
-              <h4 className="font-medium text-gray-700 mb-2">Response History:</h4>
+              {disputeResponses?.length > 0 && <h4 className="font-medium text-gray-700 mb-2">Response History:</h4>}
               <div className="response-timeline ml-8 border-l-2 border-blue-500 pl-4">
-                {disputeResponses
-                  .filter((response) => response.dispute === dispute.id)
+                {disputeResponses?.filter((response) => response.dispute === dispute.id)
                   .map((response, idx) => (
                     <div
                       key={response.id}
@@ -121,7 +122,7 @@ const ContractDisputes = () => {
                     </div>
                   ))}
 
-                {disputeResponses.filter((response) => response.dispute === dispute.id).length === 0 && (
+                {disputeResponses?.filter((response) => response.dispute === dispute.id).length === 0 && (
                   <p className="text-gray-500 italic">No responses yet.</p>
                 )}
               </div>

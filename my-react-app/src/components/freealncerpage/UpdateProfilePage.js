@@ -43,8 +43,9 @@ const UpdateProfilePage = () => {
   const navigate = useNavigate();
   const [updatedProfile, setUpdatedProfile] = useState({});
   const [verificationStatus, setVerificationStatus] = useState(null);
-
   const token = getDecryptedToken(); // Decrypt the token once and reuse it
+  const [successMessage , setSuccessMessage] = useState("")
+  const [errorMessage , setErrorMessage] = useState("")
 
   // Use React Query to fetch the profile data
   const { data: profile, isLoading, isError, error } = useQuery({
@@ -58,10 +59,12 @@ const UpdateProfilePage = () => {
   const mutation = useMutation({
     mutationFn: (data) => updateProfile(data),
     onSuccess: () => {
-      alert("Profile updated successfully!");
+      setSuccessMessage("Profile updated successfully!");
+      setErrorMessage("")
     },
     onError: () => {
-      alert("Failed to update profile.");
+      setErrorMessage("Failed to update profile.");
+      setSuccessMessage("")
     },
   });
 
@@ -142,7 +145,7 @@ const UpdateProfilePage = () => {
   if (isError) return <div className="text-center">Error: {error.message}</div>;
 
   return (
-    <div className="max-w-2xl mx-auto p-8 mt-8">
+    <div className="max-w-md mx-auto p-8 mt-8">
       <h1 className="text-3xl font-thin text-brand-dark-blue mb-6">Update Profile</h1>
       <form onSubmit={handleSubmit} encType="multipart/form-data">
         {/* Full Name */}
@@ -319,9 +322,13 @@ const UpdateProfilePage = () => {
         <button
           type="submit"
           className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition duration-200"
+          disabled={mutation.isLoading}
+
         >
-          Update Profile
+      {mutation.isLoading ? "Updating..." : "Update Profile"}
         </button>
+        {errorMessage && <div className="text-red-500 mt-4">{errorMessage}</div>}
+        {successMessage && <div className="text-green-500 mt-4">{successMessage}</div>}
       </form>
     </div>
   );

@@ -49,8 +49,8 @@ const ContractsList = () => {
   }
 
   return (
-    <div className="max-w-xl mx-auto p-8 mt-8">
-      <h1 className="text-3xl font-thin text-brand-dark-blue mb-6">Contracts</h1>
+    <div className="max-w-lg mx-auto p-8 mt-8">
+      <h1 className="text-3xl font-thin text-center text-brand-dark-blue mb-6">Contracts</h1>
       {contracts.map((contract) => (
         <div key={contract.id} className="border border-gray-200 rounded-lg p-4 mb-4 bg-gray-50 shadow-sm">
           <div className="flex items-center justify-between mb-2">
@@ -77,6 +77,8 @@ const getContractStatusStyle = (status) => {
       return 'bg-blue-500 text-white';
     case 'accepted':
       return 'bg-green-500 text-white';
+    case 'completed':
+        return 'bg-green-500 text-white';
     case 'pending':
       return 'bg-yellow-500 text-black';
     case 'inDispute':

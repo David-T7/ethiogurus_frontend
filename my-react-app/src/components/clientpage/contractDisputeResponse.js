@@ -83,7 +83,7 @@ const [ supportingDocuments,setSupportingDocuments] = useState([])
 
 
   return (
-    <div className="max-w-xl mx-auto p-8 mt-8">
+    <div className="max-w-md mx-auto p-8 mt-8">
       <h1 className="text-3xl font-thin text-brand-dark-blue mb-6">Dispute Response Details</h1>
       
       {/* Display Response Details */}
@@ -144,7 +144,7 @@ const [ supportingDocuments,setSupportingDocuments] = useState([])
 
        {/* Submit Button */}
        <div className="flex justify-center">
-       {responseDetails.created_by === clientId ? !responseDetails.got_response &&  responseDetails.response !=="accepted" &&
+       {responseDetails.created_by === clientId ? !responseDetails.got_response &&
        <button
           onClick={() => handleEditDisputeResponse(responseDetails.id)}
           className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md"
@@ -152,10 +152,10 @@ const [ supportingDocuments,setSupportingDocuments] = useState([])
           Edit Response
         </button>
         :
-        !responseDetails.got_response &&  
+        !responseDetails.got_response && 
        <button
           onClick={() => handleCounterDisputeResponse(responseDetails.id)}
-          className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md"        
+          className="bg-blue-500 w-[50%] text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md"        
         >
           Respond
         </button>
@@ -170,7 +170,7 @@ const getDisputeResponseStatus = (got_response) => {
       case true:
         return 'bg-yellow-500 text-black';
       case false:
-        return 'bg-red-500 text-black';
+        return 'bg-red-500 text-white';
       case "accepted":
         return 'bg-green-500 text-white';
       case "rejected":

@@ -1,8 +1,6 @@
-import React, { useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaEnvelope, FaStar } from "react-icons/fa";
 import { useQuery } from "@tanstack/react-query";
-import { AuthContext } from "../AuthContext"; // Update this path according to your project structure
 import axios from "axios";
 
 const fetchTalents = async ({ queryKey }) => {
@@ -14,9 +12,8 @@ const fetchTalents = async ({ queryKey }) => {
 const TalentListPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated } = useContext(AuthContext);
   const blurlimit = 3;
-
+  const isClientAuthenticated = !location.pathname.startsWith('/hire-talent')
   // Fetch talents using useQuery
   const { data: talents = [], isLoading, isError } = useQuery({
     queryKey: [
@@ -32,10 +29,9 @@ const TalentListPage = () => {
     queryFn: fetchTalents,
   });
 
-  const authenticated = isAuthenticated();
-
+  
   const handleRedirectToSignup = (id) => {
-    if (!authenticated) {
+    if (location.pathname.startsWith('/hire-talent')) {      
       navigate("/hire-talent/finalize");
     } else {
       navigate(`/hire-talent/talent-list/${id}`);
@@ -58,7 +54,7 @@ const TalentListPage = () => {
   return (
     <div className="container mx-auto py-12 px-6">
       <section className="bg-gray-100 p-8 rounded-lg max-w-6xl mx-auto">
-        {talents.length > 0 && !authenticated && (
+        {talents.length > 0 && !isClientAuthenticated && (
           <h2 className="text-3xl font-normal text-brand-blue mb-6">
             Here are some freelancers matched based on your project needs.
             <br />
@@ -74,8 +70,8 @@ const TalentListPage = () => {
         {talents.length <= 0 && (
           <h2 className="text-center">No freelancer found based on your requirement</h2>
         )}
-        {talents.length > 0 && authenticated && (
-          <h2 className="text-center mb-6">
+        {talents.length > 0 && isClientAuthenticated && (
+          <h2 className="text-lg text-center mb-6">
             Here are some freelancers matched based on your project needs.
           </h2>
         )}
@@ -86,7 +82,7 @@ const TalentListPage = () => {
               key={talent.id}
               onClick={(e) => handleCardClick(e, talent.id)}
               className={`relative bg-white p-6 rounded-lg shadow-lg transition-transform transform hover:scale-105 hover:shadow-xl cursor-pointer ${
-                !authenticated && index >= blurlimit
+                !isClientAuthenticated && index >= blurlimit
                   ? "opacity-50 grayscale-[20%] blur-sm pointer-events-none"
                   : ""
               }`}
@@ -102,7 +98,7 @@ const TalentListPage = () => {
                 />
                 <h3
                   className={`text-2xl font-semibold text-brand-blue mb-2 ${
-                    !authenticated && index >= blurlimit ? "select-none" : ""
+                    !isClientAuthenticated && index >= blurlimit ? "select-none" : ""
                   }`}
                   style={{
                     maxWidth: "200px",
@@ -153,7 +149,7 @@ const TalentListPage = () => {
                   )}
                   <div
                     className={`flex items-center mb-4 ${
-                      index >= blurlimit && !authenticated ? "select-none" : ""
+                      index >= blurlimit && !isClientAuthenticated ? "select-none" : ""
                     }`}
                   >
                     <FaStar className="text-yellow-500" />
@@ -163,15 +159,16 @@ const TalentListPage = () => {
                   </div>
                 </div>
 
-                {authenticated && (
+
                   <button
                     onClick={(e) => handleContactClick(e, talent.id)}
                     className="absolute pt-1 left-0 bottom-1 w-full bg-brand-blue text-white py-2 px-4 hover:bg-brand-dark-blue transition flex items-center justify-center gap-2"
+                    disabled={!isClientAuthenticated}
                   >
                     <FaEnvelope />
                     <span>Contact Freelancer</span>
                   </button>
-                )}
+              
               </div>
             </div>
           ))}

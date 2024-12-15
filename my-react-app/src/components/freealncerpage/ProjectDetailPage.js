@@ -66,7 +66,7 @@ const ProjectDetails = () => {
     return <div className="text-center py-8">Loading project details...</div>;
   }
 
-  if (projectError || milestonesError) {
+  if (projectError) {
     return <div className="text-center py-8 text-red-600">Failed to load data. Please try again later.</div>;
   }
 
@@ -98,7 +98,7 @@ const ProjectDetails = () => {
         </div>
       )}
 
-      {/* Approval Section for Projects without Milestones */}
+      {/* Approval Section for Projects without Milestones
       {milestones.length === 0 && (
         <div className="mb-6">
           <p className="font-normal">
@@ -111,7 +111,7 @@ const ProjectDetails = () => {
             Request Approval
           </button>
         </div>
-      )}
+      )} */}
 
       <div className="border-t border-gray-200">
         {milestones.length > 0 ? (
@@ -137,8 +137,15 @@ const ProjectDetails = () => {
             </div>
             </div>
           ))
-        ) : (
+        ) : (<>
           <p className="text-gray-600 mb-2">No milestones found for this Offer.</p>
+          <button
+          onClick={requestProjectApproval}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-200 mt-4"
+        >
+          Request Approval
+        </button>
+        </>
         )}
       </div>
     </div>

@@ -275,7 +275,7 @@ const SkillsPage = () => {
     <div className="max-w-6xl mx-auto py-10 px-4">
       {skills.length > 0 ? (
        <div className="flex justify-between items-center mb-6">
-       <h1 className="text-3xl font-normal ml-6 text-brand-blue">Skills</h1>
+       <h1 className="text-3xl font-thin ml-6 text-brand-blue">Skills</h1>
        {softSkillTestComplted && (
          <button
            onClick={() => navigate("/new-test")}
@@ -307,7 +307,7 @@ const SkillsPage = () => {
             <div key={index} className="mb-6">
             {/* Header Section */}
             <div className="flex justify-between items-center mb-4">
-              <span className="text-2xl font-normal mr-2 text-brand-dark-blue">
+              <span className="text-2xl font-thin mr-2 text-brand-dark-blue">
                 {group.category}
               {/* {!interviewDone ? !appointmentDate ? (
                 <button 
