@@ -96,7 +96,7 @@ const ApplyAsFreelancer = () => {
       });
     },
     onSuccess: () => {
-      setSuccessMessage("Application successful! Watch out for emails regarding your results.");
+      setSuccessMessage("Application successful! Activate you emal using link on your email inbox.");
       setIsSubmitting(false);
       setFormData({
         full_name: "",

@@ -57,7 +57,7 @@ const AssessmentsPage = () => {
   }
 
   return (
-    <div className="max-w-xl mx-auto p-8 mt-8">
+    <div className="max-w-lg mx-auto p-8 mt-8">
       <section className="mb-12">
         {assessments.length === 0 ? (
           <p className="text-gray-500 text-center">No assessments available.</p>
@@ -131,7 +131,7 @@ const AssessmentCard = ({ assessment , token }) => {
       </p>
 
       <div className="mt-2">
-        <p className="text-gray-600">
+        {/* <p className="text-gray-600">
           Soft Skills Assessment Status:{" "}
           <span
             className={`font-semibold ${
@@ -142,7 +142,7 @@ const AssessmentCard = ({ assessment , token }) => {
           >
             {assessment.soft_skills_assessment_status.replace("_", " ")}
           </span>
-        </p>
+        </p> */}
         <p className="text-gray-600">
           Depth Skill Assessment Status:{" "}
           <span

@@ -38,6 +38,8 @@ const ResumeDetails = () => {
   const [isActivationModalOpen, setIsActivationModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");  
   const [showMore, setShowMore] = useState(false); // State to toggle feedback view
   const encryptedToken = localStorage.getItem('access');
   const secretKey = process.env.REACT_APP_SECRET_KEY;
@@ -49,7 +51,7 @@ const ResumeDetails = () => {
       (acc, positionId) => ({
         ...acc,
         [positionId]: {
-          soft_skills_assessment_status: 'not_started',
+          // soft_skills_assessment_status: 'not_started',
           depth_skill_assessment_status: 'not_started',
           live_assessment_status: 'not_started',
         },
@@ -144,22 +146,27 @@ const approveFreelancer = async (freelancerId, token) => {
         }
       );
 
-      await axios.patch(
-        `http://127.0.0.1:8000/api/assign-soft-skills-assessment-appointment/${freelancerId}/`,
-        {
-          modalData
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      // await axios.patch(
+      //   `http://127.0.0.1:8000/api/assign-soft-skills-assessment-appointment/${freelancerId}/`,
+      //   {
+      //     modalData
+      //   },
+      //   {
+      //     headers: { Authorization: `Bearer ${token}` },
+      //   }
+      // );
 
 
-      alert('Project activated successfully.');
-      setIsModalOpen(false);
-    } catch (error) {
-      console.error('Error activating project:', error);
-      alert('Failed to activate project.');
+      setSuccessMessage('Project activated successfully.');
+      setErrorMessage("")
+    } catch (err) {
+      if (err.response && err.response.data) {
+        // Display backend validation errors
+        setErrorMessage(JSON.stringify(err.response.data));
+      } else {
+        setErrorMessage('Failed to Activate Assessment. Please try again.');
+      }
+      setSuccessMessage("")
     }
   };
 
@@ -168,34 +175,34 @@ const approveFreelancer = async (freelancerId, token) => {
 
 
   // Helper function to activate soft skills assessment
-const activateSoftSkillsAssessment = async (freelancerId, token) => {
-    try {
-      await axios.patch(
-        `http://127.0.0.1:8000/api/activate-full-assessment/${freelancerId}/`,
-        {
+// const activateSoftSkillsAssessment = async (freelancerId, token) => {
+//     try {
+//       await axios.patch(
+//         `http://127.0.0.1:8000/api/activate-full-assessment/${freelancerId}/`,
+//         {
 
-        }
-        ,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+//         }
+//         ,
+//         {
+//           headers: { Authorization: `Bearer ${token}` },
+//         }
+//       );
 
-      await axios.patch(
-        `http://127.0.0.1:8000/api/assign-soft-skills-assessment-appointment/${freelancerId}/`,
-        {
+//       await axios.patch(
+//         `http://127.0.0.1:8000/api/assign-soft-skills-assessment-appointment/${freelancerId}/`,
+//         {
 
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      alert('Soft Skills Assessment Activated');
-    } catch (error) {
-      console.error('Error activating soft skills assessment:', error);
-      alert('Failed to activate soft skills assessment.');
-    }
-  };
+//         },
+//         {
+//           headers: { Authorization: `Bearer ${token}` },
+//         }
+//       );
+//       alert('Soft Skills Assessment Activated');
+//     } catch (error) {
+//       console.error('Error activating soft skills assessment:', error);
+//       alert('Failed to activate soft skills assessment.');
+//     }
+//   };
 
   const handleAddFreelancer = async (freelancerId) => {
     try {
@@ -211,10 +218,17 @@ const activateSoftSkillsAssessment = async (freelancerId, token) => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setIsModalOpen(false);
-} catch (error) {
-  console.error('Error approving freelancer:', error);
-  alert('Failed to approve freelancer.');
+      setSuccessMessage("Freelancer Approved!")
+      setErrorMessage("")
+} catch (err) {
+  console.error('Error approving freelancer:', err);
+  if (err.response && err.response.data) {
+    // Display backend validation errors
+    setErrorMessage(JSON.stringify(err.response.data));
+  } else {
+    setErrorMessage('Failed to Approve Freelancer. Please try again.');
+  }
+  setSuccessMessage("")
 }
 }
 
@@ -367,6 +381,16 @@ const activateSoftSkillsAssessment = async (freelancerId, token) => {
                   Cancel
                 </button>
               </div>
+              {successMessage && (
+    <div className="text-green-500 mt-4 text-center text-md">
+      {successMessage}
+    </div>
+  )}
+  {errorMessage && (
+    <div className="text-red-500 mt-4 text-center text-md">
+      {typeof errorMessage === "string" && errorMessage.length<=100 ? errorMessage : "An error occurred. Please try again."}
+    </div>
+  )}
             </div>
           </div>
         )}
@@ -385,10 +409,10 @@ const activateSoftSkillsAssessment = async (freelancerId, token) => {
               Add Skill
             </button>
       <div className='mb-2'>
-              <p className='text-lg font-normal'>
+              <p className='text-lg font-normal mb-2'>
                 Position: {services[currentPositionIndex]?.name || `Position ID: ${currentPositionId}`}
               </p>
-              <div>
+              {/* <div>
                 <label className="block">Soft Skills Assessment Status:</label>
                 <select
                   value={currentPositionData.soft_skills_assessment_status}
@@ -403,15 +427,15 @@ const activateSoftSkillsAssessment = async (freelancerId, token) => {
                     </option>
                   ))}
                 </select>
-              </div>
-              <div>
+              </div> */}
+              <div className='mb-2'>
                 <label className="block">Depth Skill Assessment Status:</label>
                 <select
                   value={currentPositionData.depth_skill_assessment_status}
                   onChange={(e) =>
                     handleModalFieldChange('depth_skill_assessment_status', e.target.value)
                   }
-                  className="block w-full px-3 py-2 border border-gray-300 rounded"
+                  className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
 
                 >
                   {choiceFieldOptions.map((option) => (
@@ -421,15 +445,14 @@ const activateSoftSkillsAssessment = async (freelancerId, token) => {
                   ))}
                 </select>
               </div>
-              <div>
+              <div className='mb-2'>
                 <label className="block">Live Assessment Status:</label>
                 <select
                   value={currentPositionData.live_assessment_status}
                   onChange={(e) =>
                     handleModalFieldChange('live_assessment_status', e.target.value)
                   }
-                  className="block w-full px-3 py-2 border border-gray-300 rounded"
-z
+                  className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
                 >
                   {choiceFieldOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -438,6 +461,7 @@ z
                   ))}
                 </select>
               </div>
+
             </div>
       {/* Modal Actions */}
       <div className="flex justify-end mt-6">
@@ -463,6 +487,16 @@ z
               className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 mr-2"
               onClick={() => {setIsModalOpen(false) ; setIsActivationModalOpen(false) }}>Close</button>
             </div>
+            {successMessage && (
+    <div className="text-green-500 mt-4 text-center text-md">
+      {successMessage}
+    </div>
+  )}
+  {errorMessage && (
+    <div className="text-red-500 mt-4 text-center text-md">
+      {typeof errorMessage === "string" && errorMessage.length<=100 ? errorMessage : "An error occurred. Please try again."}
+    </div>
+  )}
 
             
     </div>

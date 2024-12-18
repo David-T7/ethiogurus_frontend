@@ -32,7 +32,12 @@ const LoginPage = () => {
         navigate("/admin-dashboard");
       } else if (userData.role === "freelancer") {
         if (userData.assessment) {
-          navigate("/assessments");
+          if (!userData.assessment_started){
+            setError("Resume Assesment is in progress...!")
+          }
+          else{
+            navigate("/assessments");
+          }
         } else {
           navigate("/home");
         }
@@ -137,7 +142,7 @@ const LoginPage = () => {
           >
             {loading ? "Logging in..." : "Log In"}
           </button>
-          <div className="flex items-center justify-center mt-4 mb-6">
+          {/* <div className="flex items-center justify-center mt-4 mb-6">
             <div className="w-full border-t border-gray-300"></div>
             <span className="mx-4 text-gray-500">or</span>
             <div className="w-full border-t border-gray-300"></div>
@@ -152,7 +157,7 @@ const LoginPage = () => {
               className="w-5 h-5 object-contain"
             />
             Log In with Google
-          </button>
+          </button> */}
           <div className="mt-3 text-center">
             <p className="text-lg text-gray-700 mb-2">
               No account? Join Ethiogurus as a{" "}

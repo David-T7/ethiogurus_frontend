@@ -74,8 +74,8 @@ const FinalizePage = () => {
       localStorage.setItem("access", access);
       localStorage.setItem("refresh", refresh);
       setLoading(false);
-      setMessage("Registration successful! Please log in.");
-      setTimeout(() => navigate("/login"), 2000); // Redirect after 2 seconds
+      setMessage("Registration successful! Please.Please Verify your email using the link sent to your email.");
+      // setTimeout(() => navigate("/login"), 2000); // Redirect after 2 seconds
     } catch (error) {
       setLoading(false);
       if (error.response && error.response.status === 400) {
@@ -99,7 +99,7 @@ const FinalizePage = () => {
   };
 
   return (
-    <div className="container mx-auto py-12 px-6">
+    <div className="container mx-w-md mx-auto py-12 px-6">
       <section className="bg-gray-100 p-8 rounded-lg max-w-lg mx-auto">
         <h2 className="text-3xl font-thin text-brand-blue mb-6">
           Complete Your Registration

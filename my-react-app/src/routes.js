@@ -112,6 +112,9 @@ import ResumeCheckLayout from './components/resumecheck/resumeCheckLayout';
 import ResumeCheckDashboard from './components/resumecheck/resumeCheckDashboard';
 import ResumeDetails from './components/resumecheck/ResumeDetails';
 import UpdateRCheckerProfile from './components/resumecheck/UpdateProfilePage';
+import Resumes from './components/resumecheck/resumes';
+import VerifyEmail from './components/VerifyEmail';
+
 
 const RoutesConfig = () => {
   return (
@@ -245,6 +248,9 @@ const RoutesConfig = () => {
         <Route path="/resume-notifications" element={<ResumeCheckLayout><NotificationPage/></ResumeCheckLayout>} />
         <Route path="/resume/:id" element={<ResumeCheckLayout><ResumeDetails /></ResumeCheckLayout>} />
         <Route path="/update-myprofile" element={<ResumeCheckLayout><UpdateRCheckerProfile /></ResumeCheckLayout>} />
+        <Route path="/resumes" element={<ResumeCheckLayout><Resumes/></ResumeCheckLayout>} />
+        <Route path="/resumes/:id/verify-email/:token/" element={<Layout><VerifyEmail /></Layout>} />
+        <Route path="/user/:id/verify-email/:token/" element={<Layout><VerifyEmail /></Layout>} />
 
       </Routes>
   );

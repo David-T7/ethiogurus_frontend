@@ -3,6 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 import { useState } from 'react';
 import { decryptToken } from '../../utils/decryptToken';
+import { setAppElement } from 'react-modal';
 
 // Utility to get and decrypt the token
 const getDecryptedToken = () => {
@@ -13,7 +14,7 @@ const getDecryptedToken = () => {
 
 // Function to fetch the profile data
 const fetchProfile = async (token) => {
-  const response = await axios.get('http://127.0.0.1:8000/api/user/resume-checker/manage/', {
+  const response = await axios.get('http://127.0.0.1:8000/api/user/resume-check/manage/', {
     headers: { Authorization: `Bearer ${token}` },
   });
   return response.data;
@@ -25,7 +26,7 @@ const updateProfile = async ({ updatedProfile, token }) => {
   for (const key in updatedProfile) {
     formData.append(key, updatedProfile[key]);
   }
-  await axios.patch('http://127.0.0.1:8000/api/user/resume-checker/manage/', formData, {
+  await axios.patch('http://127.0.0.1:8000/api/user/resume-check/manage/', formData, {
     headers: { Authorization: `Bearer ${token}` },
   });
 };
@@ -33,20 +34,22 @@ const updateProfile = async ({ updatedProfile, token }) => {
 const UpdateRCheckerProfile = () => {
   const [updatedProfile, setUpdatedProfile] = useState({});
   const token = getDecryptedToken(); // Decrypt the token once
-
+  const [successMessage , setSuccesMessage] = useState("")
+  const [errorMessage , setErrorMessage] = useState("")
   const { data: profile, isLoading, isError, error } = useQuery({
-    queryKey: ['drcProfile'],
+    queryKey: ['resumeCheckProfile'],
     queryFn: () => fetchProfile(token), // Pass the token
-    enabled: !!token,
   });
 
   const mutation = useMutation({
     mutationFn: (data) => updateProfile({ ...data, token }), // Pass both profile data and token
     onSuccess: () => {
-      alert('Profile updated successfully!');
+      setSuccesMessage('Profile updated successfully!');
+      setErrorMessage("")
     },
     onError: () => {
-      alert('Failed to update profile.');
+      setErrorMessage('Failed to update profile.');
+      setSuccesMessage("")
     },
   });
 
@@ -72,15 +75,15 @@ const UpdateRCheckerProfile = () => {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className='text-center'>Loading...</div>;
   }
 
   if (isError) {
-    return <div>{error.message}</div>;
+    return <div className='text-center'>{error.message}</div>;
   }
 
   return (
-    <div className="max-w-lg mx-auto p-6 mt-8">
+    <div className="max-w-md mx-auto p-6 mt-8">
       <h2 className="text-3xl font-thin text-brand-dark-blue mb-6 text-center">Update Profile</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Email Address */}
@@ -147,11 +150,22 @@ const UpdateRCheckerProfile = () => {
         <div className="flex justify-center">
           <button
             type="submit"
-            className="bg-brand-blue text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200"
-          >
-            Update Profile
-          </button>
+            className="bg-blue-500 w-full text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200"
+            disabled={mutation.isLoading}
+            >
+              {mutation.isLoading ? 'Updating...' : 'Update Profile'}
+            </button>
         </div>
+        {successMessage && (
+    <div className="text-green-500 text-center mt-4 text-md">
+      {successMessage}
+    </div>
+  )}
+  {errorMessage && (
+    <div className="text-red-500 text-center mt-4 text-md">
+      {typeof errorMessage === "string" && errorMessage.length<=100 ? errorMessage : "An error occurred. Please try again."}
+    </div>
+  )}
       </form>
     </div>
   );

@@ -20,7 +20,8 @@ const UpdateInterviewerProfile = () => {
   const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
   const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const queryClient = useQueryClient();
-
+  const [successMessage , setSuccesMessage] = useState("")
+  const [errorMessage , setErrorMessage] = useState("")
   // Fetch interviewer profile
   const { data: profile, isLoading, error } = useQuery({
     queryKey: ['interviewerProfile', token],
@@ -33,10 +34,12 @@ const UpdateInterviewerProfile = () => {
     mutationFn: ({ token, formData }) => updateInterviewerProfile({ token, formData }),
     onSuccess: () => {
       queryClient.invalidateQueries(['interviewerProfile', token]); // Refetch profile
-      alert('Profile updated successfully!');
+      setSuccesMessage('Profile updated successfully!');
+      setErrorMessage("");
     },
     onError: () => {
-      alert('Failed to update profile.');
+      setErrorMessage('Failed to update profile.');
+      setSuccesMessage("");
     },
   });
 
@@ -136,6 +139,16 @@ const UpdateInterviewerProfile = () => {
             {mutation.isLoading ? 'Updating...' : 'Update Profile'}
           </button>
         </div>
+        {successMessage && (
+    <div className="text-green-500 text-center mt-4 text-md">
+      {successMessage}
+    </div>
+  )}
+  {errorMessage && (
+    <div className="text-red-500 text-center mt-4 text-md">
+      {typeof errorMessage === "string" && errorMessage.length<=100 ? errorMessage : "An error occurred. Please try again."}
+    </div>
+  )}
       </form>
     </div>
   );

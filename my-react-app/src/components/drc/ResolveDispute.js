@@ -69,9 +69,11 @@ const ResolveDispute = () => {
   const [refundType, setRefundType] = useState('full');
   const [refundAmount, setRefundAmount] = useState('');
   const [winner, setWinner] = useState('client');
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
-
+  const [titleError, setTitleError] = useState("");
+  const [descriptionError, setDescriptionError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("")
+  const [errorMessage, setErrorMessage] = useState("")
+  const [partialRefundError, setPartialRefundError] = useState("");
   const { data: contract } = useQuery({
     queryKey: ['contract', dispute.contract],
     queryFn: () => fetchContract(dispute.contract, token),
@@ -92,32 +94,54 @@ const ResolveDispute = () => {
   const mutation = useMutation({
     mutationFn: (data) => resolveDispute({ ...data, token }),
     onSuccess: () => {
-      setSuccess(true);
+      setSuccessMessage("Dispute resolved successfully.");
+      setErrorMessage("")
       navigate(`/dispute-events/${disputeId}`, {
         state: {
           drcForwardedItem: drcForwardedItem,
         },
       });
     },
-    onError: () => {
-      setError('Failed to submit resolved dispute. Please try again.');
-    },
+    onError: (err) => {
+      if (err.response && err.response.data) {
+        // Display backend validation errors
+        setErrorMessage(JSON.stringify(err.response.data));
+      } else {
+        setErrorMessage('Failed to resolve dispute. Please try again.');
+      }
+      setSuccessMessage("")
+    }
+    ,
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    let valid = true;
     if (!title.trim()) {
-      setError('Please provide a title for the resolved dispute.');
-      return;
+      setTitleError("Title is required.");
+      valid = false;
+    } else {
+      setTitleError("");
     }
 
-    if (refundType === 'partial' && !refundAmount) {
-      setError('Please specify the refund amount for a partial refund.');
-      return;
+    if (!comment.trim()) {
+      setDescriptionError("Comment is required.");
+      valid = false;
+    } else {
+      setDescriptionError("");
     }
 
-    setError(null);
+    if (refundType === "partial" && !refundAmount) {
+      setPartialRefundError("Please specify the refund amount for a partial refund.");
+      valid = false;
+    }
+    else{
+    setPartialRefundError("")
+    }
+
+    if (!valid) return;
+
     const data = {
       title,
       comment,
@@ -136,14 +160,10 @@ const ResolveDispute = () => {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6 mt-6">
+    <div className="max-w-lg mx-auto p-6 mt-6">
       <h1 className="text-3xl font-thin text-brand-dark-blue mb-6 text-center">
         Resolve Dispute
       </h1>
-
-      {error && <div className="text-red-500 mb-4">{error}</div>}
-      {success && <div className="text-green-500 mb-4">Resolved dispute submitted successfully!</div>}
-
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label htmlFor="title" className="block text-lg font-normal text-brand-blue mb-2">
@@ -156,8 +176,9 @@ const ResolveDispute = () => {
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Enter resolved dispute title..."
             className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-            required
           />
+          {titleError && <div className="text-red-500 mt-1">{titleError}</div>}
+
         </div>
 
         <div>
@@ -170,8 +191,9 @@ const ResolveDispute = () => {
             onChange={(e) => setComment(e.target.value)}
             placeholder="Add any comments about the resolution..."
             className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none h-40 focus:border-blue-500"
-            required
           />
+          {descriptionError && <div className="text-red-500 mt-1">{descriptionError}</div>}
+
         </div>
 
         <div>
@@ -226,8 +248,9 @@ const ResolveDispute = () => {
                 onChange={(e) => setRefundAmount(e.target.value)}
                 placeholder="Enter amount"
                 className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-                required
               />
+              {partialRefundError && <div className="text-red-500 mt-1">{partialRefundError}</div>}
+
             </div>
           )}
         </div>
@@ -265,7 +288,7 @@ const ResolveDispute = () => {
         <div className="text-center">
           <button
             type="submit"
-            className={`bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md ${
+            className={`bg-blue-500 w-[50%] text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md ${
               mutation.isLoading ? 'opacity-50 cursor-not-allowed' : ''
             }`}
             disabled={mutation.isLoading}
@@ -273,6 +296,16 @@ const ResolveDispute = () => {
             {mutation.isLoading ? 'Submitting...' : 'Submit Resolution'}
           </button>
         </div>
+        {successMessage && (
+    <div className="text-green-500 mt-4 text-center text-md">
+     {successMessage}
+    </div>
+  )}
+  {errorMessage && (
+    <div className="text-red-500 mt-4 text-md text-center">
+      {typeof errorMessage === "string" && errorMessage.length<=100 ? errorMessage : "An error occurred. Please try again."}
+    </div>
+  )}
       </form>
     </div>
   );

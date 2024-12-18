@@ -60,13 +60,13 @@ const Layout = ({ children }) => {
 
         if (!token) {
           console.warn("No valid token found. Redirecting to login.");
-          navigate("/login");
+          // navigate("/login");
           return;
         }
 
         const data = await getRole(); // Call getRole from AuthContext
         if (data && typeof data.role !== "undefined") {
-          const { role, assessment } = data;
+          const { role, assessment , assessment_started } = data;
           console.log("Role found in layout:", role);
 
           // Perform redirection based on role
@@ -74,7 +74,13 @@ const Layout = ({ children }) => {
             navigate("/admin-dashboard");
           } else if (role === "freelancer") {
             if (assessment) {
+              if(assessment_started){
               navigate("/assessments");
+              }
+              else{
+                navigate("/login");
+
+              }
             } else {
               navigate("/home");
             }
@@ -91,11 +97,11 @@ const Layout = ({ children }) => {
           
         } else {
           console.warn("Invalid data returned from getRole:", data);
-          navigate("/login");
+          // navigate("/login");
         }
       } catch (error) {
         console.error("Error during redirection:", error);
-        navigate("/login");
+        // navigate("/login");
       }
     };
 

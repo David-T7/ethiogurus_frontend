@@ -62,8 +62,13 @@ const UpdateProfilePage = () => {
       setSuccessMessage("Profile updated successfully!");
       setErrorMessage("")
     },
-    onError: () => {
-      setErrorMessage("Failed to update profile.");
+    onError: (err) => {
+      if (err.response && err.response.data) {
+        // Display backend validation errors
+        setErrorMessage(JSON.stringify(err.response.data));
+      } else {
+        setErrorMessage('Failed to resolve dispute. Please try again.');
+      }
       setSuccessMessage("")
     },
   });
@@ -327,8 +332,12 @@ const UpdateProfilePage = () => {
         >
       {mutation.isLoading ? "Updating..." : "Update Profile"}
         </button>
-        {errorMessage && <div className="text-red-500 mt-4">{errorMessage}</div>}
-        {successMessage && <div className="text-green-500 mt-4">{successMessage}</div>}
+        {errorMessage && (
+    <div className="text-red-500 mt-4 text-center">
+      {typeof errorMessage === "string" && errorMessage.length<=100 ? errorMessage : "An error occurred. Please try again."}
+    </div>
+  )}
+        {successMessage && <div className="text-green-500 text-center mt-4">{successMessage}</div>}
       </form>
     </div>
   );

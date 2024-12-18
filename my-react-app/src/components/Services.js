@@ -23,14 +23,17 @@ const Services = () => {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
+  // Exclude services with the name "Soft Skills"
+  const filteredServices = servicesData.filter(service => service.name !== 'Soft Skills');
+
   return (
-    <div className="container mx-auto py-12 px-6">
+    <div className="container max-w-2xl mx-auto py-12 px-6">
       <h1 className="text-4xl font-normal text-center text-brand-blue mb-8">Our Services</h1>
       <p className="text-lg mb-12 text-center text-brand-gray-dark">
         At EthioGuru, we connect you with top professionals across various domains to help you achieve your business goals.
       </p>
       <div className="space-y-6">
-        {servicesData.map((service, index) => (
+        {filteredServices.map((service, index) => (
           <div key={service.id} className="bg-white rounded-lg shadow-md p-6 transition-transform duration-300 transform hover:scale-105 hover:shadow-lg">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-normal">{service.name}</h2>

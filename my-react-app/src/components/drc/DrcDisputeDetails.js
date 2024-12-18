@@ -26,11 +26,11 @@ const DrcDisputeDetails = () => {
   });
 
   if (isLoading) {
-    return <p className="text-gray-600">Loading dispute details...</p>;
+    return <p className="text-center">Loading dispute details...</p>;
   }
 
   if (isError) {
-    return <p className="text-red-500">Error fetching dispute details.</p>;
+    return <p className="text-red-500 text-center">Error fetching dispute details.</p>;
   }
 
   const handleResolveDispute = (disputeId) => {
@@ -43,7 +43,7 @@ const DrcDisputeDetails = () => {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-8 mt-8">
+    <div className="max-w-lg mx-auto p-8 mt-8">
       {/* Display Dispute Details */}
       <div className="dispute-card bg-white p-4 border border-gray-200 rounded-lg mb-6 shadow-sm relative">
         <div className="absolute w-4 h-4 bg-blue-600 rounded-full text-white flex items-center justify-center right-12 top-4">
@@ -66,14 +66,14 @@ const DrcDisputeDetails = () => {
         <p className="text-gray-800">
           {dispute.return_type === "full" ? "Full Refund Offer" : "Partial Refund Offer"}
         </p>
-        <p className="text-gray-800">Amount: ${dispute.return_amount}</p>
+        <p className="text-gray-800">Amount: {dispute.return_amount} Birr</p>
       </div>
 
       {/* Submit Button */}
       {dispute.status !== 'resolved' && <div className="flex justify-center">
         <button
           onClick={() => handleResolveDispute(dispute.id)}
-          className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md"
+          className="bg-blue-500 w-[50%] text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-md"
         >
           Resolve
         </button>

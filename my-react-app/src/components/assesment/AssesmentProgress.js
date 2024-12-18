@@ -100,7 +100,7 @@ const AssessmentRoadmap = () => {
   }
 
   const roadmapSteps = [
-    { key: "soft_skills_assessment_status", label: "Soft Skills Assessment", description: "Understand your soft skills for various roles." },
+    // { key: "soft_skills_assessment_status", label: "Soft Skills Assessment", description: "Understand your soft skills for various roles." },
     { key: "depth_skill_assessment_status", label: "Depth Skill Assessment", description: "Evaluate your in-depth knowledge and expertise in relevant skills." },
     { key: "live_assessment_status", label: "Live Interview Assessment", description: "Live Interview for assessing your skill in applied postiton." },
 

@@ -105,8 +105,8 @@ const ResumeCheckLayout = ({ children }) => {
         {/* Top-right navigation */}
         <nav className="hidden md:flex space-x-8 absolute right-6 top-6 mr-20">
           <Link
-            to="/drc-disputes"
-            className={getLinkClasses("/drc-disputes")}
+            to="/resumes"
+            className={getLinkClasses("/resumes")}
             onClick={() => setIsMenuOpen(false)}
           >
             Resumes
@@ -206,8 +206,8 @@ const ResumeCheckLayout = ({ children }) => {
       </Link>
                 <nav className="flex flex-col space-y-4">
                   <Link
-                    to="/drc-disputes"
-                    className={getLinkClasses("/drc-disputes")}
+                    to="/resumes"
+                    className={getLinkClasses("/resumes")}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Resumes

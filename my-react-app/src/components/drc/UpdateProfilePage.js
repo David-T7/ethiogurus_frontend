@@ -33,7 +33,8 @@ const updateProfile = async ({ updatedProfile, token }) => {
 const UpdateDrcProfile = () => {
   const [updatedProfile, setUpdatedProfile] = useState({});
   const token = getDecryptedToken(); // Decrypt the token once
-
+  const [successMessage, setSuccessMessage] = useState("")
+  const [errorMessage, setErrorMessage] = useState("")
   const { data: profile, isLoading, isError, error } = useQuery({
     queryKey: ['drcProfile'],
     queryFn: () => fetchProfile(token), // Pass the token
@@ -43,10 +44,17 @@ const UpdateDrcProfile = () => {
   const mutation = useMutation({
     mutationFn: (data) => updateProfile({ ...data, token }), // Pass both profile data and token
     onSuccess: () => {
-      alert('Profile updated successfully!');
+      setSuccessMessage('Profile updated successfully!');
+      setErrorMessage("")
     },
-    onError: () => {
-      alert('Failed to update profile.');
+    onError: (err) => {
+      if (err.response && err.response.data) {
+        // Display backend validation errors
+        setErrorMessage(JSON.stringify(err.response.data));
+      } else {
+        setErrorMessage('Failed to resolve dispute. Please try again.');
+      }
+      setSuccessMessage("")
     },
   });
 
@@ -80,7 +88,7 @@ const UpdateDrcProfile = () => {
   }
 
   return (
-    <div className="max-w-lg mx-auto p-6 mt-8">
+    <div className="max-w-md mx-auto p-6 mt-8">
       <h2 className="text-3xl font-thin text-brand-dark-blue mb-6 text-center">Update Profile</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Email Address */}
@@ -162,11 +170,17 @@ const UpdateDrcProfile = () => {
         <div className="flex justify-center">
           <button
             type="submit"
-            className="bg-brand-blue text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200"
+            className="bg-blue-500 w-full text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200"
           >
-            Update Profile
-          </button>
+           {mutation.isLoading ? "Updating..." : "Update Profile"}
+        </button>
         </div>
+        {errorMessage && (
+    <div className="text-red-500 mt-4 text-center">
+      {typeof errorMessage === "string" && errorMessage.length<=100 ? errorMessage : "An error occurred. Please try again."}
+    </div>
+  )}
+        {successMessage && <div className="text-green-500 text-center mt-4">{successMessage}</div>}
       </form>
     </div>
   );

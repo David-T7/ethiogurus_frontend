@@ -48,7 +48,7 @@ const AuthProvider = ({ children }) => {
 
     if (!token) {
       console.warn("No access token found. Logging out.");
-      logout();
+      // logout();
       return;
     }
 
@@ -72,7 +72,7 @@ const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error("Error during authentication:", error.response?.data || error.message);
-      logout();
+      // logout();
     }
   };
 
@@ -117,7 +117,7 @@ const AuthProvider = ({ children }) => {
       const userResponse = await axios.get("http://127.0.0.1:8000/api/user/role/", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      return { role: userResponse.data.role, assessment: userResponse.data.assessment };
+      return { role: userResponse.data.role, assessment: userResponse.data.assessment , assessment_started:userResponse.assessment_started };
     } catch (error) {
       console.error("Error fetching role:", error.response?.data || error.message);
       return null;
@@ -128,7 +128,7 @@ const AuthProvider = ({ children }) => {
     try {
       const response = await axios.post("http://127.0.0.1:8000/api/user/login/", { email, password });
       const { access, refresh } = response.data.token;
-      const { role, assessment } = response.data;
+      const { role, assessment , assessment_started} = response.data;
 
       // Encrypt and save tokens to localStorage
       localStorage.setItem("access", encryptToken(access));
@@ -137,7 +137,7 @@ const AuthProvider = ({ children }) => {
       // Set user role in state
       setAuth({ role });
 
-      return { role, assessment };
+      return { role, assessment , assessment_started };
     } catch (error) {
       console.error("Login failed:", error.response?.data?.detail || error.message);
       throw new Error("Login failed");
