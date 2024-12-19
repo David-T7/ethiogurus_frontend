@@ -47,20 +47,24 @@ const ClientDashboard = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen p-6">
+       {recentProjects.length > 0 && (
       <header className="text-center mb-8">
         <p className="text-lg text-gray-600">
           Here’s a quick overview of your recent projects and activities.
         </p>
       </header>
+       )}
 
       {/* Recent Projects Highlights */}
       <div className="max-w-lg mx-auto p-6 mb-8">
+      {recentProjects.length > 0 && (
         <h2 className="text-blue-600 text-2xl mb-6 flex items-center gap-3">
           <FaProjectDiagram className="text-blue-600 text-2xl" />
           Recent Projects
         </h2>
+      )}
         {recentProjects.length === 0 ? (
-          <p className="text-gray-600 text-center">No recent projects.</p>
+          <p className="text-gray-600 text-center text-lg">No recent projects.</p>
         ) : (
           <ul className="space-y-4">
             {recentProjects.map((project) => (

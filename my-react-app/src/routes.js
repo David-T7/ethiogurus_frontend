@@ -14,7 +14,7 @@ import HiringNeeds from './components/clientpage/HiringNeeds';
 import TimeCommitment from './components/clientpage/TimeCommitment';
 import Skills from './components/clientpage/Skills';
 import FinalizePage from './components/clientpage/FinalizePage ';
-import ForgotPasswordPage from './components/ForgotPasswordPage ';
+import ForgotPasswordPage from './components/ForgotPasswordPage';
 import ProjectDescriptionPage from './components/clientpage/ProjectDescription';
 import TalentListPage from './components/clientpage/talentList';
 import FreelancerDetailPage from './components/clientpage/FreelancerDetailPage';
@@ -114,8 +114,8 @@ import ResumeDetails from './components/resumecheck/ResumeDetails';
 import UpdateRCheckerProfile from './components/resumecheck/UpdateProfilePage';
 import Resumes from './components/resumecheck/resumes';
 import VerifyEmail from './components/VerifyEmail';
-
-
+import ResetPassword from './components/resetPassword';
+import ClientMessages from './components/clientpage/ClientMessages';
 const RoutesConfig = () => {
   return (
       <Routes>
@@ -153,7 +153,7 @@ const RoutesConfig = () => {
         <Route path="/hire-talent/finalize" element={<Layout><FinalizePage /></Layout>} />
         <Route path="/contact-freelancer/:id" element={<ContactFreelancer />} />
         <Route path="/contact-client/:id" element={<FreelancerProfileLayout ><ContactClient/></FreelancerProfileLayout>} />
-        <Route path="/inbox" element={<ClientInbox />} />
+        <Route path="/inbox" element={<ClientLayout><ClientMessages/></ClientLayout>} />
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/projects/:id" element={<ProjectDetailPage />} />
         <Route path="/project/:id/edit" element={<EditProjectPage />} />
@@ -251,6 +251,7 @@ const RoutesConfig = () => {
         <Route path="/resumes" element={<ResumeCheckLayout><Resumes/></ResumeCheckLayout>} />
         <Route path="/resumes/:id/verify-email/:token/" element={<Layout><VerifyEmail /></Layout>} />
         <Route path="/user/:id/verify-email/:token/" element={<Layout><VerifyEmail /></Layout>} />
+        <Route path="/reset-password/:id/:token/" element={<Layout><ResetPassword/></Layout>} />
 
       </Routes>
   );

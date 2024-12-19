@@ -3,17 +3,18 @@ import { Link, useNavigate } from "react-router-dom";
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import googleLogo from "../images/google-logo.png";
 import { AuthContext } from "./AuthContext";
-
+import axios from "axios";
 const LoginPage = () => {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [successMessage ,setSuccesMessage] = useState("")
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  const [emailVerified , setEmailVerified] = useState(true)
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -26,7 +27,12 @@ const LoginPage = () => {
     setLoading(true); // Show loading spinner
     try {
       const userData = await login(email, password);
-
+      if(!userData.email_verified){
+        setError("Email is not verified!.Verify your email using the link sent in to your email.")
+        setEmailVerified(false)
+        return;
+      }
+      else{
       // Redirect based on role
       if (userData.role === "admin") {
         navigate("/admin-dashboard");
@@ -52,6 +58,7 @@ const LoginPage = () => {
       } else {
         navigate("/dashboard"); // Default dashboard for other roles
       }
+    }
     } catch (err) {
       console.error("Login error:", err.response?.data || err.message);
       setError(
@@ -62,15 +69,47 @@ const LoginPage = () => {
     }
   };
 
+  const handleSendVerificationLInk= async () => {
+    try{
+    const response = await axios.post('http://127.0.0.1:8000/api/user/send-verification-link/',{
+      email:email
+    });
+    setSuccesMessage("Email Verification link sent to your email.")
+    setError("")
+  }
+   catch(err){
+    console.error("Login error:", err.response?.data || err.message);
+      setError(
+        err.response?.data?.detail || "Unable to send Email Verification Link.Try again."
+      );
+      setSuccesMessage("")
+   }
+  }
+
   return (
     <div className="container mx-auto py-12 px-6">
       <section className="bg-gray-100 p-8 rounded-lg max-w-md mx-auto">
         <h2 className="text-3xl font-thin text-brand-blue mb-6">Log In</h2>
+        {successMessage && (
+          <div className="bg-green-100 border border-green-300 text-green-700 px-4 py-3 rounded mb-6">
+            {successMessage}
+            </div>
+        )}
         {error && (
           <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded mb-6">
-            {error}
+           {error}
+           {!emailVerified &&
+                    <Link
+                    onClick={handleSendVerificationLInk}
+                      className="text-blue-600 hover:underline flex items-center"
+                    >
+                     Send Link Again 
+                    </Link>
+      }
           </div>
+          
         )}
+         
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           <div className="relative">
             <label

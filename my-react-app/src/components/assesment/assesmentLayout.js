@@ -252,7 +252,7 @@ const AssessmentLayout = ({ children }) => {
           </div>
         )}
       </header>
-      <main className="flex-grow p-6">{children}</main>
+      <main className={`flex-grow ${isMenuOpen ?  'hidden':''} p-6 transition-transform duration-300`}>{children}</main>
     </div>
   );
 };

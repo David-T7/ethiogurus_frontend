@@ -117,7 +117,7 @@ const AuthProvider = ({ children }) => {
       const userResponse = await axios.get("http://127.0.0.1:8000/api/user/role/", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      return { role: userResponse.data.role, assessment: userResponse.data.assessment , assessment_started:userResponse.assessment_started };
+      return { role: userResponse.data.role, assessment: userResponse.data.assessment , assessment_started:userResponse.assessment_started , email_verified:userResponse.email_verified };
     } catch (error) {
       console.error("Error fetching role:", error.response?.data || error.message);
       return null;
@@ -128,16 +128,16 @@ const AuthProvider = ({ children }) => {
     try {
       const response = await axios.post("http://127.0.0.1:8000/api/user/login/", { email, password });
       const { access, refresh } = response.data.token;
-      const { role, assessment , assessment_started} = response.data;
-
+      const { role, assessment , assessment_started , email_verified} = response.data;
+      if(email_verified){
       // Encrypt and save tokens to localStorage
       localStorage.setItem("access", encryptToken(access));
       localStorage.setItem("refresh", encryptToken(refresh));
-
+      }
       // Set user role in state
       setAuth({ role });
 
-      return { role, assessment , assessment_started };
+      return { role, assessment , assessment_started , email_verified};
     } catch (error) {
       console.error("Login failed:", error.response?.data?.detail || error.message);
       throw new Error("Login failed");

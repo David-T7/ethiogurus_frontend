@@ -37,21 +37,18 @@ export const UserProvider = ({ children }) => {
   const { data: profileData } = useQuery({
     queryKey: ['profileData', token],
     queryFn: fetchProfileData,
-    enabled: !!token,
     staleTime: 300000, // Cache for 5 minutes
   });
 
   const { data: unreadMessages = 0 } = useQuery({
     queryKey: ['unreadMessages', token],
     queryFn: fetchUnreadMessages,
-    enabled: !!token,
     staleTime: 300000,
   });
 
   const { data: unreadNotifications = 0 } = useQuery({
     queryKey: ['unreadNotifications', token],
     queryFn: fetchUnreadNotifications,
-    enabled: !!token,
     staleTime: 300000,
   });
 

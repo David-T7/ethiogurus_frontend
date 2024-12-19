@@ -114,10 +114,10 @@ const Inbox = () => {
       </div>
 
       <div className="space-y-4">
-        {(searchTerm ? filteredChats : chats).length === 0 ? (
+        {(searchTerm ? filteredChats : chats)?.length === 0 ? (
           <p>No freelancers match your search.</p>
         ) : (
-          (searchTerm ? filteredChats : chats).map((chatItem) => {
+          (searchTerm ? filteredChats : chats)?.map((chatItem) => {
             const freelancerId = chatItem.chat.freelancer;
             const freelancerData = freelancersData[freelancerId];
 

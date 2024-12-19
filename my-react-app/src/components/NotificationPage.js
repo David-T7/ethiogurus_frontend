@@ -171,11 +171,14 @@ const NotificationPage = () => {
 
   return (
     <div className="bg-gray-100 min-h-screen p-4">
+    {displayedNotifications.length >  0 && 
       <header className="text-center mb-8 mt-2">
         <p className="text-lg font-normal text-brand-dark-blue">
           Stay updated with your recent alerts and messages.
         </p>
       </header>
+    }
+
 
       {loading ? (
         <p className="text-center text-gray-600 py-8">
@@ -184,7 +187,7 @@ const NotificationPage = () => {
       ) : (
         <>
           {displayedNotifications.length === 0 ? (
-            <p className="text-gray-600 text-center">No new notifications.</p>
+            <p className="text-gray-700 text-center">No new notifications.</p>
           ) : (
             <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg border border-gray-200">
               <ul>

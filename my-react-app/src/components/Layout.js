@@ -66,9 +66,11 @@ const Layout = ({ children }) => {
 
         const data = await getRole(); // Call getRole from AuthContext
         if (data && typeof data.role !== "undefined") {
-          const { role, assessment , assessment_started } = data;
+          const { role, assessment , assessment_started , email_verified } = data;
           console.log("Role found in layout:", role);
-
+          if(!email_verified){
+            return;
+          }
           // Perform redirection based on role
           if (role === "admin") {
             navigate("/admin-dashboard");
@@ -226,10 +228,10 @@ const Layout = ({ children }) => {
       </header>
 
       {/* Page Content */}
-      <main className="flex-1 bg-brand-gray-light">{children}</main>
-
+      <main className={`flex-1 ${isMenuOpen ? 'hidden':''} bg-brand-gray-light transition-transform duration-300`}>{children}</main>
+      
       <footer className="p-4 bg-brand-blue text-white text-center">
-        <p>&copy; 2024 EthioGuru. All rights reserved.</p>
+        <p>&copy; 2024 EthioGurus. All rights reserved.</p>
       </footer>
     </div>
   );

@@ -48,8 +48,12 @@ const ProjectsPage = () => {
     <ClientLayout>
       <div className="max-w-xl mx-auto p-6 mt-6">
         <h1 className="text-3xl font-thin text-brand-blue mb-8 text-center">Your Projects</h1>
-
-        <div className="flex justify-end items-center mb-8">
+         {projects.length === 0 && (
+          <p className="text-gray-700 text-center mb-2">
+            You have no projects. Click "Create Project" to get started.
+          </p>
+         )}
+        <div className={`flex ${projects.length >  0 ? 'justify-end':'justify-center'} items-center mb-8`}>
           <Link
             to="/create-project"
             className="inline-flex items-center gap-3 px-4 py-2 bg-blue-600 text-white rounded-lg shadow-lg text-xl font-semibold transition-all duration-300 hover:bg-blue-700 hover:scale-110 hover:shadow-xl"
@@ -62,10 +66,6 @@ const ProjectsPage = () => {
           <div className="flex justify-center">
             <FaSpinner className="animate-spin text-3xl text-brand-blue" />
           </div>
-        ) : projects.length === 0 ? (
-          <p className="text-gray-500 text-center">
-            You have no projects. Click "Create Project" to get started.
-          </p>
         ) : (
           <div className="grid grid-cols-1 gap-8 cursor-pointer">
             {projects.map((project) => (

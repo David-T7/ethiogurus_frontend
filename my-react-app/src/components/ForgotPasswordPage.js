@@ -1,50 +1,44 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setMessage('');
 
-    // Basic validation
-    if (!email) {
-      setError('Please enter your email address.');
-      return;
-    }
-
-    // Handle password recovery logic here (e.g., API call)
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setMessage('We have sent password reset instructions to your email. Please check your inbox (and spam folder) for further instructions.');
-    } catch (err) {
-      setError('Failed to send password reset instructions. Please try again.');
+      // Send POST request to create dispute
+      const response = await axios.post('http://127.0.0.1:8000/password-reset-request/', 
+        {
+          email:email
+        }
+      );
+
+      setMessage(response.data.message)
     }
+    catch(err){
+      if (err.response && err.response.data) {
+        // Display backend validation errors
+        setError(JSON.stringify(err.response.data));
+      } else {
+        setError('Failed to send reset link. Please try again.');
+      }
+    }    
   };
 
   return (
     <div className="container mx-auto py-12 px-6">
       <section className="bg-gray-100 p-8 rounded-lg  max-w-md mx-auto">
-        <h2 className="text-3xl font-normal text-brand-blue mb-6">
+        <h2 className="text-2xl font-normal text-brand-blue mb-6">
           Forgot Your Password?
         </h2>
         <p className="text-lg text-gray-700 mb-6">
           Enter the email address associated with your account, and we will send you a link to reset your password.
         </p>
-        {message && (
-          <div className="bg-green-100 border border-green-300 text-green-700 px-4 py-3 rounded mb-6">
-            {message}
-          </div>
-        )}
-        {error && (
-          <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded mb-6">
-            {error}
-          </div>
-        )}
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           <div>
             <label htmlFor="email" className="block text-lg font-normal text-brand-blue mb-2">
@@ -66,6 +60,16 @@ const ForgotPasswordPage = () => {
           >
             Submit
           </button>
+          {message && (
+          <div className="text-green-500 text-center mt-4 text-md">
+            {message}
+          </div>
+        )}
+        {error && (
+    <div className="text-red-500 text-center mt-4 text-md">
+      {typeof error === "string" && error.length<=100 ? error : "An error occurred. Please try again."}
+    </div>
+  )}
         </form>
       </section>
     </div>
