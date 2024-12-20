@@ -13,7 +13,7 @@ const HireATalent = () => {
     e.preventDefault();
     let nextPath = '/hire-talent/time-commitment'; // Default path for Layout
     // Check current route to determine the next path
-    if (location.pathname.startsWith('/create-project')) {
+    if (location.pathname.startsWith('/find-talent')) {
       nextPath = '/create-project/time-commitment'; // Update this path if needed
     }
     // Navigate to the determined next path

@@ -1,6 +1,6 @@
 import React, {useContext} from "react";
 import { FaCheckCircle } from "react-icons/fa";
-import { useParams , useNavigate} from "react-router-dom";
+import { useParams , useNavigate , useLocation} from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import profilePic from "../../images/default-profile-picture.png"; // Default profile picture
@@ -13,11 +13,9 @@ const fetchFreelancerData = async ({ queryKey }) => {
 };
 
 const FreelancerDetailPage = () => { 
-  const { isAuthenticated , getRole} = useContext(AuthContext);
   const { id: freelancerId } = useParams();
-  const authenticated = isAuthenticated();
-  const role = getRole()
-  const isClientAuthenticated = authenticated && role==="client"
+  const location = useLocation()
+  const isClientAuthenticated = location.pathname.startsWith('/create-project/talent-list/')    
   const navigate = useNavigate()
   const {
     data: freelancerData,
@@ -27,14 +25,13 @@ const FreelancerDetailPage = () => {
     queryKey: ["freelancerData", freelancerId],
     queryFn: fetchFreelancerData,
   });
-
   if (isLoading) return <div className="text-center py-8">Loading...</div>;
   if (isError) return <div className="text-center py-8">Error fetching freelancer details</div>;
   if (!freelancerData) return <div className="text-center py-8">No data available</div>;
 
 
   const handleRedirectToSignup = (id) => {
-    if (!authenticated) {
+    if (!isClientAuthenticated) {
       navigate("/hire-talent/finalize");
     } else {
       navigate(`/hire-talent/talent-list/${id}`);
@@ -89,9 +86,11 @@ const FreelancerDetailPage = () => {
         
            
 
-              {is_active && isClientAuthenticated && (
-                <button className="bg-green-500 text-white py-2 px-4 rounded-lg">
-                  Hire {full_name || "John Doe"}
+              {isClientAuthenticated && (
+                <button 
+                onClick={() => navigate(`/contact-freelancer/${freelancerId}`)}
+                className="bg-green-500 text-white py-2 px-4 rounded-lg hover:scale-115 transition-all duration-300">
+                  Contact {full_name || "John Doe"}
                 </button>
 
               )}

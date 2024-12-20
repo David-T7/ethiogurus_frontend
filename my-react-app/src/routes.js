@@ -116,6 +116,7 @@ import Resumes from './components/resumecheck/resumes';
 import VerifyEmail from './components/VerifyEmail';
 import ResetPassword from './components/resetPassword';
 import ClientMessages from './components/clientpage/ClientMessages';
+import Inbox from './components/Inbox';
 const RoutesConfig = () => {
   return (
       <Routes>
@@ -145,6 +146,7 @@ const RoutesConfig = () => {
         <Route path="/dashboard" element={<ClientLayout><ClientDashboard /></ClientLayout>} />
         <Route path="/settings" element={<ClientLayout><ClientSettingsPages /> </ClientLayout>} />        
         <Route path="/profile-update" element={<ClientLayout><UpdateProfile/> </ClientLayout>} />        
+        <Route path="/create-project/talent-list/:id" element={<ClientLayout><FreelancerDetailPage /></ClientLayout>} />
         <Route path="/create-project/project-description" element={<ClientLayout><ProjectDescriptionPage /></ClientLayout>} />
         <Route path="/hire-talent/requirements" element={<Layout><HiringNeeds /></Layout>} />
         <Route path="/hire-talent/time-commitment" element={<Layout><TimeCommitment /></Layout>} />
@@ -153,7 +155,7 @@ const RoutesConfig = () => {
         <Route path="/hire-talent/finalize" element={<Layout><FinalizePage /></Layout>} />
         <Route path="/contact-freelancer/:id" element={<ContactFreelancer />} />
         <Route path="/contact-client/:id" element={<FreelancerProfileLayout ><ContactClient/></FreelancerProfileLayout>} />
-        <Route path="/inbox" element={<ClientLayout><ClientMessages/></ClientLayout>} />
+        <Route path="/inbox" element={<ClientLayout><Inbox/></ClientLayout>} />
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/projects/:id" element={<ProjectDetailPage />} />
         <Route path="/project/:id/edit" element={<EditProjectPage />} />

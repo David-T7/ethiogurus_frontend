@@ -34,7 +34,12 @@ const TalentListPage = () => {
     if (location.pathname.startsWith('/hire-talent')) {      
       navigate("/hire-talent/finalize");
     } else {
-      navigate(`/hire-talent/talent-list/${id}`);
+      if (location.pathname.startsWith('/create-project/talent-list')){      
+      navigate(`/create-project/talent-list/${id}`);
+      }
+      else{
+        navigate(`/hire-talent/talent-list/${id}`);        
+      }
     }
   };
 

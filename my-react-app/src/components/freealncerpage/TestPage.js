@@ -311,7 +311,7 @@ const TestPage = () => {
     try {
       // Send patch request to update the assessment
       const response = await axios.patch(
-        `http://127.0.0.1:8000/api/full-assessment/${freelancerId}/update/`,
+        `http://127.0.0.1:8000/api/assessments/${assessment.id}/`,
         assessmentUpdatePayload,
         {
           headers: {

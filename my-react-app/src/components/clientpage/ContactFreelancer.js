@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect} from "react";
 import { useParams } from "react-router-dom";
 import { FaPaperclip, FaUserPlus, FaDownload } from "react-icons/fa";
 import ClientLayout from "./ClientLayoutPage";
@@ -50,11 +50,12 @@ const ContactFreelancer = () => {
   const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
   const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const messageEndRef = useRef(null);
-
+  const [error , setError]= useState("")
   const [newMessage, setNewMessage] = useState("");
   const [file, setFile] = useState(null);
   const [isSelectingProject, setIsSelectingProject] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
+  const [chatID, setChatID] = useState(null);
 
   const { data: freelancerData, isLoading: loadingFreelancer } = useQuery({
     queryKey: ["freelancer", freelancerId],
@@ -102,7 +103,37 @@ const ContactFreelancer = () => {
     },
   });
 
-  const handleSendMessage = (e) => {
+
+  const fetchOrCreateChat = async () => {
+    try {
+      const chatResponse = await axios.get("http://127.0.0.1:8000/api/user/clientFreelancerChat/", {
+        params: { client_id: clientData.id, freelancer_id: freelancerId },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (chatResponse.data.chat) {
+        return chatResponse.data; // Return the first chat
+      } else {
+        // Create a new chat if none exists
+        const newChatResponse = await axios.post(
+          "http://127.0.0.1:8000/api/user/chats/",
+          {
+            client: clientData.id,
+            freelancer: freelancerData.id,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        return newChatResponse.data;
+      }
+    } catch (error) {
+      throw new Error("Error fetching or creating chat: " + error.message);
+    }
+  };
+
+
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim() && !file) return;
 
@@ -110,9 +141,20 @@ const ContactFreelancer = () => {
     formData.append("content", newMessage);
     if (file) formData.append("file", file);
 
-    sendMessageMutation.mutate({ chatID: chatData.chat.id, formData });
-    setNewMessage("");
-    setFile(null);
+    try {
+      const chatResponse = await fetchOrCreateChat();
+
+      if (chatResponse.chat) {
+        setChatID(chatResponse.chat.id);
+      }
+
+      sendMessageMutation.mutate({ chatID: chatResponse.chat.id, formData });
+
+      setNewMessage("");
+      setFile(null);
+    } catch (error) {
+      setError(error.message);
+    }
   };
 
   const groupedMessages = chatData?.messages?.reduce((acc, message) => {
@@ -121,6 +163,39 @@ const ContactFreelancer = () => {
     acc[date].push(message);
     return acc;
   }, {});
+
+   // Function to mark messages as read
+   const markMessagesAsRead = async (messages) => {
+    const unreadMessages = messages?.filter(
+      message => !message.read && message.sender===freelancerData.id 
+    );
+    if (unreadMessages?.length > 0) {
+      try {
+        await axios.patch(
+          "http://127.0.0.1:8000/api/user/messages/read/",
+          {
+            message_ids: unreadMessages.map(message => message.id),
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      } catch (error) {
+        console.error("Error marking messages as read: ", error);
+      }
+    }
+  };
+
+   // This effect will be triggered when new messages are received or updated
+   useEffect(() => {
+    // Call the function to mark freelancer messages as read
+    markMessagesAsRead(chatData?.messages);
+
+    // Scroll to the bottom of the chat whenever new messages arrive
+    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatData?.messages]); // Dependency on 'messages' ensures the effect runs whenever messages change
 
   if (loadingFreelancer || loadingClient || loadingChat || loadingProjects)
     return <div className="text-center py-8">Loading...</div>;

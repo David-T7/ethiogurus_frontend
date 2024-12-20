@@ -124,7 +124,7 @@ const ProjectDetailPage = () => {
               {freelancers?.length === 0 ? (
                 <div className="mt-8">
                   <Link
-                    to="/hire-talent/requirements"
+                    to="/find-talent"
                     className="flex items-center md:w-[25%] justify-center bg-brand-green text-white px-6 py-3 rounded-lg transition-transform duration-300 transform hover:scale-105 hover:shadow-lg hover:bg-green-600"
                   >
                     <FaUserPlus className="mr-2" /> Hire a Talent

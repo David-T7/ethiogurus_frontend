@@ -117,12 +117,12 @@ const ContactClient = () => {
       const chatResponse = await fetchOrCreateChat();
 
       // If a chat is created, store its ID
-      if (chatResponse) {
+      if (chatResponse.chat) {
         setChatID(chatResponse.id);
       }
 
       // Send the message
-      const response = await sendMessage(chatResponse.id, formData);
+      const response = await sendMessage(chatResponse.chat.id, formData);
       console.log("send message resposne is ", response.data);
       setMessages((prevMessages) => [...prevMessages, response.data]);
 
@@ -136,10 +136,10 @@ const ContactClient = () => {
 
   // Function to mark messages as read
   const markMessagesAsRead = async (messages) => {
-    const unreadMessages = messages.filter(
+    const unreadMessages = messages?.filter(
       message => !message.read && message.sender===clientData.id 
     );
-    if (unreadMessages.length > 0) {
+    if (unreadMessages?.length > 0) {
       try {
         await axios.patch(
           "http://127.0.0.1:8000/api/user/messages/read/",
@@ -178,15 +178,13 @@ const ContactClient = () => {
 
   const fetchOrCreateChat = async () => {
     try {
-      const chatResponse = await axios.get(
-        "http://127.0.0.1:8000/api/user/chats/",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const chatResponse = await axios.get("http://127.0.0.1:8000/api/user/clientFreelancerChat/", {
+        params: { client_id: clientData.id, freelancer_id: freelancerData.id },
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      if (chatResponse.data.length > 0) {
-        return chatResponse.data[0]; // Assuming you're interested in the first chat
+      if (chatResponse.data.chat) {
+        return chatResponse.data; // Return the first chat
       } else {
         // Create a new chat if none exists
         const newChatResponse = await axios.post(
@@ -205,7 +203,6 @@ const ContactClient = () => {
       throw new Error("Error fetching or creating chat: " + error.message);
     }
   };
-
   const sendMessage = async (chatID, formData) => {
     try {
       return await axios.post(
