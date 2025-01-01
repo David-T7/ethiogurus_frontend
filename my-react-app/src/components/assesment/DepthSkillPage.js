@@ -10,37 +10,69 @@ const fetchServiceName = async (appliedPosition) => {
 };
 
 const fetchTests = async ({ appliedPositionNames, token }) => {
-  const codingTestsResponse = await axios.post(
-    "http://127.0.0.1:8002/api/practical-tests/assessment/",
-    { applied_position_names: [appliedPositionNames] },
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
-  const theoreticalTestsResponse = await axios.post(
-    "http://127.0.0.1:8001/api/theoretical-tests/assessment/",
-    { applied_position_names: appliedPositionNames },
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
+  try {
+    const [codingTestsResponse, theoreticalTestsResponse] = await Promise.all([
+      axios.post(
+        "http://127.0.0.1:8002/api/practical-tests/assessment/",
+        { applied_position_names: [appliedPositionNames] },
+        { headers: { Authorization: `Bearer ${token}` } }
+      ),
+      axios.post(
+        "http://127.0.0.1:8001/api/theoretical-tests/assessment/",
+        { applied_position_names: [appliedPositionNames] },
+        { headers: { Authorization: `Bearer ${token}` } }
+      ),
+    ]);
 
-  const codingTests = codingTestsResponse.data || {};
-  const theoreticalTests = theoreticalTestsResponse.data || {};
+    const codingTests = codingTestsResponse.data || {};
+    const theoreticalTests = theoreticalTestsResponse.data || {};
 
-  // Combine data
-  const combinedData = { ...theoreticalTests };
-  for (const category in codingTests) {
-    if (!combinedData[category]) {
-      combinedData[category] = [];
-    }
-    const techMap = new Map(combinedData[category].map((tech) => [tech.name, tech]));
-    codingTests[category].forEach((tech) => {
-      if (!techMap.has(tech.name)) {
-        techMap.set(tech.name, tech);
+    console.log("Coding Tests:", codingTests);
+    console.log("Theoretical Tests:", theoreticalTests);
+
+    // Combine data
+    const combinedData = {};
+
+    // Helper function to normalize categories
+    const normalizeCategory = (category) => category.trim().toLowerCase();
+
+    // Add theoretical tests to combinedData
+    for (const category in theoreticalTests) {
+      const normalizedCategory = normalizeCategory(category);
+      if (!combinedData[normalizedCategory]) {
+        combinedData[normalizedCategory] = [];
       }
-    });
-    combinedData[category] = Array.from(techMap.values());
-  }
+      combinedData[normalizedCategory].push(...theoreticalTests[category]);
+    }
 
-  return combinedData;
+    // Add coding tests to combinedData
+    for (const category in codingTests) {
+      const normalizedCategory = normalizeCategory(category);
+      if (!combinedData[normalizedCategory]) {
+        combinedData[normalizedCategory] = [];
+      }
+
+      // Use a map to merge unique technologies
+      const techMap = new Map(
+        combinedData[normalizedCategory].map((tech) => [tech.technology, tech])
+      );
+
+      codingTests[category].forEach((tech) => {
+        if (!techMap.has(tech.technology)) {
+          techMap.set(tech.technology, tech);
+        }
+      });
+
+      combinedData[normalizedCategory] = Array.from(techMap.values());
+    }
+
+    return combinedData;
+  } catch (error) {
+    console.error("Error fetching tests:", error);
+    return {};
+  }
 };
+
 
 const fetchSkillTests = async ({ technology, token }) => {
   const [theoreticalResponse, codingResponse] = await Promise.allSettled([
@@ -108,11 +140,18 @@ const DepthSkillTestPage = () => {
     setSelectedSkill(null);
   };
 
+  // Handle starting a test
   const handleStartTest = (testId, testType) => {
-    navigate(`/assessment-camera-check/${testId}/${testType}`,{
+    navigate(`/verification-check/${testId}/${testType}`,{
       state:{assessment:assessment}
     });
   };
+
+  // const handleStartTest = (testId, testType) => {
+  //   navigate(`/assessment-camera-check/${testId}/${testType}`,{
+  //     state:{assessment:assessment}
+  //   });
+  // };
 
   if (loadingPositions || loadingTests) return <div className="text-center">Loading...</div>;
   if (positionsError || testsError) return <div className="text-center text-red-500">Failed to load tests</div>;
@@ -122,8 +161,8 @@ const DepthSkillTestPage = () => {
   }
 
   return (
-    <div className="max-w-3xl mx-auto py-10 px-4">
-      <h1 className="text-2xl font-normal mb-8 text-brand-blue">Start a New Test</h1>
+    <div className="max-w-2xl mx-auto py-10 px-4">
+      <h1 className="text-3xl font-thin mb-8 text-brand-blue">Start a New Test</h1>
 
       {/* Category Selection */}
       <div className="mb-8">

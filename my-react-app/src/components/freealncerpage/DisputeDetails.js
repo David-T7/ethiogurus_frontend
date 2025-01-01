@@ -42,7 +42,7 @@ const DisputeDetails = () => {
   
 
   return (
-    <div className="max-w-md mx-auto p-8 mt-8">
+    <div className="max-w-lg mx-auto p-8 mt-8">
       <h1 className="text-3xl font-thin text-brand-dark-blue mb-6">Dispute for {contract.title}</h1>
       
       {/* Display Dispute Details */}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaCheckCircle } from 'react-icons/fa';
 import { useQuery } from '@tanstack/react-query';
@@ -33,6 +33,29 @@ const ProjectListPage = () => {
     queryFn: fetchProjects,
   });
 
+  const projectsPerPage = 3; // Number of projects per page
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalProjects = projects.length;
+  const totalPages = Math.ceil(totalProjects / projectsPerPage);
+
+  const currentProjects = projects.slice(
+    (currentPage - 1) * projectsPerPage,
+    currentPage * projectsPerPage
+  );
+
+  const handleNext = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage((prev) => prev + 1);
+    }
+  };
+
+  const handleBack = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prev) => prev - 1);
+    }
+  };
+
   if (isLoading) {
     return <div className="text-center py-8">Loading projects...</div>;
   }
@@ -49,7 +72,7 @@ const ProjectListPage = () => {
     <div className="max-w-xl mx-auto p-8 mt-8">
       <h1 className="text-3xl font-thin mb-8 text-brand-dark-blue text-center">My Projects</h1>
       <div className="p-6">
-        {projects.map((project) => (
+        {currentProjects.map((project) => (
           <div
             key={project.id}
             className="border border-gray-200 rounded-lg p-4 mb-6 bg-gray-50 shadow-sm hover:shadow-md transition-shadow duration-200"
@@ -77,6 +100,27 @@ const ProjectListPage = () => {
           </div>
         ))}
       </div>
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center mt-4 space-x-8">
+          <button
+            onClick={handleBack}
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50 mr-2"
+          >
+            Back
+          </button>
+          <span className="text-sm font-normal">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={handleNext}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50 ml-2"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };

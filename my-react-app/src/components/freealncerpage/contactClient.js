@@ -308,16 +308,15 @@ const ContactClient = () => {
                   >
                     {message.content && <p>{message.content}</p>}
                     {message.file && (
-                                      <div className="flex items-center mt-1">
-                      <a
-                        href={`http://127.0.0.1:8000/${message.file}`} // Update URL according to your backend
-                        download
-                        className="text-white"
-                      >
-                        <FaDownload className="h-5 w-5 mr-1" />
-                        {message.file.split("/").pop()}{" "}
-                        {/* Get the file name */}
-                      </a>
+                      <div className="flex items-center mt-1">
+                        <a
+                          href={`http://127.0.0.1:8000/${message.file}`}
+                          download
+                          className="text-white"
+                        >
+                          <FaDownload className="h-5 w-5 mr-1" />
+                          {message.file.split("/").pop()}
+                        </a>
                       </div>
                     )}
                   </div>
@@ -330,35 +329,35 @@ const ContactClient = () => {
           ))
         )}
         <div ref={messageEndRef} />
-
-        <form
-          className="flex items-center space-x-2 border-t border-gray-200 pt-4"
-          onSubmit={handleSendMessage}
-        >
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type your message..."
-            className="flex-1 border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-          />
-          <label htmlFor="file-upload" className="cursor-pointer text-gray-500">
-            <FaPaperclip className="text-xl" />
-            <input
-              id="file-upload"
-              type="file"
-              onChange={handleFileChange}
-              className="hidden"
-            />
-          </label>
-          <button
-            type="submit"
-            className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition"
-          >
-            Send
-          </button>
-        </form>
       </div>
+
+      <form
+        className="flex items-center space-x-2 border-t border-gray-200 pt-4"
+        onSubmit={handleSendMessage}
+      >
+        <input
+          type="text"
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+          placeholder="Type your message..."
+          className="flex-1 border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
+        />
+        <label htmlFor="file-upload" className="cursor-pointer text-gray-500">
+          <FaPaperclip className="text-xl" />
+          <input
+            id="file-upload"
+            type="file"
+            onChange={(e) => setFile(e.target.files[0])}
+            className="hidden"
+          />
+        </label>
+        <button
+          type="submit"
+          className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition"
+        >
+          Send
+        </button>
+      </form>
     </div>
   );
 };

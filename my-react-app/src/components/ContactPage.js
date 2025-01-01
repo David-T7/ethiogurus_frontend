@@ -1,16 +1,84 @@
-import React from 'react';
-import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaUser, FaComment } from 'react-icons/fa'; // Import icons
-
+import React, { useState } from 'react';
+import { FaEnvelope, FaPhone, FaUser, FaComment } from 'react-icons/fa'; // Import icons
+import axios from 'axios';
 const ContactPage = () => {
+  // State for form values
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  // State for validation errors
+  const [errors, setErrors] = useState({});
+
+  const sendMail = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+  
+    const newErrors = {};
+    if (!name) newErrors.name = "Name is required";
+    if (!email) newErrors.email = "Email is required";
+    if (!message) newErrors.message = "Message is required";
+  
+    setErrors(newErrors);
+  
+    if (Object.keys(newErrors).length === 0) {
+      try {
+        const response = await axios.post("http://127.0.0.1:8000/api/user/send-email/", {
+          name,
+          email,
+          message,
+          to_email: "ethiogurus@gmail.com",
+          subject: "New Contact Message",
+        });
+  
+        if (response.status === 200) {
+          setSuccessMessage("Your message was sent successfully!");
+          setErrorMessage("");
+          setName("");
+          setEmail("");
+          setMessage("");
+        } else {
+          setErrorMessage("Failed to send your message. Please try again.");
+        }
+      } catch (error) {
+        setErrorMessage(
+          error.response?.data?.error || "An error occurred. Please try again later."
+        );
+      } finally {
+        setIsSubmitting(false);
+      }
+    } else {
+      setIsSubmitting(false);
+    }
+  };
+  
+
   return (
     <div className="container mx-auto py-12 px-6">
       {/* Contact Form and Details Section */}
-      <div className="flex flex-col lg:flex-row gap-12">
-        
+      <div className="flex flex-col lg:flex-row gap-12 justify-center items-center">
+
         {/* Contact Form */}
-        <section className="flex-1  p-8 rounded-lg">
-          <h2 className="text-2xl font-normal text-center text-brand-blue mb-6">Contact Us</h2>
-          <form className="flex flex-col gap-6">
+        <section className="w-full max-w-lg p-8">
+          <h2 className="text-3xl font-thin text-center text-brand-blue mb-6">Contact Us</h2>
+
+          {/* Contact Info */}
+          <div className="max-w-md mx-auto mb-8 text-center">
+            <p className="text-lg font-normal text-gray-900">
+              <span className='text-brand-blue'>Email:</span> ethiogurus@gmail.com
+            </p>
+            <p className="text-lg font-normal text-gray-900">
+              <span className='text-brand-blue'>Phone:</span> +251900000000
+            </p>
+            <p className="text-gray-600 mt-2">
+              Our team will reply to your message in a short time.
+            </p>
+          </div>
+
+          {/* Contact Form */}
+          <form onSubmit={sendMail} className="flex flex-col gap-6">
             <div className="flex flex-col gap-2">
               <label htmlFor="name" className="text-lg font-normal text-brand-blue flex items-center gap-2">
                 <FaUser className="text-brand-blue" /> Name
@@ -18,10 +86,14 @@ const ContactPage = () => {
               <input
                 id="name"
                 type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 placeholder="Your Name"
-                className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-                />
+                className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-blue"
+              />
+              {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
             </div>
+
             <div className="flex flex-col gap-2">
               <label htmlFor="email" className="text-lg font-normal text-brand-blue flex items-center gap-2">
                 <FaEnvelope className="text-brand-blue" /> Email
@@ -29,10 +101,14 @@ const ContactPage = () => {
               <input
                 id="email"
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="Your Email"
-                className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-                />
+                className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-blue"
+              />
+              {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
             </div>
+
             <div className="flex flex-col gap-2">
               <label htmlFor="message" className="text-lg font-normal text-brand-blue flex items-center gap-2">
                 <FaComment className="text-brand-blue" /> Message
@@ -40,60 +116,26 @@ const ContactPage = () => {
               <textarea
                 id="message"
                 rows="5"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
                 placeholder="Your Message"
-                className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none h-40 focus:border-blue-500"
-                ></textarea>
+                className="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-blue"
+              ></textarea>
+              {errors.message && <p className="text-red-500 text-sm">{errors.message}</p>}
             </div>
+
             <button
-              type="submit"
-              className="bg-brand-blue text-white p-4 rounded-lg hover:bg-brand-dark-blue transition font-medium"
+            type="submit"
+            className="bg-blue-500 px-6 py-3 rounded-lg text-lg text-white hover:bg-blue-600 transition duration-300 w-full"
+            disabled={isSubmitting}
             >
-              Send Message
+              {isSubmitting ? "Sending..." : "Send Message"}
             </button>
+            {successMessage && <p className="mt-2 text-center text-green-600">{successMessage}</p>}
+            {errorMessage && <p className="mt-2 text-center text-red-600">{errorMessage}</p>}
           </form>
         </section>
-
-        {/* Contact Details */}
-        <section className="flex-1 p-8 rounded-lg">
-          <h2 className="text-2xl font-normal text-center text-brand-blue mb-6">Get in Touch</h2>
-          <div className="flex flex-col gap-6">
-            <div className="flex items-center gap-4">
-              <FaEnvelope className="text-3xl text-brand-blue" />
-              <div>
-                <h3 className="text-xl font-normal text-brand-blue">Email</h3>
-                <p className="text-lg text-brand-gray-dark">contact@example.com</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <FaPhone className="text-3xl text-brand-blue" />
-              <div>
-                <h3 className="text-xl font-normal text-brand-blue">Phone</h3>
-                <p className="text-lg text-brand-gray-dark">+1 (123) 456-7890</p>
-              </div>
-            </div>
-            {/* <div className="flex items-center gap-4">
-              <FaMapMarkerAlt className="text-3xl text-brand-blue" />
-              <div>
-                <h3 className="text-xl font-normal text-brand-blue">Address</h3>
-                <p className="text-lg text-brand-gray-dark">123 Main Street, City, Country</p>
-              </div>
-            </div> */}
-          </div>
-        </section>
       </div>
-
-      {/* Map Section
-      <section className="mt-12">
-        <h2 className="text-2xl font-normal text-center text-brand-blue mb-6">Our Location</h2>
-        <div className="relative w-full h-64 rounded-lg overflow-hidden shadow-lg">
-          <iframe
-            className="absolute inset-0 w-full h-full border-none"
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3153.8377168654294!2d-122.41941568468117!3d37.77492927975981!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8085805e1c9e9147%3A0x7a5a4f2a5e5f8b7b!2sSan%20Francisco%2C%20CA%2C%20USA!5e0!3m2!1sen!2sin!4v1624923452807!5m2!1sen!2sin"
-            allowFullScreen=""
-            loading="lazy"
-          ></iframe>
-        </div>
-      </section> */}
     </div>
   );
 };

@@ -28,7 +28,7 @@ const ProjectSelectionPage = ({ projects, freelancerID }) => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-8 mt-8">
+    <div className="max-w-xl mx-auto p-8 mt-8">
       <h1 className="text-3xl font-thin mb-6 text-brand-dark-blue">Select a Project</h1>
       <div className="flex justify-end items-center mb-8">
         <Link to="/create-project" className="inline-flex items-center gap-3  py-2 px-4 bg-blue-600 text-white rounded-lg shadow-lg text-xl font-semibold transition-transform duration-300 transform hover:scale-105 hover:bg-blue-700 hover:shadow-xl">
@@ -51,11 +51,11 @@ const ProjectSelectionPage = ({ projects, freelancerID }) => {
           </li>
         ))}
       </ul>
-      <div className="mt-6 flex justify-end">
+      <div className="mt-6 flex justify-center">
         <button
           onClick={handleConfirm}
           disabled={!selectedProject}
-          className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
+          className="bg-blue-500 w-[50%] text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
           Confirm Selection
         </button>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react'; 
 import { useQuery } from '@tanstack/react-query';
 import { FaSpinner, FaEdit, FaTrashAlt, FaPlus } from 'react-icons/fa';
 import ClientLayout from './ClientLayoutPage';
@@ -26,6 +26,8 @@ const fetchProjects = async () => {
 
 const ProjectsPage = () => {
   const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState(1);
+  const projectsPerPage = 3;
 
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ['projects'],
@@ -42,6 +44,24 @@ const ProjectsPage = () => {
 
   const handleEditProject = (projectId) => {
     navigate(`/project/${projectId}/edit`);
+  };
+
+  const indexOfLastProject = currentPage * projectsPerPage;
+  const indexOfFirstProject = indexOfLastProject - projectsPerPage;
+  const currentProjects = projects.slice(indexOfFirstProject, indexOfLastProject);
+
+  const totalPages = Math.ceil(projects.length / projectsPerPage);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage((prevPage) => prevPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prevPage) => prevPage - 1);
+    }
   };
 
   return (
@@ -68,7 +88,7 @@ const ProjectsPage = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-8 cursor-pointer">
-            {projects.map((project) => (
+            {currentProjects.map((project) => (
               <div
                 key={project.id}
                 onClick={() => handleProjectClick(project.id)}
@@ -96,6 +116,26 @@ const ProjectsPage = () => {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {projects.length > projectsPerPage && (
+          <div className="flex justify-between items-center mt-8">
+            <button
+              onClick={handlePrevPage}
+              disabled={currentPage === 1}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg shadow-md transition-all duration-300 hover:bg-gray-300 disabled:opacity-50"
+            >
+              Back
+            </button>
+            <span className="text-gray-700">Page {currentPage} of {totalPages}</span>
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg shadow-md transition-all duration-300 hover:bg-gray-300 disabled:opacity-50"
+            >
+              Next
+            </button>
           </div>
         )}
       </div>

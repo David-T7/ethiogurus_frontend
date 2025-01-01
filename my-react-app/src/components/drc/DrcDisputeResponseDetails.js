@@ -22,6 +22,8 @@ const DrcDisputeResponseDetails = () => {
   const { data: responseDetails, isLoading, isError, error } = useQuery({
     queryKey: ["disputeResponseDetails", { responseId, token }],
     queryFn: fetchDisputeResponseDetails,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false, // Disable refetching on tab focus
   });
 
   if (isLoading) return <div className="text-center mt-8">Loading...</div>;

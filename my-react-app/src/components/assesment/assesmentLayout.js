@@ -108,11 +108,6 @@ const AssessmentLayout = ({ children }) => {
             onClick={() => setIsMenuOpen(false)}
           >
             Assessment
-            {unreadMessages > 0 && (
-              <span className="absolute -top-1 -right-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
-                {unreadMessages}
-              </span>
-            )}
           </Link>
           <Link
             to="/assessment-notifications"
@@ -221,11 +216,6 @@ const AssessmentLayout = ({ children }) => {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Assessment
-                    {unreadMessages > 0 && (
-                      <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-1">
-                        {unreadMessages}
-                      </span>
-                    )}
                   </Link>
                   <Link
                     to="/assessment-notifications"

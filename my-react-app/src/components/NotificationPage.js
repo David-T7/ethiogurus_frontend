@@ -85,19 +85,38 @@ const NotificationPage = () => {
   //   fetchNotifications();
   // }, []);
 
-  const showMoreNotifications = () => {
-    const nextPage = currentPage + 1;
-    const startIndex = currentPage * notificationsPerPage;
-    const newNotifications = notifications.slice(
-      0,
-      startIndex + notificationsPerPage
+  // const showMoreNotifications = () => {
+  //   const nextPage = currentPage + 1;
+  //   const startIndex = currentPage * notificationsPerPage;
+  //   const newNotifications = notifications.slice(
+  //     0,
+  //     startIndex + notificationsPerPage
+  //   );
+  //   setDisplayedNotifications(newNotifications);
+  //   setCurrentPage(nextPage);
+  // };
+  // const showLessNotifications = () => {
+  //   setDisplayedNotifications(notifications.slice(0, notificationsPerPage)); // Reset to the initial batch
+  //   setCurrentPage(1); // Reset page count
+  // };
+
+  useEffect(() => {
+    setNotifications(data);
+    setDisplayedNotifications(
+      data.slice((currentPage - 1) * notificationsPerPage, currentPage * notificationsPerPage)
     );
-    setDisplayedNotifications(newNotifications);
-    setCurrentPage(nextPage);
+  }, [data, currentPage]);
+
+  const showPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prevPage) => prevPage - 1);
+    }
   };
-  const showLessNotifications = () => {
-    setDisplayedNotifications(notifications.slice(0, notificationsPerPage)); // Reset to the initial batch
-    setCurrentPage(1); // Reset page count
+
+  const showNextPage = () => {
+    if (currentPage * notificationsPerPage < notifications.length) {
+      setCurrentPage((prevPage) => prevPage + 1);
+    }
   };
 
   const markAsRead = async (id) => {
@@ -189,7 +208,7 @@ const NotificationPage = () => {
           {displayedNotifications.length === 0 ? (
             <p className="text-gray-700 text-center">No new notifications.</p>
           ) : (
-            <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg border border-gray-200">
+            <div className="max-w-2xl mx-auto bg-white shadow-lg rounded-lg border border-gray-200">
               <ul>
                 {displayedNotifications.map((notification, index) => (
                   <React.Fragment key={notification.id}>
@@ -257,26 +276,29 @@ const NotificationPage = () => {
                   </React.Fragment>
                 ))}
               </ul>
-              {displayedNotifications.length < notifications.length && (
-                <div className="text-center py-4">
-                  <button
-                    onClick={showMoreNotifications}
-                    className="text-blue-600 hover:text-blue-800 underline"
-                  >
-                    Show More
-                  </button>
-                </div>
-              )}
-              { notifications.length === displayedNotifications.length && displayedNotifications.length > notificationsPerPage && (
-                <div className="text-center py-4">
-                  <button
-                    onClick={showLessNotifications}
-                    className="text-blue-600 hover:text-blue-800 underline"
-                  >
-                    Show Less
-                  </button>
-                </div>
-              )}
+
+             {/* Pagination Controls */}
+      {(displayedNotifications.length > 0 || currentPage > 1) && (
+        <div className="text-center py-4 flex items-center justify-center gap-4">
+            <button
+              onClick={showPreviousPage}
+              disabled={currentPage === 1}
+              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+              Back
+            </button>
+          <span className="text-gray-700 font-medium">
+            Page {currentPage}
+          </span>
+            <button
+              onClick={showNextPage}
+              disabled={currentPage >= notifications.length / notificationsPerPage}
+              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+              Next
+            </button>
+        </div>
+      )}
             </div>
           )}
         </>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaCheckCircle, FaClock, FaTimesCircle, FaExclamationCircle } from 'react-icons/fa';
 import { useQuery } from '@tanstack/react-query';
@@ -6,9 +6,9 @@ import axios from 'axios';
 import { decryptToken } from '../../utils/decryptToken';
 
 const fetchContracts = async () => {
-  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
-  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
-  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
+  const encryptedToken = localStorage.getItem('access');
+  const secretKey = process.env.REACT_APP_SECRET_KEY;
+  const token = decryptToken(encryptedToken, secretKey);
   const response = await axios.get('http://127.0.0.1:8000/api/contracts/', {
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -19,22 +19,32 @@ const ContractsPage = () => {
   const { data: contracts = [], isLoading, isError, error } = useQuery({
     queryKey: ['contracts'],
     queryFn: fetchContracts,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false, // Disable refetching on tab focus
   });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 3;
+  const totalPages = Math.ceil(contracts.length / itemsPerPage);
+
+  const currentContracts = contracts.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const getStatusStyle = (status) => {
     switch (status) {
       case 'active':
         return 'bg-blue-500 text-white';
-      case 'completed':
-        return 'bg-green-500 text-white';
       case 'accepted':
+        return 'bg-green-500 text-white';
+      case 'completed':
         return 'bg-green-500 text-white';
       case 'pending':
         return 'bg-yellow-500 text-black';
       case 'inDispute':
         return 'bg-red-500 text-white';
       case 'draft':
-        return 'bg-gray-300 text-black';
       default:
         return 'bg-gray-300 text-black';
     }
@@ -62,16 +72,16 @@ const ContractsPage = () => {
 
   return (
     <div className="max-w-6xl mx-auto p-8 mt-8">
-    <h1 className="text-4xl font-thin mb-8 text-brand-dark-blue">My Contracts</h1>
+      <h1 className="text-4xl font-thin mb-8 text-brand-dark-blue">My Contracts</h1>
 
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-      {contracts.map((contract) => (
-        <div
-          key={contract.id}
-          className="bg-gray-50 border border-gray-200 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300"
-        >
-          <div className="p-8">
-            <div className="flex items-center mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {currentContracts.map((contract) => (
+          <div
+            key={contract.id}
+            className="bg-gray-50 border border-gray-200 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300"
+          >
+            <div className="p-8">
+              <div className="flex items-center mb-6">
                 <h2 className="text-2xl font-normal text-brand-blue">{contract.title || 'No Title'}</h2>
                 <span className={`ml-3 px-2 py-2 text-xs font-semibold rounded-full ${getStatusStyle(contract.status)}`}>
                   {contract.status}
@@ -89,6 +99,26 @@ const ContractsPage = () => {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="flex justify-center items-center mt-8">
+        <button
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300"
+          >
+          Back
+        </button>
+        <span className="mx-4 text-lg">
+          Page {currentPage} of {totalPages}
+        </span>
+        <button
+          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+          disabled={currentPage === totalPages}
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300"
+          >
+          Next
+        </button>
       </div>
     </div>
   );

@@ -112,6 +112,7 @@ const DisputeResponseCounter = () => {
       title: response?.title || prevDisputeResponse.title,
       description: response?.description || prevDisputeResponse.description,
       dispute: prevDisputeResponse.dispute,
+      return_amount: response?.counterOfferAmount || prevDisputeResponse.return_amount,
       return_type: response?.counterReturnType || prevDisputeResponse.return_type,
       response: response?.decision === 'accept' ? 'accepted' : response.decision === 'reject'  ? 'rejected' : 'counter_offer',
     };
@@ -170,7 +171,15 @@ const DisputeResponseCounter = () => {
         }, {
           headers: { Authorization: `Bearer ${token}` },
         });
-
+        await axios.post(`http://127.0.0.1:8000/api/dispute-response/`, {
+          ...payload,
+          supporting_documents: uploadedIds ,
+          // Send the new document IDs
+        }, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+          },
+        });
       } 
       else if (response.decision === 'reject' && response.forwardToResolutionCenter ){
        await axios.patch(`http://127.0.0.1:8000/api/disputes/${response.dispute}/`, {
@@ -179,7 +188,18 @@ const DisputeResponseCounter = () => {
         }, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        alert("Dispute has been rejected.");
+      
+        await axios.post(`http://127.0.0.1:8000/api/dispute-response/`, {
+          ...payload,
+          supporting_documents: uploadedIds ,
+          // Send the new document IDs
+        }, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      
+      
       }
       
       else {
@@ -187,6 +207,16 @@ const DisputeResponseCounter = () => {
           got_response: true
         }, {
           headers: { Authorization: `Bearer ${token}` },
+        });
+
+        await axios.post(`http://127.0.0.1:8000/api/dispute-response/`, {
+          ...payload,
+          supporting_documents: uploadedIds ,
+          // Send the new document IDs
+        }, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+          },
         });
       }
 

@@ -24,7 +24,7 @@ const fetchInterviewer = async ({ queryKey }) => {
 };
 
 const updateAppointmentDate = async ({ id, formattedDate, interviewerId, token }) => {
-  const response = await axios.post(
+  const response = await axios.patch(
     "http://127.0.0.1:8000/api/user/select-appointment/",
     {
       appointment_id: id.toString(),

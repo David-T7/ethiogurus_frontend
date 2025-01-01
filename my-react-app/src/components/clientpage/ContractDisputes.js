@@ -29,15 +29,16 @@ const ContractDisputes = () => {
   const { data: disputes, isLoading: loadingDisputes, error: disputeError } = useQuery({
     queryKey: ['disputes', contractId],
     queryFn: () => fetchDisputes(contractId, token),
-    staleTime: 5 * 60 * 1000, // Data considered fresh for 5 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false, // Disable refetching on tab focus
 
   });
   
   const { data: disputeResponses, isLoading: loadingResponses, error: responseError } = useQuery({
     queryKey: ['disputeResponses', contractId],
     queryFn: () => fetchDisputeResponses(contractId, token),
-    staleTime: 5 * 60 * 1000, // Data considered fresh for 5 minutes
-
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false, // Disable refetching on tab focus
   });
 
   const handleDisputeDetails = (disputeId) => {
@@ -67,7 +68,7 @@ const ContractDisputes = () => {
   }
 
   return (
-    <div className="max-w-md mx-auto p-8 mt-8">
+    <div className="max-w-lg mx-auto p-8 mt-8">
       <h1 className="text-3xl font-thin text-brand-dark-blue mb-6">Disputes for Contract: {contract?.title}</h1>
 
       {disputes.length === 0 ? (
@@ -81,8 +82,8 @@ const ContractDisputes = () => {
               key={dispute.id}
               className="dispute-card bg-white p-4 border border-gray-200 rounded-lg mb-6 shadow-sm relative"
             >
-              <div className="absolute w-4 h-4 bg-blue-600 rounded-full text-white flex items-center justify-center right-14 top-4">
-                <span className={`text-xs font-semibold rounded-full px-4 py-1 ${getDisputeStatusStyle(dispute.status)}`}>
+              <div className="absolute w-4 h-4 bg-blue-600 rounded-full text-white flex items-center justify-center right-16 top-4">
+                <span className={`text-xs font-semibold rounded-full ml-8 px-4 py-1 ${getDisputeStatusStyle(dispute.status)}`}>
                   {dispute.status}
                 </span>
               </div>

@@ -4,6 +4,8 @@ import { FaUpload } from "react-icons/fa";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { decryptToken } from "../../utils/decryptToken";
+import ConfirmationModal from './ConfirmationModal';
+
 const fetchDispute = async ({ queryKey }) => {
   const [, disputeId, token] = queryKey;
   const response = await axios.get(`http://127.0.0.1:8000/api/disputes/${disputeId}/`, {
@@ -11,6 +13,20 @@ const fetchDispute = async ({ queryKey }) => {
   });
   return response.data;
 };
+
+const fetchCheckDisputeInDrc = async ({ queryKey }) => {
+  const [, disputeId, token] = queryKey;
+
+  // Make a GET request with the dispute_id as a query parameter
+  const response = await axios.get(`http://127.0.0.1:8000/check-dispute-in-drc/`, {
+    params: { dispute_id: disputeId }, // dispute_id as query param
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  return response.data.is_in_drc_forwarded;
+};
+
+
 
 const UpdateDispute = () => {
   const { id: disputeId } = useParams(); // Get dispute ID from URL
@@ -29,11 +45,18 @@ const UpdateDispute = () => {
   const [titleError, setTitleError] = useState("");
   const [descriptionError, setDescriptionError] = useState("");
   const [partialRefundError, setPartialRefundError] = useState("");
+  const [isModalOpen, setModalOpen] = useState(false);
 
   // Fetch dispute details using useQuery
   const { data: dispute, isLoading, isError } = useQuery({
     queryKey: ["dispute", disputeId, token],
     queryFn: fetchDispute,
+  });
+
+  // Fetch dispute details using useQuery
+  const { data: is_in_drc_forwarded, isDrcLoading, isDrcError } = useQuery({
+    queryKey: ["dispute-in-drc", disputeId, token],
+    queryFn: fetchCheckDisputeInDrc,
   });
 
   useEffect(() => {
@@ -110,6 +133,32 @@ const UpdateDispute = () => {
     } catch (err) {
       setError(err.response?.data || "Failed to update dispute. Please try again.");
     }
+  };
+
+  const handleCancelDispute = async () =>{
+    try {
+      await axios.patch(`http://127.0.0.1:8000/api/disputes/${disputeId}/`,
+        {
+          status: "cancelled"
+        } 
+        ,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setSuccess(true);
+      navigate(-1); // Go back to the previous page
+    }
+    catch(error){
+      setError(error.response?.data || "Failed to cancel dispute. Please try again.");
+
+    }
+  }
+  const handleCancel = () => {
+    console.log('Cancelled!');
+    setModalOpen(false);
   };
 
   if (isLoading) {
@@ -235,27 +284,47 @@ const UpdateDispute = () => {
         </div>
 
         {/* Submit Button */}
-        <div className="text-center">
-          <button
-            type="submit"
-            className={`bg-blue-500 w-[50%] text-white px-6 py-3 rounded-lg hover:bg-brand-dark-blue transition-all duration-200 shadow-md ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-            disabled={isLoading}
-          >
-            {isLoading ? "Submitting..." : "Update Dispute"}
-          </button>
-            {/* Display Success or Error Message */}
+        <div className="text-center flex space-x-4 justify-center">
+        <button
+    type="submit"
+    className={`bg-blue-500 w-[30%] text-white px-6 py-3 rounded-lg hover:bg-brand-dark-blue transition-all duration-200 shadow-md ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+    disabled={isLoading}
+  >
+    {isLoading ? "Submitting..." : "Update Dispute"}
+  </button>
+  
+  {!is_in_drc_forwarded && dispute.status === "open" && <button
+    type="button" // Use "button" if it's not a form submit
+    onClick={() => setModalOpen(true)}
+    className={`bg-red-500 w-[30%] text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-all duration-200 shadow-md ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+    disabled={isLoading}
+  >
+    {isLoading ? "Cancelling..." : "Cancel Dispute"}
+  </button>
+}
+</div>
+        
+        {/* Display Success or Error Message */}
   {success && (
-    <div className="text-green-500 mt-4 text-sm">
+    <div className="text-green-500 text-center mt-4 text-md">
       Dispute Updated successfully!
     </div>
   )}
   {error && (
-    <div className="text-red-500 mt-4 text-sm">
+    <div className="text-red-500 mt-4 text-center text-md">
       {typeof error === "string" && error.length<=100 ? error : "An error occurred. Please try again."}
     </div>
   )}
-        </div>
       </form>
+
+       {/* Cancel Confirmation Modal */}
+       {isModalOpen && (
+        <ConfirmationModal
+          message="Are you sure you want to proceed?"
+          onConfirm={handleCancelDispute}
+          onCancel={handleCancel}
+        />
+      )}
     </div>
   );
 };

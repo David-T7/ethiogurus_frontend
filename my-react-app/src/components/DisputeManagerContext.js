@@ -29,11 +29,15 @@ export const DisputeMangerUserProvider = ({ children }) => {
   const { data: profileData } = useQuery({
     queryKey: ['disputeManagerProfile', token],
     queryFn: fetchDisputeManagerProfile,
+    enabled: !!token,
+    staleTime: 300000, // Cache for 5 minutes
   });
 
   const { data: unreadNotifications = 0 } = useQuery({
     queryKey: ['unreadNotifications', token],
     queryFn: fetchUnreadNotifications,
+    enabled: !!token,
+    staleTime: 300000, // Cache for 5 minutes
   });
 
   const profilePicture = profileData?.profile_picture || profilePic;

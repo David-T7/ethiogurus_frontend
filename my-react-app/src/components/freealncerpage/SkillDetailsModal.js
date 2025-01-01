@@ -10,14 +10,14 @@ const SkillDetailsModal = ({ skill, codingTests, theoreticalTests, onClose, onSt
       exit={{ opacity: 0 }}
     >
       <motion.div
-        className="bg-white p-6 rounded-lg shadow-lg w-11/12 md:w-3/4 lg:w-1/2"
+        className="bg-white p-6 rounded-lg shadow-lg w-10/12 sm:w-3/4 md:w-2/3 lg:w-1/3"
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.8, opacity: 0 }}
         transition={{ duration: 0.3 }}
       >
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-normal text-brand-dark-blue">{skill.name} Test</h2>
+          <h2 className="text-xl font-normal text-brand-dark-blue"> {skill.name.replace(/\b\w/g, (char) => char.toUpperCase())} Test</h2>
           <button onClick={onClose} className="text-brand-orange font-bold text-2xl">&times;</button>
         </div>
 
@@ -30,7 +30,7 @@ const SkillDetailsModal = ({ skill, codingTests, theoreticalTests, onClose, onSt
                   className="flex justify-between items-center p-2 border border-brand-gray-light rounded-lg hover:bg-brand-gray-light transition-colors duration-300"
                   whileHover={{ scale: 1.02 }}
                 >
-                  <p className="text-brand-gray-dark">{test.skill_type} Practical Test </p>
+                  <p className="text-brand-gray-dark">{test.skill_type} Practical Test</p>
                   <button
                     onClick={() => onStartTest(test.id, 'practical')}
                     className="py-2 px-4 rounded bg-brand-green text-white hover:bg-brand-dark-green transition-transform duration-300 transform hover:scale-105"

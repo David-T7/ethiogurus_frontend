@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { decryptToken } from "../../utils/decryptToken";
+import { use } from "react";
 // Fetch interviews and their associated data
 const fetchInterviews = async ({ queryKey }) => {
   const [, { token }] = queryKey;
@@ -80,7 +81,8 @@ const InterviewsPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [durationFilter, setDurationFilter] = useState("");
-  const [visibleCount, setVisibleCount] = useState(5); // Initially show 5 interviews
+  const interviewsPerPage = 3;
+  const [currentPage, setCurrentPage] = useState(1);
 
   const { data: interviews = [], isLoading, error } = useQuery({
     queryKey: ["interviews", { token }],
@@ -141,7 +143,14 @@ const InterviewsPage = () => {
   };
 
   const filteredInterviews = handleFilter();
-
+  const [currrentInterviews, setCurrentInterviews] = useState(filteredInterviews.slice(0, interviewsPerPage));
+  useEffect(() => {
+    setCurrentInterviews(filteredInterviews.slice(
+     (currentPage - 1) * interviewsPerPage,
+     currentPage * interviewsPerPage
+    )
+   );
+ } ,[currentPage, filteredInterviews]);
   // Loading and Error states
   if (isLoading) return <div className="text-center py-8">Loading interviews...</div>;
   if (error)
@@ -152,8 +161,16 @@ const InterviewsPage = () => {
     );
 
   // Pagination logic
-  const handleSeeMore = () => setVisibleCount((prev) => prev + 5);
-  const handleSeeLess = () => setVisibleCount(5);
+  const totalPages = Math.ceil(filteredInterviews.length / interviewsPerPage);
+  
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+  };
 
   return (
     <div className="max-w-xl mx-auto p-8 mt-8">
@@ -195,7 +212,7 @@ const InterviewsPage = () => {
         {filteredInterviews.length === 0 ? (
           <p className="text-gray-500 text-center">No interviews found.</p>
         ) : (
-          filteredInterviews.slice(0, visibleCount).map((interview) => (
+          currrentInterviews.map((interview) => (
             <div
               key={interview.id}
               className="border border-gray-300 rounded-lg p-4 mb-4 shadow-sm"
@@ -238,17 +255,27 @@ const InterviewsPage = () => {
           ))
         )}
 
-        {/* Pagination Buttons */}
-        {filteredInterviews.length > visibleCount && (
-          <button onClick={handleSeeMore} className="bg-blue-500 text-white px-4 py-2 rounded">
-            See More
+{filteredInterviews.length > interviewsPerPage && (
+        <div className="flex items-center justify-center gap-4">
+          <button
+            onClick={handlePreviousPage}
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+            Back
           </button>
-        )}
-        {visibleCount > 5 && (
-          <button onClick={handleSeeLess} className="bg-gray-500 text-white px-4 py-2 rounded mt-2">
-            See Less
+          <span className="font-normal">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+            Next
           </button>
-        )}
+        </div>
+      )}
       </section>
     </div>
   );

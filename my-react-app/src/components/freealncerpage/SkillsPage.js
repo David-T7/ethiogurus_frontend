@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate , useLocation } from "react-router-dom";
 import { MdPending } from "react-icons/md";
 import { MdHourglassEmpty } from "react-icons/md";
 import { FaGlassWhiskey } from "react-icons/fa"; // Import glass icon
@@ -23,7 +23,7 @@ const SkillsPage = () => {
   const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
   const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
   const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
-  
+  const location = useLocation()
   // useEffect(() => {
   //   const fetchSkills = async () => {
   //     try {
@@ -276,7 +276,7 @@ const SkillsPage = () => {
       {skills.length > 0 ? (
        <div className="flex justify-between items-center mb-6">
        <h1 className="text-3xl font-thin ml-6 text-brand-blue">Skills</h1>
-       {softSkillTestComplted && (
+       {!location.pathname.startsWith('/my-skills') && (
          <button
            onClick={() => navigate("/new-test")}
            className="px-4 py-2 bg-brand-green text-white rounded-lg transition-transform duration-150 transform hover:scale-105"

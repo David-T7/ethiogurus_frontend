@@ -96,7 +96,7 @@ const DisputeResponsePage = () => {
     formData.append("dispute", disputeId);
     formData.append("response",response.decision === "accept" ?"accepted":response.decision === "reject" ?"rejected":"counter_offer" );
 
-    response.documents.forEach((file) => formData.append("documents", file));
+    response.documents.forEach((file) => formData.append("supporting_documents", file));
 
     try {
       if (response.decision === 'accept') {

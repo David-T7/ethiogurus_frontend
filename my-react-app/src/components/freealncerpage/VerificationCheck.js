@@ -1,5 +1,5 @@
 import React from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams , useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { decryptToken } from "../../utils/decryptToken";
@@ -21,6 +21,8 @@ const CheckVerification = () => {
   const encryptedToken = localStorage.getItem("access"); // Get the encrypted token from localStorage
   const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
   const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
+  const location = useLocation()
+  const assessment = location.state || null
 
   // UseQuery to fetch freelancer data
   const { data: freelancerData, isLoading, isError } = useQuery({
@@ -29,17 +31,35 @@ const CheckVerification = () => {
   });
 
   const handleUpdateProfile = () => {
-    navigate("/update-profile"); // Redirect to profile update page
+    if (location.pathname.startsWith('/verification-check/')){      
+    navigate("/profileupdate"); // Redirect to profile update page
+    }
+    else{
+      navigate("/update-profile"); // Redirect to profile update page
+    }
   };
 
   const handleVerify = () => {
-    navigate("/verify-account"); // Redirect to account verification page
+    if (location.pathname.startsWith('/verification-check/')){      
+    navigate("/account-verification"); // Redirect to account verification page
+    }
+    else{
+      navigate("/verify-account"); // Redirect to account verification page      
+    }
   };
 
   const handleNext = () => {
-    navigate(`/camera-check/${id}/${type}`); // Redirect to the camera check page
+    if (location.pathname.startsWith('/verification-check/')){    
+      navigate(`/assessment-camera-check/${id}/${type}`,{
+        state:{assessment:assessment}
+      }); 
+    }
+    else{
+      navigate(`/camera-check/${id}/${type}`,{
+        state:{assessment:assessment}
+      }); // Redirect to the camera check page
   };
-
+  }
   if (isLoading) return <div className="text-center py-8">Loading...</div>;
   if (isError) return <div className="text-center py-8 text-red-500">Failed to fetch freelancer data.</div>;
 

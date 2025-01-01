@@ -22,7 +22,8 @@ const ContractDisputeDetails = () => {
   const { data: dispute, isLoading, error } = useQuery({
     queryKey: ['disputeDetails', disputeId],
     queryFn: () => fetchDisputeDetails(disputeId, token),
-    enabled: !!disputeId && !!token,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false, // Disable refetching on tab focus
   });
 
   if (isLoading) {
@@ -42,7 +43,7 @@ const ContractDisputeDetails = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-8 mt-8">
+    <div className="max-w-lg mx-auto p-8 mt-8">
       <h1 className="text-3xl font-thin text-brand-dark-blue mb-6">
         Dispute for {contract?.title || 'Contract'}
       </h1>

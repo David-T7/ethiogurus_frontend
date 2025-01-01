@@ -6,6 +6,7 @@ import { decryptToken } from '../../utils/decryptToken';
 export const CameraContext = createContext();
 
 export const CameraProvider = ({ children }) => {
+  const cameraStreamRef = useRef(null);
   const [cameraStream, setCameraStream] = useState(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [intervalId, setIntervalId] = useState(null);
@@ -24,7 +25,9 @@ export const CameraProvider = ({ children }) => {
   const canvasRef = useRef(document.createElement('canvas')); // Reusable canvas
   const location = useLocation()
   const startingPath = location.pathname.split('/').slice(0, 2).join('/'); // e.g., '/assessment-camera-check'
-
+  const [preTestCameraCheck, setPreTestCameraCheck] = useState(false);
+  const [successfulVerifications, setSuccessfulVerifications] = useState(0);
+  const [preTestCheckPassPath, setPreTestCheckPassPath] = useState({ path: '', state: {} });
   // Retry with backoff
   const retryWithBackoff = async (fn, retries = 3, delay = 1000) => {
     let attempt = 0;
@@ -42,27 +45,32 @@ export const CameraProvider = ({ children }) => {
     }
   };
 
-  // Function to start the camera
   const startCamera = async () => {
     try {
+      console.log("Starting the camera...");
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      console.log("Camera stream obtained:", stream);
       setCameraStream(stream);
-      setIsCameraActive(true);
-      
+      cameraStreamRef.current = stream;  
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.onloadedmetadata = () => {
+          console.log("Video is ready for playback.");
+          setIsCameraActive(true);
+        };
       }
-
+  
       // Start screenshot interval
       const interval = setInterval(() => {
         captureAndSendScreenshot();
-      }, 10000); // Adjust interval time as needed
+      }, 10000); // Adjust interval as needed
       setIntervalId(interval);
     } catch (error) {
-      console.error('Error accessing camera:', error);
-      setErrorMessage('Error accessing camera. Please check your camera permissions.');
+      console.error("Error accessing camera:", error);
+      setErrorMessage("Error accessing camera. Please check your camera permissions.");
     }
   };
+  
   const updateVideoSource = () => {
     if (videoRef.current && cameraStream) {
         videoRef.current.srcObject = cameraStream;
@@ -83,10 +91,23 @@ export const CameraProvider = ({ children }) => {
     }
   };
 
+  useEffect(() => {
+    console.log("Successful Verifications Updated:", successfulVerifications);
+    if (preTestCameraCheck && successfulVerifications  >= 3) {
+      console.log("pre test camera chekc path ",preTestCheckPassPath.path)
+      setPreTestCameraCheck(false);
+      navigate(preTestCheckPassPath.path, { state: preTestCheckPassPath.state });
+    }
+  }, [successfulVerifications]);
+
   // Capture screenshot and send it to the server
 const captureAndSendScreenshot = async () => {
-  if (!cameraStream || !freelancerId || isTerminated) return;
-
+  console.log("capturing screenshot started")
+  console.log("freelancer id is ",freelancerId)
+  console.log("isTerminated is ",isTerminated)
+  console.log("camera stream is ",cameraStreamRef)
+  if (!cameraStreamRef || !freelancerId || isTerminated) return;
+  console.log("capturing screenshot")
   const video = videoRef.current;
 
   // Check if the video element and camera stream are available
@@ -140,6 +161,9 @@ const captureAndSendScreenshot = async () => {
     if (data.action === 'pause') {
       if (testStatus !== "paused") {
         setTestStatus("paused");
+        if(preTestCameraCheck){
+        setSuccessfulVerifications(0);
+        }
         setRetryCount(retryCount + 1);
         setErrorMessage('Suspicious activity detected. Please adjust your position.');
         handlePauseTest();
@@ -147,6 +171,9 @@ const captureAndSendScreenshot = async () => {
     } else if (data.action === 'terminate') {
       setIsTerminated(true);
       console.log("test is terminated")
+      if(preTestCameraCheck){
+      setSuccessfulVerifications(0);
+      }
       if(startingPath === "/theory-skill-test" || startingPath === "/coding-skill-test" ){
       navigate('/skill-test-terminated');
       }
@@ -154,11 +181,15 @@ const captureAndSendScreenshot = async () => {
       navigate('/test-terminated');
       }
     } else {
-      if (testStatus !== "continued") {
         setTestStatus("continued");
+        console.log("successful verification")
+        if(preTestCameraCheck){
+        setSuccessfulVerifications((prev) => prev + 1);
+        }
         setRetryCount(0);
         handleResumeTest();
-      }
+     console.log("preTestCameraCheck is ",preTestCameraCheck)
+
     }
   };
 
@@ -211,6 +242,8 @@ const captureAndSendScreenshot = async () => {
         setIsPaused,
         setShowModal,
         updateVideoSource,
+        setPreTestCameraCheck,
+        setPreTestCheckPassPath
       }}
     >
       {children}

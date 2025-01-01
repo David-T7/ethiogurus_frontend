@@ -31,7 +31,7 @@ const AssessmentRoadmap = () => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [appointmentDateSelected, setAppointmentDateSelected] = useState(false);
-
+  const [newAppointment , setNewAppointment] = useState(true)
   const { data: assessment, isLoading: isLoadingAssessment, error: assessmentError } = useQuery({
     queryKey: ["assessment", id],
     queryFn: () => fetchAssessment(id, token),
@@ -46,6 +46,7 @@ const AssessmentRoadmap = () => {
 
   const handleCloseModal = () => {
     setModalIsOpen(false);
+    setIsModalOpen(false);
   };
 
   const isValidAppointmentDate = (date) => {
@@ -73,6 +74,17 @@ const AssessmentRoadmap = () => {
       : [];
     setSelectedAppointment({ ...appointment, appointment_date_options: parsedOptions });
     setModalIsOpen(true);
+    setIsModalOpen(false);
+  };
+
+  const handleUpdateDate = (appointment) => {
+    const parsedOptions = appointment.appointment_date_options
+      ? JSON.parse(appointment.appointment_date_options)
+      : [];
+    setNewAppointment(false)
+    setSelectedAppointment({ ...appointment, appointment_date_options: parsedOptions });
+    setModalIsOpen(true);
+    setIsModalOpen(false);
   };
 
   const handleStartSkillTest = (assessmentType) => {
@@ -187,30 +199,41 @@ const AssessmentRoadmap = () => {
       </div>
 
       {isModalOpen && selectedStep && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full relative">
-            <h3 className="text-xl font-semibold text-brand-dark-blue mb-4">{selectedStep.label || "Interview Details"}</h3>
-            <p className="text-sm text-gray-600 mb-4">{selectedStep.description || "Interview details are displayed here."}</p>
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div className="bg-white p-6 rounded-lg max-w-md w-full relative">
+            <h3 className="text-xl font-semibold text-brand-dark-blue mb-4">{selectedStep.label || "Details"}</h3>
+            <p className="text-sm text-gray-600 mb-4">{selectedStep.description || "No details available."}</p>
             {selectedStep.appointment_date && (
-              <p className="text-gray-500 text-sm mb-4">
-                Appointment Date: {new Date(selectedStep.appointment_date).toLocaleString()}
+                <p className="text-gray-500 text-sm mb-4">
+                Appointment Date:{" "}
+                {new Date(selectedStep.appointment_date).toLocaleDateString("en-US", {
+                  month: "long",
+                  day: "numeric",
+                })}{" "}
+                at{" "}
+                {new Date(selectedStep.appointment_date).toLocaleTimeString("en-US", {
+                  hour: "numeric",
+                  minute: "numeric",
+                  hour12: true,
+                })}
               </p>
             )}
-            <button
-              onClick={closeModal}
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+            {selectedStep.appointment_date && <button
+                className="flex items-center px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300"
+                onClick={() => handleSelectDate(selectedStep)}
             >
-              &#10005;
+                <span className="text-sm">Change Interview Date</span>
             </button>
+          }
             <button
-              onClick={closeModal}
-              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                onClick={closeModal}
+                className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
             >
-              Close
+                &#10005;
             </button>
-          </div>
         </div>
-      )}
+    </div>
+)}
 
       {modalIsOpen && selectedAppointment && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
@@ -219,6 +242,7 @@ const AssessmentRoadmap = () => {
             appointmentID={selectedAppointment?.id}
             onClose={handleCloseModal}
             setAppointmentDateSelected={setAppointmentDateSelected}
+            newAppointment={newAppointment}
           />
         </div>
       )}

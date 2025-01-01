@@ -1,108 +1,85 @@
-import React, { useState, useRef, useEffect} from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { FaPaperclip, FaUserPlus, FaDownload } from "react-icons/fa";
 import ClientLayout from "./ClientLayoutPage";
 import ProjectSelectionPage from "./ProjectSelectionPage";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { decryptToken } from "../../utils/decryptToken";
-const fetchFreelancerData = async (freelancerId) => {
-  const response = await axios.get(`http://127.0.0.1:8000/api/user/freelancer/${freelancerId}/`);
-  return response.data;
-};
-
-const fetchClientData = async (token) => {
-  const response = await axios.get("http://127.0.0.1:8000/api/user/client/manage/", {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.data;
-};
-
-const fetchChatData = async ({ queryKey }) => {
-  const [, { clientId, freelancerId, token }] = queryKey;
-  const response = await axios.get("http://127.0.0.1:8000/api/user/clientFreelancerChat/", {
-    params: { client_id: clientId, freelancer_id: freelancerId },
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.data;
-};
-
-const fetchProjects = async (token) => {
-  const response = await axios.get("http://127.0.0.1:8000/api/projects/", {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.data;
-};
-
-const checkActiveContract = async ({ queryKey }) => {
-  const [, { clientId, freelancerId, token }] = queryKey;
-  const response = await axios.get("http://127.0.0.1:8000/api/check-active-contract/", {
-    params: { client_id: clientId, freelancer_id: freelancerId },
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.data.active_contract;
-};
 
 const ContactFreelancer = () => {
   const { id: freelancerId } = useParams();
-  const queryClient = useQueryClient();
-  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
-  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
-  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const messageEndRef = useRef(null);
-  const [error , setError]= useState("")
+  const [freelancerData, setFreelancerData] = useState(null);
+  const [clientData, setClientData] = useState(null);
+  const [chatData, setChatData] = useState(null);
+  const [projects, setProjects] = useState([]);
+  const [isHired, setIsHired] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
   const [newMessage, setNewMessage] = useState("");
   const [file, setFile] = useState(null);
   const [isSelectingProject, setIsSelectingProject] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   const [chatID, setChatID] = useState(null);
 
-  const { data: freelancerData, isLoading: loadingFreelancer } = useQuery({
-    queryKey: ["freelancer", freelancerId],
-    queryFn: () => fetchFreelancerData(freelancerId),
-  });
+  const encryptedToken = localStorage.getItem("access");
+  const secretKey = process.env.REACT_APP_SECRET_KEY;
+  const token = decryptToken(encryptedToken, secretKey);
 
-  const { data: clientData, isLoading: loadingClient } = useQuery({
-    queryKey: ["client", token],
-    queryFn: () => fetchClientData(token),
-  });
+  const fetchFreelancerData = async () => {
+    try {
+      const response = await axios.get(`http://127.0.0.1:8000/api/user/freelancer/${freelancerId}/`);
+      setFreelancerData(response.data);
+    } catch (error) {
+      console.error("Error fetching freelancer data:", error);
+    }
+  };
 
-  const { data: chatData, isLoading: loadingChat } = useQuery({
-    queryKey: ["chat", { clientId: clientData?.id, freelancerId, token }],
-    queryFn: fetchChatData,
-    enabled: !!clientData && !!freelancerData,
-  });
+  const fetchClientData = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/user/client/manage/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setClientData(response.data);
+    } catch (error) {
+      console.error("Error fetching client data:", error);
+    }
+  };
 
-  const { data: projects, isLoading: loadingProjects } = useQuery({
-    queryKey: ["projects", token],
-    queryFn: () => fetchProjects(token),
-  });
+  const fetchChatData = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/user/clientFreelancerChat/", {
+        params: { client_id: clientData?.id, freelancer_id: freelancerId },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setChatData(response.data);
+    } catch (error) {
+      console.error("Error fetching chat data:", error);
+    }
+  };
 
-  const { data: isHired } = useQuery({
-    queryKey: ["activeContract", { clientId: clientData?.id, freelancerId, token }],
-    queryFn: checkActiveContract,
-    enabled: !!clientData && !!freelancerData,
-  });
+  const fetchProjects = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/projects/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setProjects(response.data);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+    }
+  };
 
-  const sendMessageMutation = useMutation({
-    mutationFn: async ({ chatID, formData }) => {
-      const response = await axios.post(
-        `http://127.0.0.1:8000/api/user/chats/${chatID}/messages/`,
-        formData,
-        {
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" },
-        }
-      );
-      return response.data;
-    },
-    onSuccess: (data) => {
-      queryClient.setQueryData(["chat", { clientId: clientData?.id, freelancerId, token }], (old) => ({
-        ...old,
-        messages: [...old.messages, data],
-      }));
-    },
-  });
-
+  const checkActiveContract = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/api/check-active-contract/", {
+        params: { client_id: clientData?.id, freelancer_id: freelancerId },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setIsHired(response.data.active_contract);
+    } catch (error) {
+      console.error("Error checking active contract:", error);
+    }
+  };
 
   const fetchOrCreateChat = async () => {
     try {
@@ -112,9 +89,8 @@ const ContactFreelancer = () => {
       });
 
       if (chatResponse.data.chat) {
-        return chatResponse.data; // Return the first chat
+        return chatResponse.data;
       } else {
-        // Create a new chat if none exists
         const newChatResponse = await axios.post(
           "http://127.0.0.1:8000/api/user/chats/",
           {
@@ -132,7 +108,6 @@ const ContactFreelancer = () => {
     }
   };
 
-
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim() && !file) return;
@@ -148,7 +123,18 @@ const ContactFreelancer = () => {
         setChatID(chatResponse.chat.id);
       }
 
-      sendMessageMutation.mutate({ chatID: chatResponse.chat.id, formData });
+      const response = await axios.post(
+        `http://127.0.0.1:8000/api/user/chats/${chatResponse.chat.id}/messages/`,
+        formData,
+        {
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      setChatData((prevData) => ({
+        ...prevData,
+        messages: [...(prevData?.messages || []), response.data],
+      }));
 
       setNewMessage("");
       setFile(null);
@@ -157,15 +143,25 @@ const ContactFreelancer = () => {
     }
   };
 
-  const groupedMessages = chatData?.messages?.reduce((acc, message) => {
-    const date = new Date(message.timestamp).toLocaleDateString();
-    if (!acc[date]) acc[date] = [];
-    acc[date].push(message);
-    return acc;
-  }, {});
+  useEffect(() => {
+    const fetchData = async () => {
+      await fetchFreelancerData();
+      await fetchClientData();
+      setIsLoading(false);
+    };
+    fetchData();
+  }, []);
 
-   // Function to mark messages as read
-   const markMessagesAsRead = async (messages) => {
+  useEffect(() => {
+    if (clientData && freelancerData) {
+      fetchChatData();
+      fetchProjects();
+      checkActiveContract();
+    }
+  }, [clientData, freelancerData]);
+
+  // Function to mark messages as read
+  const markMessagesAsRead = async (messages) => {
     const unreadMessages = messages?.filter(
       message => !message.read && message.sender===freelancerData.id 
     );
@@ -188,7 +184,9 @@ const ContactFreelancer = () => {
     }
   };
 
-   // This effect will be triggered when new messages are received or updated
+
+
+ // This effect will be triggered when new messages are received or updated
    useEffect(() => {
     // Call the function to mark freelancer messages as read
     markMessagesAsRead(chatData?.messages);
@@ -196,9 +194,15 @@ const ContactFreelancer = () => {
     // Scroll to the bottom of the chat whenever new messages arrive
     messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatData?.messages]); // Dependency on 'messages' ensures the effect runs whenever messages change
+  
+  const groupedMessages = chatData?.messages?.reduce((acc, message) => {
+    const date = new Date(message.timestamp).toLocaleDateString();
+    if (!acc[date]) acc[date] = [];
+    acc[date].push(message);
+    return acc;
+  }, {});
 
-  if (loadingFreelancer || loadingClient || loadingChat || loadingProjects)
-    return <div className="text-center py-8">Loading...</div>;
+  if (isLoading) return <div className="text-center py-8">Loading...</div>;
 
   return (
     <ClientLayout>
@@ -213,7 +217,7 @@ const ContactFreelancer = () => {
         />
       ) : (
         <div className="max-w-2xl mx-auto bg-white shadow-lg rounded-lg p-6 mt-6">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex itms-center justify-between mb-6">
             <div className="flex items-center space-x-4">
               <img
                 src={freelancerData.profile_picture}
@@ -227,6 +231,8 @@ const ContactFreelancer = () => {
                 <p className="text-brand-dark-blue">Freelancer</p>
               </div>
             </div>
+          
+
             <div>
               {isHired ? (
                 <span className="px-4 py-2 bg-green-500 text-white rounded-full text-sm font-semibold">

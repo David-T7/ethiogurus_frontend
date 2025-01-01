@@ -103,7 +103,7 @@ const AssessmentCard = ({ assessment , token }) => {
     <div className="border border-gray-300 rounded-lg p-4 mb-4 shadow-sm">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-xl font-normal text-gray-800">
-          {assessment.finished ? "Completed" : "In Progress"} Assessment
+        {isPositionLoading ? "Loading..." : positionDetails?.name || "Unknown"}
         </h3>
         <span
           className={`text-xs font-semibold rounded-full px-4 py-1 text-white ${
@@ -121,14 +121,14 @@ const AssessmentCard = ({ assessment , token }) => {
             : "In Progress"}
         </span>
       </div>
-      <p className="text-gray-600">
+      {/* <p className="text-gray-600">
         Applied Position:{" "}
         {isPositionLoading ? "Loading..." : positionDetails?.name || "Unknown"}
-      </p>
+      </p> */}
 
-      <p className="text-gray-600">
+      {/* <p className="text-gray-600">
         Start Date: {new Date(assessment.created_at).toLocaleString()}
-      </p>
+      </p> */}
 
       <div className="mt-2">
         {/* <p className="text-gray-600">

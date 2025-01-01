@@ -246,6 +246,8 @@ const RoutesConfig = () => {
         <Route path="/my-settings" element={<AssessmentLayout><FreelancerSettingsPage /> </AssessmentLayout>} />        
         <Route path="/profileupdate" element={<AssessmentLayout><UpdateProfilePage /> </AssessmentLayout>} />              
         <Route path="/passwordupdate" element={<AssessmentLayout><ChangePasswordPage /></AssessmentLayout>} />
+        <Route path="/verification-check/:id/:type" element={<AssessmentLayout><CheckVerification/> </AssessmentLayout>} />                
+        <Route path='/account-verification' element={<AssessmentLayout><VerifyAccountPage/> </AssessmentLayout>} />                
         <Route path="/resume-check" element={<ResumeCheckLayout><ResumeCheckDashboard /></ResumeCheckLayout>} />
         <Route path="/resume-notifications" element={<ResumeCheckLayout><NotificationPage/></ResumeCheckLayout>} />
         <Route path="/resume/:id" element={<ResumeCheckLayout><ResumeDetails /></ResumeCheckLayout>} />

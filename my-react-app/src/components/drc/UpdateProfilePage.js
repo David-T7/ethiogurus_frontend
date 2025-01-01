@@ -80,11 +80,11 @@ const UpdateDrcProfile = () => {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className='text-center'>Loading...</div>;
   }
 
   if (isError) {
-    return <div>{error.message}</div>;
+    return <div className='text-center'>{error.message}</div>;
   }
 
   return (

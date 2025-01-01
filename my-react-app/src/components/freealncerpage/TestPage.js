@@ -56,6 +56,7 @@ const TestPage = () => {
   const location = useLocation()
   const startingPath = location.pathname.split('/').slice(0, 2).join('/'); // e.g., '/assessment-camera-check'
   const { testDetails = null, assessment = null } = location.state || {};
+  const [assessmentData , setAssesmentData] = useState(assessment["assessment"]["assessment"])
   const navigate = useNavigate();
   const { id } = useParams();
   const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
@@ -78,12 +79,13 @@ const TestPage = () => {
 
   useEffect(() => {
     if(fetchedFreelancerId){
+      console.log("assessment is",assessment["assessment"]["assessment"]["id"])
       setFreelancerId(fetchedFreelancerId);
       setFreelancerID_(fetchedFreelancerId);
     }
 }, [fetchedFreelancerId]);
-
-
+      
+ 
   // Handle fetched questions
   useEffect(() => {
       if(fetchQuestions){
@@ -102,8 +104,9 @@ const TestPage = () => {
 
   // Start Camera & Capture
     useEffect(() => {
+      if(freelancerId){
       startCamera(); // Start the camera when the component mounts
-  
+      }
       return () => {
         stopCamera(); // Clean up the camera stream when the component unmounts
       };
@@ -311,7 +314,7 @@ const TestPage = () => {
     try {
       // Send patch request to update the assessment
       const response = await axios.patch(
-        `http://127.0.0.1:8000/api/assessments/${assessment.id}/`,
+        `http://127.0.0.1:8000/api/assessments/${assessmentData.id}/`,
         assessmentUpdatePayload,
         {
           headers: {
@@ -548,15 +551,15 @@ const TestPage = () => {
         // Step 4: Update assessment status if the category has >= 2 skills
         if (skillsInCategory >= 2) {
           await axios.patch(
-            `http://127.0.0.1:8000/api/assessments/${assessment.id}/`,
+            `http://127.0.0.1:8000/api/assessments/${assessmentData?.id}/`,
             {depth_skill_assessment_status:"passed"},
             { headers: { Authorization: `Bearer ${token}` } }
           );
-          if(assessment.live_assessment_status === "not_started"){
+          if(assessmentData?.live_assessment_status === "not_started"){
          await axios.patch(
             `http://127.0.0.1:8000/api/assign-live-assessment-appointment/${updatedFreelancer.id}/`,
             {
-              applied_position_id:assessment.applied_position
+              applied_position_id:assessmentData?.applied_position
             },
             { headers: { Authorization: `Bearer ${token}` } }
           );

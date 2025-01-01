@@ -80,7 +80,7 @@ const DrcForwardedDisputes = () => {
   return (
     <div className="max-w-xl mx-auto p-8 mt-8">
       <section className="mb-12">
-        <h2 className="text-2xl font-thin text-brand-dark-blue mb-6">Forwarded Disputes</h2>
+        <h2 className="text-2xl font-thin text-center text-brand-dark-blue mb-6">Forwarded Disputes</h2>
         {currentDisputes.length === 0 ? (
           <p className="text-gray-500 text-center">No disputes assigned.</p>
         ) : (

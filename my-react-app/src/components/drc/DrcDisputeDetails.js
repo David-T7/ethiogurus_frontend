@@ -23,6 +23,8 @@ const DrcDisputeDetails = () => {
   const { data: dispute, isLoading, isError } = useQuery({
     queryKey: ["disputeDetails", { disputeId, token }],
     queryFn: fetchDisputeDetails,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false, // Disable refetching on tab focus
   });
 
   if (isLoading) {

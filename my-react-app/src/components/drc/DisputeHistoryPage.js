@@ -53,13 +53,17 @@ const DisputeHistoryPage = () => {
   const { data: dispute, isLoading: isLoadingDispute } = useQuery({
     queryKey: ['disputeDetails', disputeId],
     queryFn: () => fetchDisputeDetails(disputeId, token),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false, // Disable refetching on tab focus
   });
 
   // Fetch dispute responses
   const { data: disputeResponses = [], isLoading: isLoadingResponses } = useQuery({
     queryKey: ['disputeResponses', dispute?.contract],
     queryFn: () => fetchDisputeResponses(dispute.contract, token),
-    enabled: !!dispute?.contract, // Wait until `dispute.contract` is available
+    enabled: !!dispute?.contract, // Wait until `dispute.contract` is available,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false, // Disable refetching on tab focus
   });
 
   const handleDisputeResponseDetails = (disputeResponseId) => {

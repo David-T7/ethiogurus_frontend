@@ -94,7 +94,7 @@ const ContractDetails = () => {
         { status: status },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      navigate(`/mycontracts`);
+      navigate(-1);
     } catch (err) {
       setError(err.response ? err.response.data.detail : "Failed to accept the contract");
     }

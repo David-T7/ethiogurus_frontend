@@ -71,11 +71,11 @@ const UpdateInterviewerProfile = () => {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className='text-center'>Loading...</div>;
   }
 
   if (error) {
-    return <div>Failed to load profile data.</div>;
+    return <div className='text-center'>Failed to load profile data.</div>;
   }
 
   return (

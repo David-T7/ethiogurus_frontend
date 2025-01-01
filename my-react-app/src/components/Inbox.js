@@ -19,8 +19,13 @@ const fetchChats = async (clientId, token) => {
 };
 
 const fetchFreelancerData = async (freelancerId) => {
+  try{
   const response = await axios.get(`http://127.0.0.1:8000/api/user/freelancer/${freelancerId}/`);
   return response.data;
+  }
+  catch(error){
+    return null
+  }
 };
 
 const Inbox = () => {
@@ -121,7 +126,7 @@ const Inbox = () => {
             const freelancerId = chatItem.chat.freelancer;
             const freelancerData = freelancersData[freelancerId];
 
-            return freelancerData ? (
+            return freelancerData && 
               <div
                 key={chatItem.chat.id}
                 className="bg-gray-100 p-4 rounded-lg shadow-sm cursor-pointer"
@@ -148,11 +153,11 @@ const Inbox = () => {
                   </span>
                 </div>
               </div>
-            ) : (
-              <div key={chatItem.chat.id} className="text-center">
-                Loading freelancer info...
-              </div>
-            );
+            // ) : (
+            //   <div key={chatItem.chat.id} className="text-center">
+            //     Loading freelancer info...
+            //   </div>
+            // );
           })
         )}
       </div>

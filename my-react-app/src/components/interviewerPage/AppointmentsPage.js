@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState , useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
@@ -23,7 +23,8 @@ const AppointmentsPage = () => {
   const [statusFilter, setStatusFilter] = useState("");
   const [durationFilter, setDurationFilter] = useState("");
   const [visibleCount, setVisibleCount] = useState(5); // Initially show 5 appointments
-
+  const [currentPage, setCurrentPage] = useState(1);
+  
   // Fetch appointments using TanStack Query v5+
   const {
     data: appointments = [],
@@ -102,10 +103,28 @@ const AppointmentsPage = () => {
   };
 
   const filteredAppointments = handleFilter();
+  const appointmensPerPage = 3;
 
-  // Function to handle "See More" and "See Less"
-  const handleSeeMore = () => setVisibleCount((prevCount) => prevCount + 5);
-  const handleSeeLess = () => setVisibleCount(5);
+    const [currrentAppointments, setCurrentAppointments] = useState(filteredAppointments.slice(0, appointmensPerPage));
+    useEffect(() => {
+      setCurrentAppointments(filteredAppointments.slice(
+       (currentPage - 1) * appointmensPerPage,
+       currentPage * appointmensPerPage
+      )
+     );
+   } ,[currentPage, filteredAppointments]);
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredAppointments.length / appointmensPerPage);
+  
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
+  };
 
   if (isLoading) {
     return <div className="text-center py-8">Loading appointments...</div>;
@@ -158,7 +177,7 @@ const AppointmentsPage = () => {
         {filteredAppointments.length === 0 ? (
           <p className="text-gray-500 text-center">No upcoming appointments.</p>
         ) : (
-          filteredAppointments.slice(0, visibleCount).map((appointment) => (
+          currrentAppointments.map((appointment) => (
             <div
               key={appointment.id}
               className="border border-gray-300 rounded-lg p-4 mb-4 shadow-sm"
@@ -194,23 +213,27 @@ const AppointmentsPage = () => {
           ))
         )}
 
-        {filteredAppointments.length > visibleCount && (
+{filteredAppointments.length > appointmensPerPage && (
+        <div className="flex items-center justify-center gap-4">
           <button
-            onClick={handleSeeMore}
-            className="bg-blue-500 text-white px-4 py-2 rounded"
-          >
-            See More
+            onClick={handlePreviousPage}
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+            Back
           </button>
-        )}
-
-        {visibleCount > 5 && (
+          <span className="font-normal">
+            Page {currentPage} of {totalPages}
+          </span>
           <button
-            onClick={handleSeeLess}
-            className="bg-gray-500 text-white px-4 py-2 rounded mt-2"
-          >
-            See Less
+            onClick={handleNextPage}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+            Next
           </button>
-        )}
+        </div>
+      )}
       </section>
     </div>
   );

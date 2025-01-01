@@ -117,7 +117,7 @@ const AuthProvider = ({ children }) => {
       const userResponse = await axios.get("http://127.0.0.1:8000/api/user/role/", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      return { role: userResponse.data.role, assessment: userResponse.data.assessment , assessment_started:userResponse.assessment_started , email_verified:userResponse.email_verified };
+      return { role: userResponse.data.role, assessment: userResponse.data.assessment , assessment_started:userResponse.data.assessment_started , email_verified:userResponse.data.email_verified };
     } catch (error) {
       console.error("Error fetching role:", error.response?.data || error.message);
       return null;

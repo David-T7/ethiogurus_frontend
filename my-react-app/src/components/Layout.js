@@ -68,9 +68,10 @@ const Layout = ({ children }) => {
         if (data && typeof data.role !== "undefined") {
           const { role, assessment , assessment_started , email_verified } = data;
           console.log("Role found in layout:", role);
-          if(!email_verified){
-            return;
-          }
+          // if(!email_verified){
+          //   console.log("email is not verified")
+          //   return;
+          // }
           // Perform redirection based on role
           if (role === "admin") {
             navigate("/admin-dashboard");
