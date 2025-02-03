@@ -116,7 +116,9 @@ import Resumes from './components/resumecheck/resumes';
 import VerifyEmail from './components/VerifyEmail';
 import ResetPassword from './components/resetPassword';
 import ClientMessages from './components/clientpage/ClientMessages';
+import RecruitingFreelancers from './components/clientpage/RecruitingFreelancers';
 import Inbox from './components/Inbox';
+import WaitlistSignup from './components/freealncerpage/WaitlistSignup';
 const RoutesConfig = () => {
   return (
       <Routes>
@@ -137,6 +139,8 @@ const RoutesConfig = () => {
         <Route path="/test-result" element={<FreelancerProfileLayout><TestResultPage /></FreelancerProfileLayout>} />
         <Route path="/coding-test-result/:id" element={<FreelancerProfileLayout><CodingTestResultPage /></FreelancerProfileLayout>} />
         <Route path="/hire-talent" element={<Layout><ApplyClient /></Layout>} />
+        <Route path="/hire" element={<Layout><RecruitingFreelancers /></Layout>} />
+        <Route path="/waitlist" element={<Layout><WaitlistSignup /></Layout>} />
         <Route path="/find-talent" element={<ClientLayout><ApplyClient /></ClientLayout>} />
         <Route path="/create-project/requirements" element={<ClientLayout><HiringNeeds /></ClientLayout>} />
         <Route path="/create-project/time-commitment" element={<ClientLayout><TimeCommitment /></ClientLayout>} />

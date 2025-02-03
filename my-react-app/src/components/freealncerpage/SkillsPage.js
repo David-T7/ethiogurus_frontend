@@ -7,6 +7,32 @@ import { FaGlassWhiskey } from "react-icons/fa"; // Import glass icon
 import { useQuery } from "@tanstack/react-query";
 import { decryptToken } from "../../utils/decryptToken";
 // import SelectAppointmentDate from './SelectAppointmentDate'; // Import the new component
+import { Link } from "react-router-dom";
+
+const fetchAssessments = async (token) => {
+  const response = await axios.get("http://127.0.0.1:8000/api/assessments/", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};
+
+const fetchPositionDetails = async (id, token) => {
+  try {
+    const response = await axios.get(`http://127.0.0.1:8000/api/services/${id}/`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    console.log("Position Details Response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching position details:", error);
+    throw error;
+  }
+};
+
 
 const SkillsPage = () => {
   // const [skills, setSkills] = useState([]);
@@ -24,6 +50,8 @@ const SkillsPage = () => {
   const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
   const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
   const location = useLocation()
+  const [selectedService, setSelectedService] = useState(null);
+
   // useEffect(() => {
   //   const fetchSkills = async () => {
   //     try {
@@ -154,6 +182,23 @@ const SkillsPage = () => {
     staleTime: 1000 * 60 * 5, // Cache data for 5 minutes
   });
 
+
+  const { data: assessments = [] } = useQuery({
+    queryKey: ["assessments", token],
+    queryFn: () => fetchAssessments(token),
+    enabled: !!token,
+  });
+
+  const unfinishedAssessment = assessments.find(assessment => !assessment.finished);
+
+  useEffect(() => {
+    if (unfinishedAssessment) {
+      fetchPositionDetails(unfinishedAssessment.applied_position, token)
+        .then(setSelectedService)
+        .catch((error) => console.error("Error fetching service details:", error));
+    }
+  }, [unfinishedAssessment, token]);
+
   const handleMouseEnter = (skill) => {
     let message = "";
     if (skill.both_practical_theoretical) {
@@ -273,6 +318,18 @@ const SkillsPage = () => {
 
   return (
     <div className="max-w-6xl mx-auto py-10 px-4">
+      {unfinishedAssessment && (
+        <div className="mb-6 p-4 bg-red-100 border border-red-300 rounded-lg text-center">
+          <p className="text-gray-800">You have an unfinished assessment.</p>
+          {selectedService && (
+            <p className="text-gray-700">Service: {selectedService.name}</p>
+          )}
+          <Link to={`/assessment/${unfinishedAssessment.id}`} className="bg-blue-500 text-white px-4 py-2 rounded mt-2 inline-block">
+            Continue Assessment
+          </Link>
+        </div>
+      )}
+
       {skills.length > 0 ? (
        <div className="flex justify-between items-center mb-6">
        <h1 className="text-3xl font-thin ml-6 text-brand-blue">Skills</h1>

@@ -7,37 +7,37 @@ const LeverageTalentSection = () => {
       icon: <FaCode className="text-4xl text-brand-blue mb-4 group-hover:text-white" />,
       title: "Developers",
       description: "Seasoned software engineers, coders, and architects with expertise across hundreds of technologies.",
-      comingSoon: false,
+      comingSoon: true,
     },
     {
       icon: <FaPaintBrush className="text-4xl text-brand-blue mb-4 group-hover:text-white" />,
       title: "Designers",
       description: "Expert UI, UX, Visual, and Interaction designers as well as a wide range of illustrators, animators, and more.",
-      comingSoon: true,
+      comingSoon: false,
     },
     {
       icon: <FaChartLine className="text-4xl text-brand-blue mb-4 group-hover:text-white" />,
       title: "Finance Experts",
       description: "Professionals with diverse expertise to support your financial needs.",
-      comingSoon: true,
+      comingSoon: false,
     },
     {
       icon: <FaTasks className="text-4xl text-brand-blue mb-4 group-hover:text-white" />,
       title: "Project Managers",
       description: "Digital and technical project managers, scrum masters, and more with expertise in numerous PM tools, frameworks, and styles.",
-      comingSoon: true,
+      comingSoon: false,
     },
     {
       icon: <FaProductHunt className="text-4xl text-brand-blue mb-4 group-hover:text-white" />,
       title: "Product Managers",
       description: "Digital product managers, scrum product owners with expertise in numerous industries like banking, healthcare, ecommerce, and more.",
-      comingSoon: true,
+      comingSoon: false,
     },
     {
       icon: <FaBullhorn className="text-4xl text-brand-blue mb-4 group-hover:text-white" />,
       title: "Marketing Experts",
       description: "Experts in digital marketing, growth marketing, content creation, market research, brand strategy execution, social media marketing, and more.",
-      comingSoon: true,
+      comingSoon: false,
     },
   ];
 

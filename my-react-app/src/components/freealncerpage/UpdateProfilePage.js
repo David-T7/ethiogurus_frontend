@@ -22,6 +22,19 @@ const fetchProfile = async (token) => {
   return response.data;
 };
 
+
+const faceMatchCheck = async (freelancerId, userImage, token) => {
+  const formData = new FormData();
+  formData.append("freelancer_id", freelancerId);
+  formData.append("user_image", userImage);
+
+  const response = await axios.post("http://127.0.0.1:8005/api/verify/face-match/", formData, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
+
 // Function to update the profile data
 const updateProfile = async ({ updatedProfile, token }) => {
   const formData = new FormData();
@@ -39,14 +52,40 @@ const updateProfile = async ({ updatedProfile, token }) => {
   });
 };
 
+// Function to update the user image separately
+const updateUserImage = async ({ userImage, freelancerId, token }) => {
+  const formData = new FormData();
+  formData.append("freelancer_id", freelancerId);
+  formData.append("user_image", userImage);
+
+  await axios.patch("http://127.0.0.1:8005/api/verify/update-user-image/", formData, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+
+// Function to update the user image separately
+const updateTestProfilePicture = async ({ userImage, freelancerId, token }) => {
+  const formData = new FormData();
+  formData.append("freelancer_id", freelancerId);
+  formData.append("profile_picture", userImage);
+
+  await axios.patch("http://127.0.0.1:8003/api/update-test-profile-picture/", formData, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+};
+
+
+
 const UpdateProfilePage = () => {
   const navigate = useNavigate();
   const [updatedProfile, setUpdatedProfile] = useState({});
   const [verificationStatus, setVerificationStatus] = useState(null);
   const token = getDecryptedToken(); // Decrypt the token once and reuse it
+  const [userImage, setUserImage] = useState(null);
   const [successMessage , setSuccessMessage] = useState("")
   const [errorMessage , setErrorMessage] = useState("")
-
+  const [profilePicutreError , setProfilePictureError] = useState("")
   // Use React Query to fetch the profile data
   const { data: profile, isLoading, isError, error } = useQuery({
     queryKey: ["profile", token], // Include token in the queryKey to refetch if it changes
@@ -73,6 +112,25 @@ const UpdateProfilePage = () => {
     },
   });
 
+
+  // Mutation for updating user image
+  const userImageMutation = useMutation({
+    mutationFn: (data) => updateUserImage(data),
+    onError: (err) => {
+      setErrorMessage("Failed to update profile picture");
+      setSuccessMessage("");
+    },
+  });
+
+   // Mutation for updating user image
+   const testProfilePictureMutation = useMutation({
+    mutationFn: (data) => updateTestProfilePicture(data),
+    onError: (err) => {
+      setErrorMessage("Failed to update test profile picture");
+      setSuccessMessage("");
+    },
+  });
+
   useEffect(() => {
     if (profile) {
       setVerificationStatus(profile.verified);
@@ -88,12 +146,22 @@ const UpdateProfilePage = () => {
     }));
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
-    setUpdatedProfile((prev) => ({
-      ...prev,
-      profile_picture: file,
-    }));
+    setUpdatedProfile((prev) => ({ ...prev, profile_picture: file }));
+    setUserImage(file);
+    if (verificationStatus) {
+      try {
+        const response = await faceMatchCheck(profile.id, file, token);
+        if (response.status !== "success") {
+          setProfilePictureError("");
+          return;
+        }
+      } catch (err) {
+        setProfilePictureError("Face does not match with the previous profile picture.");
+        return;
+      }
+    }
   };
 
   const initializeFieldIfEmpty = (fieldName) => {
@@ -139,8 +207,21 @@ const UpdateProfilePage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if(profilePicutreError === "" && userImage){
+    userImageMutation.mutate({
+      userImage,
+      freelancerId: profile?.id,
+      token,
+    });
+    testProfilePictureMutation.mutate({
+      userImage,
+      freelancerId: profile?.id,
+      token,
+    });
+  }
     mutation.mutate({ updatedProfile, token }); // Pass both the updated profile and token
   };
+
 
   const handleVerifyAccount = () => {
     navigate("/verify-account", { state: { freelancerData: profile } });
@@ -249,6 +330,7 @@ const UpdateProfilePage = () => {
             accept="image/*"
           />
         </div>
+        {profilePicutreError && <div className="text-red-500 mt-2">{profilePicutreError}</div>}
 
         {/* Certifications */}
         <div className="mb-4">

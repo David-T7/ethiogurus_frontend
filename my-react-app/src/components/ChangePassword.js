@@ -1,208 +1,79 @@
-// ChangePasswordPage.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
-import { decryptToken } from '../utils/decryptToken';
-const ChangePasswordPage = () => {
-  const [profile, setProfile] = useState({
-    oldPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
 
-  const [passwordVisibility, setPasswordVisibility] = useState({
-    oldPasswordVisible: false,
-    newPasswordVisible: false,
-    confirmPasswordVisible: false,
-  });
-
-  const [errors, setErrors] = useState({}); // State to hold error messages
-  const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
-  const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
-  const token = decryptToken(encryptedToken, secretKey); // Decrypt the token
-  const [oldPasswordError, setOldPasswordError] = useState("");
-  const [newPasswordError, setNewPasswordError] = useState("");
-  const [confirmPasswordError, setConfirmPasswordError] = useState("");
-  const [succesMessage , setSuccesMessage ] = useState("")
-  const [errorMessage , setErrorMessage ] = useState("")
-  const [loading, setLoading] = useState(false);
-  
-  const togglePasswordVisibility = (field) => {
-    setPasswordVisibility((prevState) => ({
-      ...prevState,
-      [field]: !prevState[field],
-    }));
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setProfile((prevProfile) => ({
-      ...prevProfile,
-      [name]: value,
-    }));
-  };
-
+const ForgotPasswordPage = () => {
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    let valid = true;
-    if (!profile.newPassword.trim()) {
-      setNewPasswordError("New passowrd is required.");
-      valid = false;
-    } else {
-      setNewPasswordError("");
-    }
-
-    if (!profile.oldPassword.trim()) {
-      setOldPasswordError("Old passowrd is required.");
-      valid = false;
-    } else {
-      setOldPasswordError("");
-    }
-
-    if (!profile.confirmPassword.trim()) {
-      setConfirmPasswordError("Confirm passowrd is required.");
-      valid = false;
-    } else {
-      setConfirmPasswordError("");
-    }
-    
-    if (profile.newPassword !== profile.confirmPassword) {
-      setConfirmPasswordError("Passwords do not match!" );
-      valid = false;
-    }
-
-    if (!valid) return;
-    setLoading(true);
-
+    setError('');
+    setMessage('');
 
     try {
-      const data = {
-        'old_password': profile.oldPassword,
-        'new_password': profile.newPassword
-      };
-      const response = await axios.post(`http://127.0.0.1:8000/api/user/change-password/`, data, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      // Send POST request to create dispute
+      const response = await axios.post('http://127.0.0.1:8000/password-reset-request/', 
+        {
+          email:email
+        }
+      );
 
-      setSuccesMessage('Password updated successfully!');
-      setErrorMessage("")
-      // Optionally, reset the form
-      setProfile({
-        oldPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
-    } catch (err) {
+      setMessage(response.data.message)
+    }
+    catch(err){
       if (err.response && err.response.data) {
         // Display backend validation errors
-        setErrorMessage(JSON.stringify(err.response.data));
+        setError(JSON.stringify(err.response.data));
       } else {
-        setErrorMessage('Failed to update password');
+        setError('Failed to send reset link. Please try again.');
       }
-      setSuccesMessage("")
-    }
-    setLoading(false);
+    }    
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 mt-8">
-      <h2 className="text-3xl font-thin text-brand-dark-blue mb-6 text-center">Change Password</h2>
-      <form onSubmit={handleSubmit} className="space-y-6">
-
-        {/* Old Password */}
-        <div className="mb-4 relative">
-          <label htmlFor="oldPassword" className="block text-lg font-normal text-brand-blue mb-2">
-            Old Password
-          </label>
-          <input
-            type={passwordVisibility.oldPasswordVisible ? "text" : "password"}
-            id="oldPassword"
-            name="oldPassword"
-            value={profile.oldPassword}
-            onChange={handleInputChange}
-            className={`w-full border ${errors.old_password ? 'border-red-500' : 'border-gray-300'} p-2 rounded-lg focus:outline-none focus:border-blue-500`}
-          />
-          <span
-            className="absolute right-3 top-10 text-gray-600 hover:text-gray-800 cursor-pointer"
-            onClick={() => togglePasswordVisibility('oldPasswordVisible')}
-          >
-            {passwordVisibility.oldPasswordVisible ? <FaEye /> : <FaEyeSlash />}
-          </span>
-          {oldPasswordError && <div className="text-red-500 mt-1">{oldPasswordError}</div>}
-        </div>
-
-        {/* New Password */}
-        <div className="mb-4 relative">
-          <label htmlFor="newPassword" className="block text-lg font-normal text-brand-blue mb-2">
-            New Password
-          </label>
-          <input
-            type={passwordVisibility.newPasswordVisible ? "text" : "password"}
-            id="newPassword"
-            name="newPassword"
-            value={profile.newPassword}
-            onChange={handleInputChange}
-            className={`w-full border ${errors.new_password ? 'border-red-500' : 'border-gray-300'} p-2 rounded-lg focus:outline-none focus:border-blue-500`}
-          />
-          <span
-            className="absolute right-3 top-10 text-gray-600 hover:text-gray-800 cursor-pointer"
-            onClick={() => togglePasswordVisibility('newPasswordVisible')}
-          >
-            {passwordVisibility.newPasswordVisible ? <FaEye /> : <FaEyeSlash />}
-          </span>
-          {newPasswordError && <div className="text-red-500 mt-1">{newPasswordError}</div>}
-        </div>
-
-        {/* Confirm Password */}
-        <div className="mb-4 relative">
-          <label htmlFor="confirmPassword" className="block text-lg font-normal text-brand-blue mb-2">
-            Confirm New Password
-          </label>
-          <input
-            type={passwordVisibility.confirmPasswordVisible ? "text" : "password"}
-            id="confirmPassword"
-            name="confirmPassword"
-            value={profile.confirmPassword}
-            onChange={handleInputChange}
-            className={`w-full border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'} p-2 rounded-lg focus:outline-none focus:border-blue-500`}
-          />
-           <span
-            className="absolute right-3 top-10 text-gray-600 hover:text-gray-800 cursor-pointer"
-            onClick={() => togglePasswordVisibility('confirmPasswordVisible')}
-          >
-            {passwordVisibility.confirmPasswordVisible ? <FaEye /> : <FaEyeSlash />}
-          </span>
-          {confirmPasswordError && <div className="text-red-500 mt-1">{confirmPasswordError}</div>}
-
-        </div>
-
-
-        {/* Submit Button */}
-        <div className="flex justify-center">
+    <div className="container mx-auto py-12 px-6">
+      <section className="bg-gray-100 p-8 rounded-lg  max-w-md mx-auto">
+        <h2 className="text-2xl font-normal text-brand-blue mb-6">
+          Want to change Your Password?
+        </h2>
+        <p className="text-lg text-gray-700 mb-6">
+          Enter the email address associated with your account, and we will send you a link to reset your password.
+        </p>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+          <div>
+            <label htmlFor="email" className="block text-lg font-normal text-brand-blue mb-2">
+              Email Address
+            </label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email address"
+              className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
+              required
+            />
+          </div>
           <button
             type="submit"
-            className="bg-blue-500 w-full text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200"
+            className="bg-brand-blue text-white p-3 rounded-lg hover:bg-brand-dark-blue transition"
           >
-              {loading ? 'Submitting...' : 'Submit'}
-        </button>
-        </div>
-        {succesMessage && (
-    <div className="text-green-500 text-center mt-4 text-md">
-      {succesMessage}
-    </div>
-  )}
-  {errorMessage && (
+            Submit
+          </button>
+          {message && (
+          <div className="text-green-500 text-center mt-4 text-md">
+            {message}
+          </div>
+        )}
+        {error && (
     <div className="text-red-500 text-center mt-4 text-md">
-      {typeof errorMessage === "string" && errorMessage.length<=100 ? errorMessage : "An error occurred. Please try again."}
+      {typeof error === "string" && error.length<=100 ? error : "An error occurred. Please try again."}
     </div>
   )}
-      </form>
+        </form>
+      </section>
     </div>
   );
 };
 
-export default ChangePasswordPage;
+export default ForgotPasswordPage;

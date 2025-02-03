@@ -76,7 +76,7 @@ const Layout = ({ children }) => {
           if (role === "admin") {
             navigate("/admin-dashboard");
           } else if (role === "freelancer") {
-            if (assessment) {
+            if (!assessment) {
               if(assessment_started){
               navigate("/assessments");
               }
@@ -166,7 +166,7 @@ const Layout = ({ children }) => {
           >
             Apply as a Freelancer
           </Link>
-          <Link to="/hire-talent" className={getLinkClasses("/hire-talent")}>
+          <Link to="/hire" className={getLinkClasses("/hire")}>
             Hire a Talent
           </Link>
           <Link to="/login" className={getLinkClasses("/login")}>

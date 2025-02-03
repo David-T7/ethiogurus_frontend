@@ -37,7 +37,7 @@ const LoginPage = () => {
       if (userData.role === "admin") {
         navigate("/admin-dashboard");
       } else if (userData.role === "freelancer") {
-        if (userData.assessment) {
+        if (!userData.assessment) {
           if (!userData.assessment_started){
             setError("Resume Assesment is in progress...!")
           }
@@ -208,7 +208,7 @@ const LoginPage = () => {
               </Link>{" "}
               or{" "}
               <Link
-                to="/hire-talent"
+                to="/hire"
                 className="text-brand-blue hover:underline"
               >
                 company

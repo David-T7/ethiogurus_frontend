@@ -14,7 +14,7 @@ import {
   FaEyeSlash,
 } from "react-icons/fa";
 import axios from "axios";
-
+import { Link } from "react-router-dom";
 const ApplyAsFreelancer = () => {
   const [formData, setFormData] = useState({
     full_name: "",
@@ -30,6 +30,7 @@ const ApplyAsFreelancer = () => {
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fieldMessage, setFieldMessage] = useState(""); // State to store the field-specific message
 
   const fetchFields = async () => {
     const response = await axios.get("http://127.0.0.1:8000/api/fields/");
@@ -55,6 +56,26 @@ const ApplyAsFreelancer = () => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
     setErrors({ ...errors, [name]: "" });
+
+    // Check if the selected field is not 'Developer' and show a message
+    if (name === "field") {
+      const selectedField = fields.find(field => field.id === value);
+      if (selectedField && selectedField.name !== "Developer") {
+        setFieldMessage(
+          <>
+            We are not currently accepting <b>{selectedField.name}</b>. 
+            We will notify you once we start accepting this field.  
+            <Link 
+              to={`/waitlist?field=${selectedField.id}`} 
+              className="text-blue-500 underline ml-2">
+              Join the Waitlist
+            </Link>
+          </>
+        );
+      } else {
+        setFieldMessage(""); // Clear message if 'Developer' is selected
+      }
+    }
   };
 
   const handleFileChange = (e) => {
@@ -187,7 +208,11 @@ const ApplyAsFreelancer = () => {
               </option>
             ))}
           </select>
-          {errors.field && <p className="text-red-600">{errors.field}</p>}
+          {errors.field && <p className="text-red-600">{errors.field}</p>
+          
+          }
+       {fieldMessage && <p className="text-yellow-600">{fieldMessage}</p>} 
+
         </div>
 
         {formData.field && (
