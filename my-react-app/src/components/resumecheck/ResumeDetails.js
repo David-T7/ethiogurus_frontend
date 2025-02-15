@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { decryptToken } from '../../utils/decryptToken';
-
+import RejectionModal from './RejectionModal';
 const fetchServiceById = async (serviceId, token) => {
   const response = await axios.get(`http://127.0.0.1:8000/api/services/${serviceId}/`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -30,12 +30,13 @@ const choiceFieldOptions = [
 const ResumeDetails = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { resume, screeningResult, freelancer_id} = location.state || {};
+  const { resume, screeningResult} = location.state || {};
   const [services, setServices] = useState([]);
   const [technologies, setTechnologies] = useState([]);
   const [selectedTechnologies, setSelectedTechnologies] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isActivationModalOpen, setIsActivationModalOpen] = useState(false);
+  const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -127,15 +128,15 @@ const ResumeDetails = () => {
   };
 
   // Helper function to approve freelancer
-const approveFreelancer = async (freelancerId, token) => {
+const approveFreelancer = async (resume, token) => {
     setIsModalOpen(true);
   };
 
-  const handleSubmitActivation = async (freelancerId, token) => {
+  const handleSubmitActivation = async (resume_id, token) => {
     try {
       // Example patch request to update project status and assessments
       await axios.patch(
-        `http://127.0.0.1:8000/api/activate-full-assessment/${freelancerId}/`,
+        `http://127.0.0.1:8000/api/activate-full-assessment/${resume_id}/`,
         {
           modalData:modalData,
           selectedTechnologies:selectedTechnologies
@@ -171,44 +172,13 @@ const approveFreelancer = async (freelancerId, token) => {
   };
 
 
-  
 
 
-  // Helper function to activate soft skills assessment
-// const activateSoftSkillsAssessment = async (freelancerId, token) => {
-//     try {
-//       await axios.patch(
-//         `http://127.0.0.1:8000/api/activate-full-assessment/${freelancerId}/`,
-//         {
-
-//         }
-//         ,
-//         {
-//           headers: { Authorization: `Bearer ${token}` },
-//         }
-//       );
-
-//       await axios.patch(
-//         `http://127.0.0.1:8000/api/assign-soft-skills-assessment-appointment/${freelancerId}/`,
-//         {
-
-//         },
-//         {
-//           headers: { Authorization: `Bearer ${token}` },
-//         }
-//       );
-//       alert('Soft Skills Assessment Activated');
-//     } catch (error) {
-//       console.error('Error activating soft skills assessment:', error);
-//       alert('Failed to activate soft skills assessment.');
-//     }
-//   };
-
-  const handleAddFreelancer = async (freelancerId) => {
+  const handleAddFreelancer = async (resume_id) => {
     try {
       // Example patch request to update project status and assessments
       await axios.patch(
-        `http://127.0.0.1:8000/api/approve_freelancer/${freelancerId}/`,
+        `http://127.0.0.1:8000/api/approve_freelancer/${resume_id}/`,
         {
           modalData :modalData,
           selectedTechnologies:selectedTechnologies
@@ -248,7 +218,7 @@ const approveFreelancer = async (freelancerId, token) => {
   const resumeFileUrl = resume_file && resume_file.startsWith('http') ? resume_file : `http://127.0.0.1:8000${resume_file}`;
 
   return (
-    <div className="max-w-lg mx-auto p-8 mt-8">
+    <div className="max-w-xl mx-auto p-8 mt-8">
       <h1 className="text-lg font-normal text-center text-brand-dark-blue mb-6">Resume Details</h1>
 
       <div className="border border-gray-300 rounded-lg p-4 shadow-sm">
@@ -285,6 +255,7 @@ const approveFreelancer = async (freelancerId, token) => {
 
             {/* Displaying feedback with show more functionality */}
             <div className="mt-2">
+            <h3 className="text-xl font-normal text-gray-800 mt-4">Resume Highlight</h3>
               <p className="text-gray-600">
                 <span>
                   {showMore
@@ -329,10 +300,17 @@ const approveFreelancer = async (freelancerId, token) => {
             Activate Assessment
           </button>
           <button
-            onClick={() => approveFreelancer(freelancer_id, token)}
+            onClick={() => approveFreelancer(resume.id, token)}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Approve Freelancer
+          </button>
+
+          <button
+            onClick={() => setIsRejectionModalOpen(true)}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Reject Application
           </button>
         </div>
 
@@ -369,7 +347,7 @@ const approveFreelancer = async (freelancerId, token) => {
               <div className="flex justify-between">
                 
                 <button
-                 onClick={() => { if(assesmentSkillAdd) { setIsActivationModalOpen(true) ; setIsModalOpen(false); setAssesmentSkillAdd(false);} else{ handleAddFreelancer(freelancer_id)}}}
+                 onClick={() => { if(assesmentSkillAdd) { setIsActivationModalOpen(true) ; setIsModalOpen(false); setAssesmentSkillAdd(false);} else{ handleAddFreelancer(resume.id)}}}
                   className="bg-green-600 text-white py-2 px-4 rounded-lg"
                 >
                   {assesmentSkillAdd ? "Add Skill":"Add Freelancer"}
@@ -400,108 +378,110 @@ const approveFreelancer = async (freelancerId, token) => {
         
 {isActivationModalOpen && (
   <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded shadow-lg max-w-md w-full relative">
+    <div className="bg-white p-6 rounded shadow-lg max-w-md w-full relative">
       <h3 className="text-xl font-normal mb-4">Activate Assessments</h3>
       <button
-              className="absolute top-4 right-4 px-4 py-2 bg-blue-500 text-white rounded"
-              onClick={() => { setIsModalOpen(true) ; setAssesmentSkillAdd(true) ; setIsActivationModalOpen(false)  }}
-            >
-              Add Skill
-            </button>
-      <div className='mb-2'>
-              <p className='text-lg font-normal mb-2'>
-                Position: {services[currentPositionIndex]?.name || `Position ID: ${currentPositionId}`}
-              </p>
-              {/* <div>
-                <label className="block">Soft Skills Assessment Status:</label>
-                <select
-                  value={currentPositionData.soft_skills_assessment_status}
-                  onChange={(e) =>
-                    handleModalFieldChange('soft_skills_assessment_status', e.target.value)
-                  }
-                  className="block w-full px-3 py-2 border border-gray-300 rounded"
-                >
-                  {choiceFieldOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div> */}
-              <div className='mb-2'>
-                <label className="block">Depth Skill Assessment Status:</label>
-                <select
-                  value={currentPositionData.depth_skill_assessment_status}
-                  onChange={(e) =>
-                    handleModalFieldChange('depth_skill_assessment_status', e.target.value)
-                  }
-                  className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
+        className="absolute top-4 right-4 px-4 py-2 bg-blue-500 text-white rounded"
+        onClick={() => { setIsModalOpen(true); setAssesmentSkillAdd(true); setIsActivationModalOpen(false); }}
+      >
+        Add Skill
+      </button>
+      <div className="mb-2">
+        <p className="text-lg font-normal mb-2">
+          Position: {services[currentPositionIndex]?.name || `Position ID: ${currentPositionId}`}
+        </p>
+        <div className="mb-2">
+          <label className="block">Depth Skill Assessment Status:</label>
+          <select
+            value={currentPositionData.depth_skill_assessment_status}
+            onChange={(e) =>
+              handleModalFieldChange('depth_skill_assessment_status', e.target.value)
+            }
+            className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
+          >
+            {choiceFieldOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="mb-2">
+          <label className="block">Live Assessment Status:</label>
+          <select
+            value={currentPositionData.live_assessment_status}
+            onChange={(e) =>
+              handleModalFieldChange('live_assessment_status', e.target.value)
+            }
+            className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
+          >
+            {choiceFieldOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
-                >
-                  {choiceFieldOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className='mb-2'>
-                <label className="block">Live Assessment Status:</label>
-                <select
-                  value={currentPositionData.live_assessment_status}
-                  onChange={(e) =>
-                    handleModalFieldChange('live_assessment_status', e.target.value)
-                  }
-                  className="w-full border border-gray-300 p-2 rounded-lg focus:outline-none focus:border-blue-500"
-                >
-                  {choiceFieldOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+      {/* Only show "Next" and "Back" buttons if there is more than one position applied */}
+      {resume.applied_positions.length > 1 && (
+        <div className="flex justify-end mt-6">
+          <button
+            onClick={handlePreviousPosition}
+            disabled={currentPositionIndex === 0}
+            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 mr-2"
+          >
+            Back
+          </button>
+          <button
+            onClick={handleNextPosition}
+            disabled={currentPositionIndex === resume.applied_positions.length - 1}
+            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 mr-2"
+          >
+            Next
+          </button>
+        </div>
+      )}
 
-            </div>
-      {/* Modal Actions */}
       <div className="flex justify-end mt-6">
-              <button onClick={handlePreviousPosition} disabled={currentPositionIndex === 0}
-              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 mr-2"
+        <button
+          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 mr-2"
+          onClick={() => handleSubmitActivation(resume.id, token)}
+        >
+          Submit
+        </button>
+        <button
+          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 mr-2"
+          onClick={() => { setIsModalOpen(false); setIsActivationModalOpen(false); }}
+        >
+          Close
+        </button>
+      </div>
 
-              >
-                Back
-              </button>
-              <button
-                onClick={handleNextPosition}
-                disabled={currentPositionIndex === resume.applied_positions.length - 1}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 mr-2"
-              >
-                Next
-              </button>
-              <button
-              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 mr-2"
-              onClick={() => handleSubmitActivation(freelancer_id, token)}>
-                Submit
-              </button>
-              <button 
-              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 mr-2"
-              onClick={() => {setIsModalOpen(false) ; setIsActivationModalOpen(false) }}>Close</button>
-            </div>
-            {successMessage && (
-    <div className="text-green-500 mt-4 text-center text-md">
-      {successMessage}
-    </div>
-  )}
-  {errorMessage && (
-    <div className="text-red-500 mt-4 text-center text-md">
-      {typeof errorMessage === "string" && errorMessage.length<=100 ? errorMessage : "An error occurred. Please try again."}
-    </div>
-  )}
-
-            
+      {successMessage && (
+        <div className="text-green-500 mt-4 text-center text-md">
+          {successMessage}
+        </div>
+      )}
+      {errorMessage && (
+        <div className="text-red-500 mt-4 text-center text-md">
+          {typeof errorMessage === "string" && errorMessage.length <= 100 ? errorMessage : "An error occurred. Please try again."}
+        </div>
+      )}
     </div>
   </div>
 )}
+
+
+<RejectionModal
+  isOpen={isRejectionModalOpen}
+  onClose={() => setIsRejectionModalOpen(false)}
+  resume = {resume}
+  positions={applied_positions}
+  services={services}
+/>
+
       </div>
     </div>
   );

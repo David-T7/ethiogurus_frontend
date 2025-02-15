@@ -79,7 +79,7 @@ const CameraCheckPage = () => {
     }, [cameraStream]);
 
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100">
+    <div className="relative flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100 overflow-hidden">
       <div className="items-center justify-center">
         <div className="w-64 h-64 rounded-full overflow-hidden border-4 border-white shadow-lg">
           <video
@@ -114,7 +114,7 @@ const CameraCheckPage = () => {
         </div>
       ) : null}
 
-      <PauseModal showModal={showModal} handleClose={() => setShowModal(false)} message={errorMessage} />
+      <PauseModal showModal={showModal} handleClose={() => setShowModal(false)} message={errorMessage} title={"Pre-test camera check paused"} />
     </div>
   );
 };

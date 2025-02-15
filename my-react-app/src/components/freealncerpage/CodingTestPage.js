@@ -58,6 +58,9 @@ const CodingTestPage = () => {
   const { startCamera, stopCamera,errorMessage , setErrorMessage, isTerminated, setFreelancerID_, videoRef , showModal ,isPaused, setIsPaused , setShowModal ,updateVideoSource , cameraStream } = useContext(CameraContext);
   const [isSubmitting, setIsSubmitting] = useState(false); // State to track submission status
   const { testDetails = null, assessment = null } = location.state || {};
+  const [assessmentData, setAssesmentData] = useState(
+    assessment?.assessment?.assessment || null
+  );
   const [profilePicture , setProfilePicture] = useState(null)
   const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
   const secretKey = process.env.REACT_APP_SECRET_KEY; // Ensure the same secret key is used
@@ -179,37 +182,45 @@ useEffect(() => {
     }
   };
 
-  useEffect(() => {
-    const warningSound = warningSoundRef.current;
-    if(isPaused){
-      warningSound.pause()
-    }
-    if (isTerminated){
-      warningSound.remove()
-    }
-    if (timer === 30 && !isPaused) {
-      warningSound.play();
-    } else if (timer > 30 || timer <= 0) {
-      warningSound.pause();
-      warningSound.currentTime = 0; // Reset the sound to the start
-    }
-  }, [timer , isPaused , isTerminated]);
+  // useEffect(() => {
+  //   const warningSound = warningSoundRef.current;
+  //   if(isPaused){
+  //     warningSound.pause()
+  //   }
+  //   if (isTerminated){
+  //     warningSound.remove()
+  //   }
+  //   if (timer === 30 && !isPaused) {
+  //     warningSound.play();
+  //   } else if (timer > 30 || timer <= 0) {
+  //     warningSound.pause();
+  //     warningSound.currentTime = 0; // Reset the sound to the start
+  //   }
+  // }, [timer , isPaused , isTerminated]);
 
   useEffect(() => {
     const warningSound = followupWarningSoundRef.current;
-    if(isPaused){
-      warningSound.pause()
-    }
-    if (isTerminated){
-      warningSound.remove()
-    }
-    if (followUpTimer === 7 && !isPaused) {
-      warningSound.play();
-    } else if (followUpTimer > 7 || followUpTimer <= 0) {
+  
+    // Pause and reset sound if the test is paused or terminated
+    if (isPaused) {
       warningSound.pause();
-      warningSound.currentTime = 0; // Reset the sound to the start
     }
-  }, [followUpTimer , isPaused , isTerminated]);
+    if (isTerminated) {
+      warningSound.remove(); // This removes the sound object
+    }
+  
+    // Stop the sound if the modal is closed
+    if (!isModalOpen) {
+      warningSound.pause();
+      warningSound.currentTime = 0; // Reset sound to the start
+    } else if (followUpTimer === 7 && !isPaused) {
+      warningSound.play(); // Play sound when follow-up timer reaches 7
+    } else if (followUpTimer <= 0 || followUpTimer > 7) {
+      warningSound.pause(); // Pause sound when timer is 0 or more than 7
+      warningSound.currentTime = 0; // Reset sound to the start
+    }
+  }, [followUpTimer, isPaused, isTerminated, isModalOpen]);
+  
 
   const handleFollowUpChange = (e) => {
     console.log("name is ");
@@ -474,13 +485,13 @@ useEffect(() => {
     // Construct payload for the update
     const assessmentUpdatePayload = {
       on_hold: onhold,
-      on_hold_duration: onholdDuration,
+      hold_until: new Date(Date.now() + onholdDuration * 24 * 60 * 60 * 1000).toISOString(), // 120 days from now
     };
   
     try {
       // Send patch request to update the assessment
       const response = await axios.patch(
-        `http://127.0.0.1:8000/api/full-assessment/${assessment.id}/`,
+        `http://127.0.0.1:8000/api/full-assessment/${assessmentData.id}/`,
         assessmentUpdatePayload,
         {
           headers: {
@@ -585,7 +596,7 @@ useEffect(() => {
       } )
 
       await axios.patch(
-        `http://127.0.0.1:8000/api/full-assessment/${assessment.id}/`,
+        `http://127.0.0.1:8000/api/full-assessment/${assessmentData.id}/`,
         {
           depth_skill_assessment_status:"passed",
         },
@@ -718,11 +729,11 @@ useEffect(() => {
           );
 
           await axios.patch(
-            `http://127.0.0.1:8000/api/full-assessment/${assessment.id}/`,
+            `http://127.0.0.1:8000/api/full-assessment/${assessmentData.id}/`,
             {depth_skill_assessment_status:"passed"},
             { headers: { Authorization: `Bearer ${token}` } }
           );
-          if(assessment.live_assessment_status === "not_started"){
+          if(assessmentData.live_assessment_status === "not_started"){
           await axios.patch(
             `http://127.0.0.1:8000/api/assign-live-assessment-appointment/${updatedFreelancer.id}/`,
             {

@@ -122,12 +122,12 @@ const InterviewPage = () => {
     const fieldToUpdate = `${data.appointment.interview_type}_status`;
 
     const assessmentPayload = passed
-      ? { [fieldToUpdate]: "passed" }
-      : {
-          [fieldToUpdate]: "on_hold",
-          on_hold: true,
-          on_hold_duration: onHoldDuration,
-        };
+  ? { [fieldToUpdate]: "passed" }
+  : {
+      [fieldToUpdate]: "on_hold",
+      on_hold: true,
+      on_hold_till: new Date(Date.now() + onHoldDuration * 24 * 60 * 60 * 1000).toISOString(), // 120 days from now
+    };
     if(passed && fieldToUpdate === "soft_skills_assessment_status"){
       assessmentPayload.depth_skill_assessment_status = "pending";
     }

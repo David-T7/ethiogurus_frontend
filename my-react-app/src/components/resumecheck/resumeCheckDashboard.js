@@ -11,12 +11,12 @@ const fetchResumesAndScreeningResults = async (token) => {
   return response.data;
 };
 
-const fetchFreelancerDetails = async (freelancerId, token) => {
-  const response = await axios.get(`http://127.0.0.1:8000/api/user/freelancer/${freelancerId}/`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return response.data;
-};
+// const fetchFreelancerDetails = async (freelancerId, token) => {
+//   const response = await axios.get(`http://127.0.0.1:8000/api/user/freelancer/${freelancerId}/`, {
+//     headers: { Authorization: `Bearer ${token}` },
+//   });
+//   return response.data;
+// };
 
 const ResumeCheckDashboard = () => {
   const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
@@ -42,38 +42,12 @@ const ResumeCheckDashboard = () => {
 
   // Updated handleViewDetails function
 const handleViewDetails = async (resume, screeningResult) => {
-  try {
-    // Find the freelancer id that matches the resume email
-    const freelancer = await Promise.all(
-      full_assesments.map(async (assessment) => {
-        // Fetch freelancer details using freelancer id from FullAssessment
-        const freelancerData = await fetchFreelancerDetails(assessment.freelancer, token);
-        
-        // Match the freelancer's email with the resume email
-        if (freelancerData.email === resume.email) {
-          return freelancerData; // Return the matched freelancer data
-        }
-      })
-    );
-
-    // Filter out null values if no match was found
-    const matchedFreelancer = freelancer.filter(Boolean)[0];
-
-    if (matchedFreelancer) {
-      // Pass the freelancer details (id and email) to the details page
       navigate(`/resume/${resume.id}`, {
         state: {
           resume,
           screeningResult,
-          freelancer_id: matchedFreelancer.id,
         },
       });
-    } else {
-      console.error("No freelancer found with the matching email.");
-    }
-  } catch (error) {
-    console.error("Error while fetching freelancer details:", error);
-  }
 };
 
   return (

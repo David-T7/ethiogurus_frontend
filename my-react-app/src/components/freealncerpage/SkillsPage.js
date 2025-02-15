@@ -33,6 +33,24 @@ const fetchPositionDetails = async (id, token) => {
   }
 };
 
+const fetchSkills = async (id, token) => {
+  try {
+    const response = await axios.get(
+      "http://127.0.0.1:8000/api/user/freelancer/manage/",
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    console.log("fetching skills:", response.data);
+    return response.data.skills;
+  } catch (error) {
+    console.error("Error fetching skills:", error);
+    throw error;
+  }
+};
+
+
+
 
 const SkillsPage = () => {
   // const [skills, setSkills] = useState([]);
@@ -189,6 +207,12 @@ const SkillsPage = () => {
     enabled: !!token,
   });
 
+  const { data: freelancerSkills = [] } = useQuery({
+    queryKey: ["freelancerSkills", token],
+    queryFn: () => fetchSkills(token),
+    enabled: !!token,
+  });
+
   const unfinishedAssessment = assessments.find(assessment => !assessment.finished);
 
   useEffect(() => {
@@ -335,7 +359,9 @@ const SkillsPage = () => {
        <h1 className="text-3xl font-thin ml-6 text-brand-blue">Skills</h1>
        {!location.pathname.startsWith('/my-skills') && (
          <button
-           onClick={() => navigate("/new-test")}
+           onClick={() =>  navigate("/new-test", {
+            state: { skills: skillsData },
+          })}
            className="px-4 py-2 bg-brand-green text-white rounded-lg transition-transform duration-150 transform hover:scale-105"
          >
            <span className="mr-2">New Skill Test</span>

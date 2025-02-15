@@ -147,6 +147,7 @@ const captureAndSendScreenshot = async () => {
     } catch (error) {
       console.error('Failed to verify screenshot after retries:', error);
       setIsTerminated(true);
+
       if(startingPath === "/theory-skill-test" || startingPath === "/coding-skill-test" ){
         navigate('/skill-test-terminated');
       }
@@ -157,7 +158,7 @@ const captureAndSendScreenshot = async () => {
   }, 'image/jpeg');
 };
 
-  const handleVerificationResponse = (data) => {
+  const handleVerificationResponse = async  (data) => {
     if (data.action === 'pause') {
       if (testStatus !== "paused") {
         setTestStatus("paused");
@@ -174,6 +175,26 @@ const captureAndSendScreenshot = async () => {
       if(preTestCameraCheck){
       setSuccessfulVerifications(0);
       }
+
+      // Call the termination API
+    try {
+      const token = localStorage.getItem("access_token"); // Assuming JWT is stored in localStorage
+      await axios.patch(
+        "http://127.0.0.1:8000/api/assessment-termination/",  // Replace with your actual endpoint
+        { freelancer_id: freelancerId }, // Pass the freelancer's ID
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log("Termination count updated successfully.");
+    } catch (error) {
+      console.error("Error updating termination count:", error.response?.data || error.message);
+    }
+
+
       if(startingPath === "/theory-skill-test" || startingPath === "/coding-skill-test" ){
       navigate('/skill-test-terminated');
       }
@@ -247,9 +268,9 @@ const captureAndSendScreenshot = async () => {
       }}
     >
       {children}
-      {showModal && <PauseModal />}
+      {/* {showModal && <PauseModal />} */}
       {/* Add video element for live camera feed */}
-      <video ref={videoRef} autoPlay muted style={{ display: isCameraActive ? 'block' : 'none' }} />
+      {/* <video ref={videoRef} autoPlay muted style={{ display: isCameraActive ? 'block' : 'none' }} /> */}
     </CameraContext.Provider>
   );
 };

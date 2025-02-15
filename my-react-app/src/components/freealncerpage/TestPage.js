@@ -56,7 +56,9 @@ const TestPage = () => {
   const location = useLocation()
   const startingPath = location.pathname.split('/').slice(0, 2).join('/'); // e.g., '/assessment-camera-check'
   const { testDetails = null, assessment = null } = location.state || {};
-  const [assessmentData , setAssesmentData] = useState(assessment["assessment"]["assessment"])
+  const [assessmentData, setAssesmentData] = useState(
+    assessment?.assessment?.assessment || null
+  );
   const navigate = useNavigate();
   const { id } = useParams();
   const encryptedToken = localStorage.getItem('access'); // Get the encrypted token from localStorage
@@ -79,7 +81,6 @@ const TestPage = () => {
 
   useEffect(() => {
     if(fetchedFreelancerId){
-      console.log("assessment is",assessment["assessment"]["assessment"]["id"])
       setFreelancerId(fetchedFreelancerId);
       setFreelancerID_(fetchedFreelancerId);
     }
@@ -141,19 +142,22 @@ const TestPage = () => {
 
   useEffect(() => {
     const warningSound = warningSoundRef.current;
-    if(isPaused){
-      warningSound.pause()
+  
+    if (isPaused || isTerminated) {
+      warningSound.pause();
+      warningSound.currentTime = 0; // Ensure it stops completely
     }
-    if (isTerminated){
-      warningSound.remove()
-    }
-    if (questionTimeRemaining === 10 && !isPaused) {
-      warningSound.play();
+  
+    if (questionTimeRemaining === 10 && !isPaused && !isTerminated) {
+      warningSound.pause();  // Stop any ongoing sound before playing
+      warningSound.currentTime = 0;
+      warningSound.play().catch(error => console.error("Error playing sound:", error));
     } else if (questionTimeRemaining > 10 || questionTimeRemaining <= 0) {
       warningSound.pause();
-      warningSound.currentTime = 0; // Reset the sound to the start
+      warningSound.currentTime = 0;
     }
-  }, [questionTimeRemaining , isPaused , isTerminated]);
+  }, [questionTimeRemaining, isPaused, isTerminated]);
+  
 
   const handleOptionSelect = (questionId, optionId) => {
     setSelectedAnswers((prevAnswers) => ({
@@ -308,7 +312,7 @@ const TestPage = () => {
     // Construct payload for the update
     const assessmentUpdatePayload = {
       on_hold: onhold,
-      on_hold_duration: onholdDuration,
+      hold_until: new Date(Date.now() + onholdDuration * 24 * 60 * 60 * 1000).toISOString(), // 120 days from now
     };
   
     try {

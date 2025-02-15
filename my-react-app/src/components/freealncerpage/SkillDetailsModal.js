@@ -1,7 +1,31 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const SkillDetailsModal = ({ skill, codingTests, theoreticalTests, onClose, onStartTest }) => {
+const SkillDetailsModal = ({ skill, codingTests, theoreticalTests, freelancerSkills, onClose, onStartTest }) => {
+  // Check if the skill is already in the freelancer's skills
+  const isPracticalSkillTaken = freelancerSkills.some(freelancerSkill => {
+    return freelancerSkill.skills.some(skillItem => 
+      skillItem.title.toLowerCase() === skill.name.toLowerCase() && skillItem.types.includes('practical')
+    );
+  });
+  
+  const isTheoreticalSkillTaken = freelancerSkills.some(freelancerSkill => {
+    return freelancerSkill.skills.some(skillItem => 
+      skillItem.title.toLowerCase() === skill.name.toLowerCase() && skillItem.types.includes('theoretical')
+    );
+  });
+  
+  // console.log("freelancer skill is ",freelancerSkills.)
+  // freelancerSkills.forEach(category => {
+  //   category.skills.forEach(skillItem => {
+  //     console.log("Skill Item Title:", skillItem.title);
+  //     console.log("Skill Types:", skillItem.types);
+  //   });
+  // });
+
+  // console.log("skill is ",skill)
+
+  
   return (
     <motion.div
       className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50"
@@ -17,8 +41,12 @@ const SkillDetailsModal = ({ skill, codingTests, theoreticalTests, onClose, onSt
         transition={{ duration: 0.3 }}
       >
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-normal text-brand-dark-blue"> {skill.name.replace(/\b\w/g, (char) => char.toUpperCase())} Test</h2>
-          <button onClick={onClose} className="text-brand-orange font-bold text-2xl">&times;</button>
+          <h2 className="text-xl font-normal text-brand-dark-blue">
+            {skill.name.replace(/\b\w/g, (char) => char.toUpperCase())} Test
+          </h2>
+          <button onClick={onClose} className="text-brand-orange font-bold text-2xl">
+            &times;
+          </button>
         </div>
 
         <div className="mb-4">
@@ -33,9 +61,10 @@ const SkillDetailsModal = ({ skill, codingTests, theoreticalTests, onClose, onSt
                   <p className="text-brand-gray-dark">{test.skill_type} Practical Test</p>
                   <button
                     onClick={() => onStartTest(test.id, 'practical')}
-                    className="py-2 px-4 rounded bg-brand-green text-white hover:bg-brand-dark-green transition-transform duration-300 transform hover:scale-105"
+                    disabled={isPracticalSkillTaken}
+                    className={`py-2 px-4 rounded ${isPracticalSkillTaken ? 'bg-gray-400' : 'bg-brand-green'} text-white ${!isPracticalSkillTaken ? 'hover:bg-brand-dark-green':''} transition-transform duration-300 transform hover:scale-105`}
                   >
-                    Start Test
+                    {isPracticalSkillTaken ? 'Already Taken' : 'Start Test'}
                   </button>
                 </motion.li>
               ))}
@@ -57,9 +86,10 @@ const SkillDetailsModal = ({ skill, codingTests, theoreticalTests, onClose, onSt
                   <p className="text-brand-gray-dark">{test.title} Theoretical Test</p>
                   <button
                     onClick={() => onStartTest(test.id, 'theoretical')}
-                    className="py-2 px-4 rounded bg-brand-green text-white hover:bg-brand-dark-green transition-transform duration-300 transform hover:scale-105"
+                    disabled={isTheoreticalSkillTaken}
+                    className={`py-2 px-4 rounded ${isTheoreticalSkillTaken ? 'bg-gray-400' : 'bg-brand-green'} text-white ${!isTheoreticalSkillTaken ? 'hover:bg-brand-dark-green' : '' } transition-transform duration-300 transform hover:scale-105`}
                   >
-                    Start Test
+                    {isTheoreticalSkillTaken ? 'Already Taken' : 'Start Test'}
                   </button>
                 </motion.li>
               ))}

@@ -11,12 +11,12 @@ const fetchResumesAndScreeningResults = async (token) => {
   return response.data;
 };
 
-const fetchFreelancerDetails = async (freelancerId, token) => {
-    const response = await axios.get(`http://127.0.0.1:8000/api/user/freelancer/${freelancerId}/`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return response.data;
-  };
+// const fetchFreelancerDetails = async (freelancerId, token) => {
+//     const response = await axios.get(`http://127.0.0.1:8000/api/user/freelancer/${freelancerId}/`, {
+//       headers: { Authorization: `Bearer ${token}` },
+//     });
+//     return response.data;
+//   };
 
 const Resumes = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -79,36 +79,13 @@ const Resumes = () => {
 
   // Updated handleViewDetails function
   const handleViewDetails = async (resume, screeningResult) => {
-    try {
-      // Find the freelancer that matches the resume email
-      const freelancer = await Promise.all(
-        full_assesments.map(async (assessment) => {
-          const freelancerData = await fetchFreelancerDetails(assessment.freelancer, token);
-
-          // Match freelancer's email with the resume email
-          if (freelancerData.email === resume.email) {
-            return freelancerData;
-          }
-        })
-      );
-
-      const matchedFreelancer = freelancer.filter(Boolean)[0];
-
-      if (matchedFreelancer) {
-        // Pass matched freelancer details to the details page
+  
         navigate(`/resume/${resume.id}`, {
           state: {
             resume,
             screeningResult,
-            freelancer_id: matchedFreelancer.id,
           },
         });
-      } else {
-        console.error("No freelancer found with the matching email.");
-      }
-    } catch (error) {
-      console.error("Error while fetching freelancer details:", error);
-    }
   };
 
   return (

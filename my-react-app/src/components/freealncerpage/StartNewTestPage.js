@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate , useLocation } from "react-router-dom";
 import SkillDetailsModal from "./SkillDetailsModal";
 import { decryptToken } from "../../utils/decryptToken";
 
@@ -72,7 +72,8 @@ const StartNewTestPage = () => {
   const [selectedTechnology, setSelectedTechnology] = useState("");
   const [selectedSkill, setSelectedSkill] = useState(null);
   const navigate = useNavigate();
-
+  const location = useLocation();
+  const { skills } = location.state || null;
   const token = getDecryptedToken(); // Decrypt token once and reuse it
 
   // Fetch tests using React Query
@@ -191,6 +192,7 @@ const StartNewTestPage = () => {
       {selectedSkill && (
         <SkillDetailsModal
           skill={selectedSkill}
+          freelancerSkills = {skills}
           codingTests={selectedSkill.codingTests}
           theoreticalTests={selectedSkill.theoreticalTests}
           onClose={() => setSelectedSkill(null)}
